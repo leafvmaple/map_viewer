@@ -1,0 +1,128 @@
+{
+  "id": "metal_max",
+  "name": {
+    "zh": "重装机兵",
+    "en": "Metal Max",
+    "ja": "メタルマックス"
+  },
+  "defaultMap": "world_map",
+  "maps": {
+    "world_map": {
+      "name": { "zh": "世界地图", "en": "World Map", "ja": "ワールドマップ" },
+      "type": "image",
+      "image": "world_map/world_map_full.png",
+      "tileSize": 16,
+      "triggers": [
+        {
+          "id": "wm_t01",
+          "bounds": [[480, 1680], [496, 1696]],
+          "target": "map_01",
+          "label": { "zh": "拉多镇", "en": "Rado Town", "ja": "ラド" }
+        },
+        {
+          "id": "wm_t02",
+          "bounds": [[640, 1440], [656, 1456]],
+          "target": "map_02",
+          "label": { "zh": "波布镇", "en": "Pobo Town", "ja": "ポブレ" }
+        },
+        {
+          "id": "wm_t03",
+          "bounds": [[1200, 1100], [1216, 1116]],
+          "target": "map_0A",
+          "label": { "zh": "伊甸镇", "en": "Eden Town", "ja": "エデン" }
+        }
+      ]
+    },
+    "map_01": {
+      "name": { "zh": "拉多镇", "en": "Rado Town", "ja": "ラド" },
+      "type": "image",
+      "image": "scene_maps/map_01.png",
+      "tileSize": 16,
+      "triggers": [
+        {
+          "id": "m01_exit",
+          "bounds": [[128, 240], [144, 256]],
+          "target": "world_map",
+          "label": { "zh": "出口 → 世界地图", "en": "Exit → World Map", "ja": "出口 → ワールドマップ" }
+        }
+      ]
+    },
+    "map_02": {
+      "name": { "zh": "波布镇", "en": "Pobo Town", "ja": "ポブレ" },
+      "type": "image",
+      "image": "scene_maps/map_02.png",
+      "tileSize": 16,
+      "triggers": [
+        {
+          "id": "m02_exit",
+          "bounds": [[64, 128], [80, 144]],
+          "target": "world_map",
+          "label": { "zh": "出口 → 世界地图", "en": "Exit → World Map", "ja": "出口 → ワールドマップ" }
+        }
+      ]
+    },
+    "map_03": {
+      "name": { "zh": "场景 03", "en": "Scene 03", "ja": "シーン 03" },
+      "type": "image",
+      "image": "scene_maps/map_03.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_04": {
+      "name": { "zh": "场景 04", "en": "Scene 04", "ja": "シーン 04" },
+      "type": "image",
+      "image": "scene_maps/map_04.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_05": {
+      "name": { "zh": "场景 05", "en": "Scene 05", "ja": "シーン 05" },
+      "type": "image",
+      "image": "scene_maps/map_05.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_06": {
+      "name": { "zh": "场景 06", "en": "Scene 06", "ja": "シーン 06" },
+      "type": "image",
+      "image": "scene_maps/map_06.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_07": {
+      "name": { "zh": "场景 07", "en": "Scene 07", "ja": "シーン 07" },
+      "type": "image",
+      "image": "scene_maps/map_07.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_08": {
+      "name": { "zh": "场景 08", "en": "Scene 08", "ja": "シーン 08" },
+      "type": "image",
+      "image": "scene_maps/map_08.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_09": {
+      "name": { "zh": "场景 09", "en": "Scene 09", "ja": "シーン 09" },
+      "type": "image",
+      "image": "scene_maps/map_09.png",
+      "tileSize": 16,
+      "triggers": []
+    },
+    "map_0A": {
+      "name": { "zh": "伊甸镇", "en": "Eden Town", "ja": "エデン" },
+      "type": "image",
+      "image": "scene_maps/map_0A.png",
+      "tileSize": 16,
+      "triggers": [
+        {
+          "id": "m0A_exit",
+          "bounds": [[64, 96], [80, 112]],
+          "target": "world_map",
+          "label": { "zh": "出口 → 世界地图", "en": "Exit → World Map", "ja": "出口 → ワールドマップ" }
+        }
+      ]
+    }
+  }
+}

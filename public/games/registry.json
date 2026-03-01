@@ -1,0 +1,8 @@
+{
+  "games": [
+    {
+      "id": "metal_max",
+      "configPath": "/res/metal_max/game.json"
+    }
+  ]
+}
