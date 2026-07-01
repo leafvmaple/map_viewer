@@ -269,6 +269,10 @@ export class MapViewer {
     return this._showGrid;
   }
 
+  get gridVisible(): boolean {
+    return this._showGrid;
+  }
+
   get triggerLayer(): TriggerLayer {
     return this._triggerLayer;
   }

@@ -9,6 +9,7 @@ import { Toolbar } from './ui/Toolbar.js';
 import { TreasureList } from './ui/TreasureList.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
+import { Prefs } from './core/Prefs.js';
 import { i18n } from './i18n/index.js';
 import type { GameConfig, LangCode, LocalizedString, MapConfig, TriggerDef, ViewState } from './types';
 
@@ -207,6 +208,20 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       treasureList.setPois(mapConfig.pois ?? []);
     }
   }
+
+  // Re-apply persisted layer toggles so they survive a refresh / map change.
+  applyLayerPrefs();
+}
+
+/** Sync the live layers to the persisted toggle prefs (see Prefs / Toolbar). */
+function applyLayerPrefs(): void {
+  const p = Prefs.load();
+  // Labels first — toggling permanent labels rebuilds the trigger rectangles.
+  mapViewer.triggerLayer.setLabelsPermanent(p.labels);
+  mapViewer.triggerLayer.setVisible(!triggerEditor.active && p.triggers);
+  mapViewer.poiLayer.setVisible(p.treasures);
+  treasureList.setVisible(p.treasures && !triggerEditor.active);
+  if (p.grid !== mapViewer.gridVisible) mapViewer.toggleGrid();
 }
 
 function handleBreadcrumbNavigate(index: number): void {

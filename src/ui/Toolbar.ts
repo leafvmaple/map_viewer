@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/index.js';
+import { Prefs } from '../core/Prefs.js';
 import type { LangCode } from '../types';
 
 interface ToolbarOptions {
@@ -30,6 +31,14 @@ export class Toolbar {
     this._el = container;
     this._el.className = 'toolbar';
     this._options = options;
+
+    // Restore persisted layer-toggle states so they survive a refresh.
+    const prefs = Prefs.load();
+    this._triggersVisible = prefs.triggers;
+    this._labelsVisible = prefs.labels;
+    this._treasuresVisible = prefs.treasures;
+    this._gridVisible = prefs.grid;
+
     this._render();
   }
 
@@ -80,6 +89,7 @@ export class Toolbar {
     trigBtn.addEventListener('click', () => {
       this._triggersVisible = this._options.onTriggersToggle();
       trigBtn.classList.toggle('active', this._triggersVisible);
+      Prefs.save({ triggers: this._triggersVisible });
     });
 
     // Always-on labels toggle
@@ -87,6 +97,7 @@ export class Toolbar {
     labelsBtn.addEventListener('click', () => {
       this._labelsVisible = this._options.onLabelsToggle();
       labelsBtn.classList.toggle('active', this._labelsVisible);
+      Prefs.save({ labels: this._labelsVisible });
     });
 
     // Treasure (POI) toggle
@@ -94,6 +105,7 @@ export class Toolbar {
     treasureBtn.addEventListener('click', () => {
       this._treasuresVisible = this._options.onTreasuresToggle();
       treasureBtn.classList.toggle('active', this._treasuresVisible);
+      Prefs.save({ treasures: this._treasuresVisible });
     });
 
     // Grid toggle
@@ -101,6 +113,7 @@ export class Toolbar {
     gridBtn.addEventListener('click', () => {
       this._gridVisible = this._options.onGridToggle();
       gridBtn.classList.toggle('active', this._gridVisible);
+      Prefs.save({ grid: this._gridVisible });
     });
 
     // Edit mode toggle
