@@ -1176,14 +1176,14 @@
       "pois": [
         {
           "id": "world_map_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             1840,
             3072
           ],
           "label": {
-            "zh": "宝箱 F6",
-            "en": "Chest F6"
+            "zh": "金币 2010",
+            "en": "2010 Gold"
           },
           "item": "F6"
         },
@@ -1202,27 +1202,27 @@
         },
         {
           "id": "world_map_c02",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             3584,
             2032
           ],
           "label": {
-            "zh": "宝箱 F9",
-            "en": "Chest F9"
+            "zh": "金币 4880",
+            "en": "4880 Gold"
           },
           "item": "F9"
         },
         {
           "id": "world_map_c03",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             3648,
             144
           ],
           "label": {
-            "zh": "宝箱 F7",
-            "en": "Chest F7"
+            "zh": "金币 5500",
+            "en": "5500 Gold"
           },
           "item": "F7"
         },
@@ -1241,14 +1241,14 @@
         },
         {
           "id": "world_map_c05",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             2656,
             2496
           ],
           "label": {
-            "zh": "宝箱 F7",
-            "en": "Chest F7"
+            "zh": "金币 5500",
+            "en": "5500 Gold"
           },
           "item": "F7"
         },
@@ -1751,14 +1751,14 @@
       "pois": [
         {
           "id": "map_03_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             80,
             32
           ],
           "label": {
-            "zh": "宝箱 · 铅竹",
-            "en": "Chest · 铅竹"
+            "zh": "金币 8",
+            "en": "8 Gold"
           },
           "item": "F0"
         }
@@ -2384,14 +2384,14 @@
         },
         {
           "id": "map_0D_c01",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             128,
             128
           ],
           "label": {
-            "zh": "宝箱 · 铅竹",
-            "en": "Chest · 铅竹"
+            "zh": "金币 8",
+            "en": "8 Gold"
           },
           "item": "F0"
         }
@@ -10126,27 +10126,27 @@
       "pois": [
         {
           "id": "map_8B_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             48,
             64
           ],
           "label": {
-            "zh": "宝箱 F2",
-            "en": "Chest F2"
+            "zh": "金币 60",
+            "en": "60 Gold"
           },
           "item": "F2"
         },
         {
           "id": "map_8B_c01",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             416,
             432
           ],
           "label": {
-            "zh": "宝箱 F3",
-            "en": "Chest F3"
+            "zh": "金币 110",
+            "en": "110 Gold"
           },
           "item": "F3"
         },
@@ -10291,14 +10291,14 @@
         },
         {
           "id": "map_8C_c02",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             592,
             400
           ],
           "label": {
-            "zh": "宝箱 F4",
-            "en": "Chest F4"
+            "zh": "金币 80",
+            "en": "80 Gold"
           },
           "item": "F4"
         }
@@ -11186,14 +11186,14 @@
       "pois": [
         {
           "id": "map_99_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             144,
             224
           ],
           "label": {
-            "zh": "宝箱 F5",
-            "en": "Chest F5"
+            "zh": "金币 650",
+            "en": "650 Gold"
           },
           "item": "F5"
         },
@@ -12999,14 +12999,14 @@
       "pois": [
         {
           "id": "map_B1_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             48,
             384
           ],
           "label": {
-            "zh": "宝箱 F1",
-            "en": "Chest F1"
+            "zh": "金币 1550",
+            "en": "1550 Gold"
           },
           "item": "F1"
         }
@@ -16281,27 +16281,27 @@
       "pois": [
         {
           "id": "map_D3_c00",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             176,
             368
           ],
           "label": {
-            "zh": "宝箱 F7",
-            "en": "Chest F7"
+            "zh": "金币 5500",
+            "en": "5500 Gold"
           },
           "item": "F7"
         },
         {
           "id": "map_D3_c01",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             624,
             304
           ],
           "label": {
-            "zh": "宝箱 F8",
-            "en": "Chest F8"
+            "zh": "金币 1080",
+            "en": "1080 Gold"
           },
           "item": "F8"
         },
@@ -16433,14 +16433,14 @@
         },
         {
           "id": "map_D4_c01",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             304,
             32
           ],
           "label": {
-            "zh": "宝箱 F8",
-            "en": "Chest F8"
+            "zh": "金币 1080",
+            "en": "1080 Gold"
           },
           "item": "F8"
         },
@@ -16647,14 +16647,14 @@
         },
         {
           "id": "map_D8_c01",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             416,
             64
           ],
           "label": {
-            "zh": "宝箱 FA",
-            "en": "Chest FA"
+            "zh": "金币 498",
+            "en": "498 Gold"
           },
           "item": "FA"
         }
@@ -17476,14 +17476,14 @@
         },
         {
           "id": "map_E5_c03",
-          "kind": "treasure",
+          "kind": "gold",
           "pos": [
             656,
             368
           ],
           "label": {
-            "zh": "宝箱 FB",
-            "en": "Chest FB"
+            "zh": "随机金币",
+            "en": "Random gold"
           },
           "item": "FB"
         }
