@@ -15,6 +15,7 @@ import type { GameConfig, LangCode, LocalizedString, MapConfig, TriggerDef, View
 
 const gameLoader = new GameLoader();
 const navStack = new NavigationStack();
+const lastView = new Map<string, ViewState>();
 
 let currentGameConfig: GameConfig | null = null;
 let mapViewer: MapViewer;
@@ -181,10 +182,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
 }
 
 function handleBreadcrumbNavigate(index: number): void {
-  // Save current view state before leaving
-  if (navStack.current) {
-    navStack.saveViewState(mapViewer.getViewState());
-  }
+  saveCurrentView();
   const entry = navStack.goTo(index);
   if (entry && currentGameConfig) {
     mapViewer.loadMap(entry.mapId, entry.viewState);
@@ -193,10 +191,7 @@ function handleBreadcrumbNavigate(index: number): void {
 }
 
 function handleBack(): void {
-  // Save current view state before leaving
-  if (navStack.current) {
-    navStack.saveViewState(mapViewer.getViewState());
-  }
+  saveCurrentView();
   const entry = navStack.back();
   if (entry && currentGameConfig) {
     mapViewer.loadMap(entry.mapId, entry.viewState);
@@ -288,18 +283,30 @@ function handleMapAdd(mapId: string, name: LocalizedString, imagePath: string): 
 
 // ─── Navigation ─────────────────────────────────────────────
 
+function viewKey(gameId: string, mapId: string): string {
+  return `${gameId}/${mapId}`;
+}
+
+/** Persist the current map's view — to the nav stack and the per-map cache. */
+function saveCurrentView(): void {
+  if (!currentGameConfig || !mapViewer.currentMapId) return;
+  const vs = mapViewer.getViewState();
+  navStack.saveViewState(vs);
+  lastView.set(viewKey(currentGameConfig.id, mapViewer.currentMapId), vs);
+}
+
 async function navigateToMap(gameId: string, mapId: string, viewState?: ViewState): Promise<void> {
-  // Save current view state before leaving
-  if (navStack.current) {
-    navStack.saveViewState(mapViewer.getViewState());
-  }
+  saveCurrentView(); // remember where we were on the map we're leaving
 
   // World map is always the root — reset stack when navigating back to it
   if (currentGameConfig && mapId === currentGameConfig.defaultMap) {
     navStack.clear();
   }
   navStack.push(gameId, mapId);
-  await mapViewer.loadMap(mapId, viewState);
+
+  // Restore this map's last view when the caller didn't pass one (first visit → fitBounds).
+  const view = viewState ?? lastView.get(viewKey(gameId, mapId));
+  await mapViewer.loadMap(mapId, view);
   updateHash();
 }
 

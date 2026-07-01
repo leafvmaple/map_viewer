@@ -24,7 +24,7 @@
   "editor.delete": "削除",
   "editor.exportJson": "JSON出力",
   "editor.exportAll": "game.json出力",
-  "editor.instructions": "マップ上でドラッグしてトリガーゾーンを作成",
+  "editor.instructions": "空白をドラッグで作成 · ゾーンをドラッグで移動 · 角でリサイズ · Ctrl+Zで元に戻す",
   "editor.editTrigger": "トリガー編集",
   "editor.newTrigger": "新規トリガー",
   "trigger.unnamed": "名称未設定",

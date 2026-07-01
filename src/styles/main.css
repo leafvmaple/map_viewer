@@ -590,6 +590,10 @@ html, body {
   background: rgba(244, 67, 54, 0.15);
 }
 
+/* Editor interaction cursors */
+.trigger-edit-rect { cursor: move; }
+.trigger-handle { cursor: pointer; }
+
 /* ─── Scrollbar ─────────────────────────────────────────────── */
 
 ::-webkit-scrollbar {

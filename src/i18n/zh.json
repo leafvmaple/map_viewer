@@ -24,7 +24,7 @@
   "editor.delete": "删除",
   "editor.exportJson": "导出 JSON",
   "editor.exportAll": "导出 game.json",
-  "editor.instructions": "在地图上点击拖拽以创建触发区域",
+  "editor.instructions": "拖拽空白处绘制 · 拖拽区域移动 · 拖角缩放 · Ctrl+Z 撤销",
   "editor.editTrigger": "编辑触发区域",
   "editor.newTrigger": "新建触发区域",
   "trigger.unnamed": "未命名触发点",
