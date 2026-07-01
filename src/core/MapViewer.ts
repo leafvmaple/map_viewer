@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { TriggerLayer } from './TriggerLayer.js';
+import { PoiLayer } from './PoiLayer.js';
 import { i18n } from '../i18n/index.js';
 import type { GameConfig, MapConfig, TriggerDef, ViewState } from '../types';
 
@@ -20,6 +21,7 @@ interface ImageDimensions {
 export class MapViewer {
   private _map: L.Map;
   private _triggerLayer: TriggerLayer;
+  private _poiLayer: PoiLayer;
   private _onTriggerClick: (trigger: TriggerDef) => void;
   private _onMapLoaded: (mapId: string, mapConfig: MapConfig) => void;
 
@@ -54,6 +56,9 @@ export class MapViewer {
     this._triggerLayer = new TriggerLayer(this._map, {
       onTriggerClick: (trigger) => this._onTriggerClick(trigger),
     });
+
+    // Points of interest (treasure chests, etc.)
+    this._poiLayer = new PoiLayer(this._map);
 
     // Pixel coordinate display
     this._coordControl = new L.Control({ position: 'bottomleft' });
@@ -114,6 +119,7 @@ export class MapViewer {
     }
 
     this._triggerLayer.setTriggers(mapConfig.triggers ?? []);
+    this._poiLayer.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
     this._onMapLoaded(mapId, mapConfig);
   }
 
@@ -203,6 +209,7 @@ export class MapViewer {
       this._imageOverlay = null;
     }
     this._triggerLayer.clear();
+    this._poiLayer.clear();
     this._removeGrid();
     this._currentMapId = null;
     this._currentMapConfig = null;
@@ -257,6 +264,10 @@ export class MapViewer {
 
   get triggerLayer(): TriggerLayer {
     return this._triggerLayer;
+  }
+
+  get poiLayer(): PoiLayer {
+    return this._poiLayer;
   }
 
   get leafletMap(): L.Map {

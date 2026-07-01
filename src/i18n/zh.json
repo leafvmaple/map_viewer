@@ -44,5 +44,6 @@
   "sidebar.mapIdRequired": "地图 ID 不能为空",
   "toolbar.labels": "标签",
   "toolbar.labelsShow": "显示标签",
-  "toolbar.labelsHide": "隐藏标签"
+  "toolbar.labelsHide": "隐藏标签",
+  "toolbar.treasures": "宝箱"
 }

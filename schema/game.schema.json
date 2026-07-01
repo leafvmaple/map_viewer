@@ -77,6 +77,11 @@
         "triggers": {
           "type": "array",
           "items": { "$ref": "#/$defs/trigger" }
+        },
+        "pois": {
+          "type": "array",
+          "description": "Points of interest (treasure chests, etc.) shown as icons.",
+          "items": { "$ref": "#/$defs/poi" }
         }
       }
     },
@@ -98,6 +103,25 @@
           "description": "Key of the destination map within this same game's `maps`. Must reference an existing map (referential integrity is not expressible in JSON Schema — validate separately)."
         },
         "label": { "$ref": "#/$defs/localizedString" }
+      }
+    },
+    "poi": {
+      "type": "object",
+      "description": "A point of interest on a map (e.g. a treasure chest).",
+      "required": ["id", "kind", "pos"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "description": "POI category, e.g. \"treasure\"." },
+        "pos": {
+          "type": "array",
+          "description": "Pixel position [x, y] (top-left of the tile), full-resolution image space.",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        },
+        "label": { "$ref": "#/$defs/localizedString" },
+        "item": { "type": "string", "description": "Optional item id/hex for treasure POIs." }
       }
     },
     "bounds": {

@@ -44,5 +44,6 @@
   "sidebar.mapIdRequired": "Map ID is required",
   "toolbar.labels": "Labels",
   "toolbar.labelsShow": "Show Labels",
-  "toolbar.labelsHide": "Hide Labels"
+  "toolbar.labelsHide": "Hide Labels",
+  "toolbar.treasures": "Treasures"
 }

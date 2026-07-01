@@ -590,6 +590,27 @@ html, body {
   background: rgba(244, 67, 54, 0.15);
 }
 
+/* ─── POI markers (treasures, etc.) ─────────────────────────── */
+
+.poi-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  cursor: help;
+}
+
+.poi-tooltip {
+  background: rgba(22, 33, 62, 0.95) !important;
+  border: 1px solid #ffb300 !important;
+  color: #ffe082 !important;
+  border-radius: 4px !important;
+  padding: 3px 7px !important;
+  font-size: 12px !important;
+}
+
 /* Editor interaction cursors */
 .trigger-edit-rect { cursor: move; }
 .trigger-handle { cursor: pointer; }

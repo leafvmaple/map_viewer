@@ -44,5 +44,6 @@
   "sidebar.mapIdRequired": "マップIDは必須です",
   "toolbar.labels": "ラベル",
   "toolbar.labelsShow": "ラベル表示",
-  "toolbar.labelsHide": "ラベル非表示"
+  "toolbar.labelsHide": "ラベル非表示",
+  "toolbar.treasures": "宝箱"
 }

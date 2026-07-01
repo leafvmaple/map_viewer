@@ -54,6 +54,7 @@ async function init(): Promise<void> {
     onTriggersToggle: () => mapViewer.triggerLayer.toggle(),
     onLabelsToggle: () =>
       mapViewer.triggerLayer.setLabelsPermanent(!mapViewer.triggerLayer.labelsPermanent),
+    onTreasuresToggle: () => mapViewer.poiLayer.toggle(),
     onGridToggle: () => mapViewer.toggleGrid(),
     onEditModeToggle: handleEditModeToggle,
     onBack: handleBack,
@@ -352,6 +353,7 @@ function refreshAllLabels(): void {
   breadcrumb.refreshLabels(navStack.path);
   toolbar.refreshLabels();
   mapViewer.triggerLayer.refreshLabels();
+  mapViewer.poiLayer.refreshLabels();
   mapViewer.refreshCoordLabel();
 
   // Refresh game names

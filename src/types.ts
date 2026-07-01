@@ -21,6 +21,19 @@ export interface TriggerDef {
   label: LocalizedString;
 }
 
+/** A point of interest on a map (e.g. a treasure chest) */
+export interface PoiDef {
+  id: string;
+  /** POI category, e.g. "treasure" */
+  kind: string;
+  /** Pixel position [x, y] (top-left of the tile) */
+  pos: [number, number];
+  /** Display label */
+  label?: LocalizedString;
+  /** Optional item id/hex for treasure POIs */
+  item?: string;
+}
+
 /** Map rendering type */
 export type MapType = 'image' | 'tiles';
 
@@ -51,6 +64,8 @@ export interface MapConfig {
   thumbnail?: string;
   /** Trigger definitions */
   triggers: TriggerDef[];
+  /** Points of interest (treasure chests, etc.) */
+  pois?: PoiDef[];
 }
 
 /** Full game configuration (game.json) */

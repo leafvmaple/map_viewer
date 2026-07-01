@@ -5,6 +5,7 @@ interface ToolbarOptions {
   onLanguageChange: (lang: LangCode) => void;
   onTriggersToggle: () => boolean;
   onLabelsToggle: () => boolean;
+  onTreasuresToggle: () => boolean;
   onGridToggle: () => boolean;
   onEditModeToggle: () => boolean;
   onBack: () => void;
@@ -19,6 +20,7 @@ export class Toolbar {
   private _options: ToolbarOptions;
   private _triggersVisible = true;
   private _labelsVisible = false;
+  private _treasuresVisible = true;
   private _gridVisible = false;
   private _editMode = false;
   private _backEnabled = false;
@@ -50,6 +52,9 @@ export class Toolbar {
         </button>
         <button class="toolbar-btn btn-labels" title="${i18n.t('toolbar.labelsShow')}">
           🏷 ${i18n.t('toolbar.labels')}
+        </button>
+        <button class="toolbar-btn btn-treasure" title="${i18n.t('toolbar.treasures')}">
+          📦 ${i18n.t('toolbar.treasures')}
         </button>
         <button class="toolbar-btn btn-grid" title="${i18n.t('toolbar.grid')}">
           # ${i18n.t('toolbar.grid')}
@@ -84,6 +89,13 @@ export class Toolbar {
       labelsBtn.classList.toggle('active', this._labelsVisible);
     });
 
+    // Treasure (POI) toggle
+    const treasureBtn = this._el.querySelector('.btn-treasure')!;
+    treasureBtn.addEventListener('click', () => {
+      this._treasuresVisible = this._options.onTreasuresToggle();
+      treasureBtn.classList.toggle('active', this._treasuresVisible);
+    });
+
     // Grid toggle
     const gridBtn = this._el.querySelector('.btn-grid')!;
     gridBtn.addEventListener('click', () => {
@@ -113,6 +125,7 @@ export class Toolbar {
     this._backBtn.disabled = !this._backEnabled;
     this._el.querySelector('.btn-triggers')?.classList.toggle('active', this._triggersVisible);
     this._el.querySelector('.btn-labels')?.classList.toggle('active', this._labelsVisible);
+    this._el.querySelector('.btn-treasure')?.classList.toggle('active', this._treasuresVisible);
     this._el.querySelector('.btn-grid')?.classList.toggle('active', this._gridVisible);
 
     const editBtn = this._el.querySelector('.btn-edit');
@@ -146,6 +159,9 @@ export class Toolbar {
 
     const labelsBtn = this._el.querySelector('.btn-labels');
     if (labelsBtn) labelsBtn.textContent = `🏷 ${i18n.t('toolbar.labels')}`;
+
+    const treasureBtn = this._el.querySelector('.btn-treasure');
+    if (treasureBtn) treasureBtn.textContent = `📦 ${i18n.t('toolbar.treasures')}`;
 
     const gridBtn = this._el.querySelector('.btn-grid');
     if (gridBtn) gridBtn.textContent = `# ${i18n.t('toolbar.grid')}`;
