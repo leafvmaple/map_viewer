@@ -1,0 +1,14 @@
+.git
+.gitignore
+node_modules
+dist
+# game data (ROM-ripped) is mounted from the NAS at runtime, never baked in
+res
+# dev / meta / local
+*.log
+.vscode
+.claude
+scratchpad
+DEPLOY.md
+README.md
+CONTRACT.md

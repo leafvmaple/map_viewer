@@ -1,0 +1,16 @@
+services:
+  map-viewer:
+    # Built + pushed to the Gitea container registry by CI (.gitea/workflows/ci.yml).
+    # The NAS never builds — it just `docker compose pull && up -d`. Set MAP_IMAGE
+    # in .env to the registry path, e.g.
+    #   10.0.0.20:42197/leafvmaple/map_viewer:latest
+    image: ${MAP_IMAGE:?set MAP_IMAGE to the Gitea registry image path in .env}
+    container_name: map-viewer
+    restart: unless-stopped
+    ports:
+      - "42199:80"                 # open http://<NAS-IP>:42199 from phone/PC
+    volumes:
+      # Game data (res/ images + game.json, games/registry.json). Read-only — the
+      # container only serves it. Set MAP_DATA_ROOT to the NAS dir that holds
+      # res/ and games/. Editing that data needs no image rebuild.
+      - ${MAP_DATA_ROOT:?set MAP_DATA_ROOT to the NAS dir holding res/ + games/}:/data:ro
