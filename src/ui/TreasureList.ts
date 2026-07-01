@@ -24,9 +24,9 @@ export class TreasureList {
     document.getElementById('app')?.appendChild(this._el);
   }
 
-  /** Update the list for the current map (treasures only). */
+  /** Update the list for the current map (treasure + gold chests). */
   setPois(pois: PoiDef[]): void {
-    this._pois = (pois ?? []).filter(p => p.kind === 'treasure');
+    this._pois = (pois ?? []).filter(p => p.kind === 'treasure' || p.kind === 'gold');
     this._render();
   }
 

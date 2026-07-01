@@ -35,7 +35,7 @@ export class PoiLayer {
       const [x, y] = poi.pos;
       // Pixel (x, y) tile top-left → tile centre → LatLng(-y, x) in Simple CRS.
       const center: L.LatLngTuple = [-(y + half), x + half];
-      const glyph = poi.kind === 'treasure' ? '📦' : '📍';
+      const glyph = poi.kind === 'gold' ? '💰' : poi.kind === 'treasure' ? '📦' : '📍';
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}`,
         html: `<span class="poi-glyph">${glyph}</span>`,
