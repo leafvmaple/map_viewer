@@ -140,18 +140,25 @@ export class MapViewer {
       className: 'map-image pixelated',
     }).addTo(this._map);
 
-    // Set maxBounds FIRST so the subsequent view set respects it
-    this._map.setMaxBounds([
-      [-height - 200, -200],
-      [200, width + 200],
-    ]);
-
-    // Restore saved view or fit to full map
+    // Position the view FIRST (no animation), then size maxBounds around it.
     if (viewState) {
       this._map.setView(viewState.center, viewState.zoom, { animate: false });
     } else {
-      this._map.fitBounds(bounds);
+      this._map.fitBounds(bounds, { animate: false });
     }
+
+    // maxBounds must stay larger than the viewport — otherwise Leaflet's
+    // panInsideBounds keeps yanking the view back and forth (visible jitter,
+    // especially on tall/narrow maps that fit at a low zoom). Size the margin to
+    // at least half a viewport in map pixels so the viewport always fits inside.
+    const scale = Math.pow(2, this._map.getZoom());
+    const size = this._map.getSize();
+    const marginX = Math.max(200, (size.x / scale) * 0.5);
+    const marginY = Math.max(200, (size.y / scale) * 0.5);
+    this._map.setMaxBounds([
+      [-height - marginY, -marginX],
+      [marginY, width + marginX],
+    ]);
 
     this._currentDims = { width, height };
 
