@@ -12,6 +12,7 @@ export class PoiLayer {
   private _pois: PoiDef[] = [];
   private _tileSize = 16;
   private _visible = true;
+  private _markers = new Map<string, L.Marker>();
 
   constructor(leafletMap: L.Map) {
     this._map = leafletMap;
@@ -27,15 +28,17 @@ export class PoiLayer {
 
   private _render(): void {
     this._layerGroup.clearLayers();
+    this._markers.clear();
     const half = this._tileSize / 2;
 
     for (const poi of this._pois) {
       const [x, y] = poi.pos;
       // Pixel (x, y) tile top-left → tile centre → LatLng(-y, x) in Simple CRS.
       const center: L.LatLngTuple = [-(y + half), x + half];
+      const glyph = poi.kind === 'treasure' ? '📦' : '📍';
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}`,
-        html: poi.kind === 'treasure' ? '📦' : '📍',
+        html: `<span class="poi-glyph">${glyph}</span>`,
         iconSize: [18, 18],
         iconAnchor: [9, 9],
       });
@@ -46,6 +49,22 @@ export class PoiLayer {
         offset: [0, -6],
       });
       this._layerGroup.addLayer(marker);
+      this._markers.set(poi.id, marker);
+    }
+  }
+
+  /** Pan to a POI (keeping zoom) and briefly flash its marker. */
+  focusPoi(poiId: string): void {
+    const poi = this._pois.find(p => p.id === poiId);
+    if (!poi) return;
+    const half = this._tileSize / 2;
+    this._map.panTo([-(poi.pos[1] + half), poi.pos[0] + half]);
+    const glyph = this._markers.get(poiId)?.getElement()?.querySelector('.poi-glyph') as HTMLElement | null;
+    if (glyph) {
+      glyph.classList.remove('poi-flash');
+      void glyph.offsetWidth; // restart the animation
+      glyph.classList.add('poi-flash');
+      setTimeout(() => glyph.classList.remove('poi-flash'), 1600);
     }
   }
 
@@ -83,6 +102,7 @@ export class PoiLayer {
   /** Remove all POI markers. */
   clear(): void {
     this._layerGroup.clearLayers();
+    this._markers.clear();
     this._pois = [];
   }
 }

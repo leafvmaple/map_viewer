@@ -6,6 +6,7 @@ import { TriggerEditor } from './editor/TriggerEditor.js';
 import { Sidebar } from './ui/Sidebar.js';
 import { Breadcrumb } from './ui/Breadcrumb.js';
 import { Toolbar } from './ui/Toolbar.js';
+import { TreasureList } from './ui/TreasureList.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
 import { i18n } from './i18n/index.js';
@@ -23,6 +24,7 @@ let triggerEditor: TriggerEditor;
 let sidebar: Sidebar;
 let breadcrumb: Breadcrumb;
 let toolbar: Toolbar;
+let treasureList: TreasureList;
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
@@ -54,10 +56,18 @@ async function init(): Promise<void> {
     onTriggersToggle: () => mapViewer.triggerLayer.toggle(),
     onLabelsToggle: () =>
       mapViewer.triggerLayer.setLabelsPermanent(!mapViewer.triggerLayer.labelsPermanent),
-    onTreasuresToggle: () => mapViewer.poiLayer.toggle(),
+    onTreasuresToggle: () => {
+      const visible = mapViewer.poiLayer.toggle();
+      treasureList.setVisible(visible);
+      return visible;
+    },
     onGridToggle: () => mapViewer.toggleGrid(),
     onEditModeToggle: handleEditModeToggle,
     onBack: handleBack,
+  });
+
+  treasureList = new TreasureList({
+    onSelect: (poi) => mapViewer.poiLayer.focusPoi(poi.id),
   });
 
   // Subscribe to nav stack changes
@@ -178,6 +188,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       }
 
       triggerEditor.setCurrentMap(mapId, triggers, mapConfig.tileSize);
+      treasureList.setPois(mapConfig.pois ?? []);
     }
   }
 }
@@ -208,6 +219,8 @@ function handleEditModeToggle(): boolean {
   const active = triggerEditor.toggle();
   // Hide normal trigger layer during edit mode to avoid visual overlap
   mapViewer.triggerLayer.setVisible(!active);
+  // Hide the treasure list in edit mode (it shares the right side with the editor panel)
+  treasureList.setVisible(!active && mapViewer.poiLayer.visible);
   return active;
 }
 
@@ -354,6 +367,7 @@ function refreshAllLabels(): void {
   toolbar.refreshLabels();
   mapViewer.triggerLayer.refreshLabels();
   mapViewer.poiLayer.refreshLabels();
+  treasureList.refreshLabels();
   mapViewer.refreshCoordLabel();
 
   // Refresh game names

@@ -611,6 +611,94 @@ html, body {
   font-size: 12px !important;
 }
 
+.poi-glyph {
+  display: inline-block;
+  line-height: 1;
+}
+
+.poi-glyph.poi-flash {
+  animation: poiFlash 0.5s ease-in-out 3;
+}
+
+@keyframes poiFlash {
+  50% { transform: scale(1.8); filter: drop-shadow(0 0 6px #ffb300); }
+}
+
+/* ─── Treasure list panel (right) ───────────────────────────── */
+
+.treasure-panel {
+  position: absolute;
+  top: 80px;
+  right: 16px;
+  width: 210px;
+  max-height: calc(100vh - 160px);
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  z-index: 1050;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.treasure-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #0f3460;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+}
+
+.treasure-count {
+  margin-left: auto;
+  color: #8899aa;
+  font-weight: 400;
+}
+
+.treasure-panel-body {
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.treasure-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.treasure-item:hover {
+  background: rgba(255, 179, 0, 0.12);
+}
+
+.treasure-idx {
+  color: #667788;
+  min-width: 16px;
+  text-align: right;
+}
+
+.treasure-name {
+  flex: 1;
+  color: #ffe082;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.treasure-pos {
+  color: #667788;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 11px;
+}
+
 /* Editor interaction cursors */
 .trigger-edit-rect { cursor: move; }
 .trigger-handle { cursor: pointer; }

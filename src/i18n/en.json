@@ -45,5 +45,6 @@
   "toolbar.labels": "Labels",
   "toolbar.labelsShow": "Show Labels",
   "toolbar.labelsHide": "Hide Labels",
-  "toolbar.treasures": "Treasures"
+  "toolbar.treasures": "Treasures",
+  "treasure.listTitle": "Treasures"
 }

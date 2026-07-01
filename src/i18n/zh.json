@@ -45,5 +45,6 @@
   "toolbar.labels": "标签",
   "toolbar.labelsShow": "显示标签",
   "toolbar.labelsHide": "隐藏标签",
-  "toolbar.treasures": "宝箱"
+  "toolbar.treasures": "宝箱",
+  "treasure.listTitle": "宝箱列表"
 }
