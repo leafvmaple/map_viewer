@@ -1172,6 +1172,125 @@
             "en": "→ 地图 EE"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "world_map_c00",
+          "kind": "treasure",
+          "pos": [
+            1840,
+            3072
+          ],
+          "label": {
+            "zh": "宝箱 F6",
+            "en": "Chest F6"
+          },
+          "item": "F6"
+        },
+        {
+          "id": "world_map_c01",
+          "kind": "treasure",
+          "pos": [
+            2240,
+            3584
+          ],
+          "label": {
+            "zh": "宝箱 30",
+            "en": "Chest 30"
+          },
+          "item": "30"
+        },
+        {
+          "id": "world_map_c02",
+          "kind": "treasure",
+          "pos": [
+            3584,
+            2032
+          ],
+          "label": {
+            "zh": "宝箱 F9",
+            "en": "Chest F9"
+          },
+          "item": "F9"
+        },
+        {
+          "id": "world_map_c03",
+          "kind": "treasure",
+          "pos": [
+            3648,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 F7",
+            "en": "Chest F7"
+          },
+          "item": "F7"
+        },
+        {
+          "id": "world_map_c04",
+          "kind": "treasure",
+          "pos": [
+            1792,
+            1280
+          ],
+          "label": {
+            "zh": "宝箱 8E",
+            "en": "Chest 8E"
+          },
+          "item": "8E"
+        },
+        {
+          "id": "world_map_c05",
+          "kind": "treasure",
+          "pos": [
+            2656,
+            2496
+          ],
+          "label": {
+            "zh": "宝箱 F7",
+            "en": "Chest F7"
+          },
+          "item": "F7"
+        },
+        {
+          "id": "world_map_c06",
+          "kind": "treasure",
+          "pos": [
+            560,
+            3744
+          ],
+          "label": {
+            "zh": "宝箱 6F",
+            "en": "Chest 6F"
+          },
+          "item": "6F"
+        },
+        {
+          "id": "world_map_c07",
+          "kind": "treasure",
+          "pos": [
+            1152,
+            3728
+          ],
+          "label": {
+            "zh": "宝箱 54",
+            "en": "Chest 54"
+          },
+          "item": "54"
+        },
+        {
+          "id": "world_map_c08",
+          "kind": "treasure",
+          "pos": [
+            1088,
+            1600
+          ],
+          "label": {
+            "zh": "宝箱 78",
+            "en": "Chest 78"
+          },
+          "item": "78"
+        }
       ]
     },
     "map_01": {
@@ -1627,6 +1746,21 @@
             "zh": "出口 → 拉多镇",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_03_c00",
+          "kind": "treasure",
+          "pos": [
+            80,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 F0",
+            "en": "Chest F0"
+          },
+          "item": "F0"
         }
       ]
     },
@@ -2233,6 +2367,34 @@
             "en": "Exit"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_0D_c00",
+          "kind": "treasure",
+          "pos": [
+            128,
+            112
+          ],
+          "label": {
+            "zh": "宝箱 A9",
+            "en": "Chest A9"
+          },
+          "item": "A9"
+        },
+        {
+          "id": "map_0D_c01",
+          "kind": "treasure",
+          "pos": [
+            128,
+            128
+          ],
+          "label": {
+            "zh": "宝箱 F0",
+            "en": "Chest F0"
+          },
+          "item": "F0"
+        }
       ]
     },
     "map_0E": {
@@ -2379,6 +2541,47 @@
             "zh": "→ 地图 0F",
             "en": "→ 地图 0F"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_10_c00",
+          "kind": "treasure",
+          "pos": [
+            16,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 1D",
+            "en": "Chest 1D"
+          },
+          "item": "1D"
+        },
+        {
+          "id": "map_10_c01",
+          "kind": "treasure",
+          "pos": [
+            32,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 11",
+            "en": "Chest 11"
+          },
+          "item": "11"
+        },
+        {
+          "id": "map_10_c02",
+          "kind": "treasure",
+          "pos": [
+            48,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 A3",
+            "en": "Chest A3"
+          },
+          "item": "A3"
         }
       ]
     },
@@ -3349,6 +3552,34 @@
             "en": "→ 地图 1E"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_1F_c00",
+          "kind": "treasure",
+          "pos": [
+            192,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 9E",
+            "en": "Chest 9E"
+          },
+          "item": "9E"
+        },
+        {
+          "id": "map_1F_c01",
+          "kind": "treasure",
+          "pos": [
+            176,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 B5",
+            "en": "Chest B5"
+          },
+          "item": "B5"
+        }
       ]
     },
     "map_20": {
@@ -4308,6 +4539,21 @@
             "en": "→ 地图 31"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_30_c00",
+          "kind": "treasure",
+          "pos": [
+            384,
+            176
+          ],
+          "label": {
+            "zh": "宝箱 B8",
+            "en": "Chest B8"
+          },
+          "item": "B8"
+        }
       ]
     },
     "map_31": {
@@ -4369,6 +4615,21 @@
             "zh": "→ 地图 33",
             "en": "→ 地图 33"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_32_c00",
+          "kind": "treasure",
+          "pos": [
+            48,
+            48
+          ],
+          "label": {
+            "zh": "宝箱 D6",
+            "en": "Chest D6"
+          },
+          "item": "D6"
         }
       ]
     },
@@ -9094,6 +9355,34 @@
             "en": "→ 地图 7B"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_7C_c00",
+          "kind": "treasure",
+          "pos": [
+            256,
+            112
+          ],
+          "label": {
+            "zh": "宝箱 A6",
+            "en": "Chest A6"
+          },
+          "item": "A6"
+        },
+        {
+          "id": "map_7C_c01",
+          "kind": "treasure",
+          "pos": [
+            256,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 AA",
+            "en": "Chest AA"
+          },
+          "item": "AA"
+        }
       ]
     },
     "map_7D": {
@@ -9285,6 +9574,21 @@
             "en": "→ 地图 80"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_81_c00",
+          "kind": "treasure",
+          "pos": [
+            144,
+            336
+          ],
+          "label": {
+            "zh": "宝箱 46",
+            "en": "Chest 46"
+          },
+          "item": "46"
+        }
       ]
     },
     "map_82": {
@@ -9449,6 +9753,34 @@
             "zh": "出口 → 地图 82",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_84_c00",
+          "kind": "treasure",
+          "pos": [
+            112,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 BF",
+            "en": "Chest BF"
+          },
+          "item": "BF"
+        },
+        {
+          "id": "map_84_c01",
+          "kind": "treasure",
+          "pos": [
+            128,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 A8",
+            "en": "Chest A8"
+          },
+          "item": "A8"
         }
       ]
     },
@@ -9744,6 +10076,21 @@
             "en": "→ 地图 89"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_8A_c00",
+          "kind": "treasure",
+          "pos": [
+            48,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 A9",
+            "en": "Chest A9"
+          },
+          "item": "A9"
+        }
       ]
     },
     "map_8B": {
@@ -9774,6 +10121,60 @@
             "zh": "→ 地图 8A",
             "en": "→ 地图 8A"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_8B_c00",
+          "kind": "treasure",
+          "pos": [
+            48,
+            64
+          ],
+          "label": {
+            "zh": "宝箱 F2",
+            "en": "Chest F2"
+          },
+          "item": "F2"
+        },
+        {
+          "id": "map_8B_c01",
+          "kind": "treasure",
+          "pos": [
+            416,
+            432
+          ],
+          "label": {
+            "zh": "宝箱 F3",
+            "en": "Chest F3"
+          },
+          "item": "F3"
+        },
+        {
+          "id": "map_8B_c02",
+          "kind": "treasure",
+          "pos": [
+            432,
+            432
+          ],
+          "label": {
+            "zh": "宝箱 B2",
+            "en": "Chest B2"
+          },
+          "item": "B2"
+        },
+        {
+          "id": "map_8B_c03",
+          "kind": "treasure",
+          "pos": [
+            400,
+            368
+          ],
+          "label": {
+            "zh": "宝箱 0A",
+            "en": "Chest 0A"
+          },
+          "item": "0A"
         }
       ]
     },
@@ -9860,6 +10261,47 @@
             "en": "→ 地图 8D"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_8C_c00",
+          "kind": "treasure",
+          "pos": [
+            208,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 A1",
+            "en": "Chest A1"
+          },
+          "item": "A1"
+        },
+        {
+          "id": "map_8C_c01",
+          "kind": "treasure",
+          "pos": [
+            304,
+            240
+          ],
+          "label": {
+            "zh": "宝箱 CD",
+            "en": "Chest CD"
+          },
+          "item": "CD"
+        },
+        {
+          "id": "map_8C_c02",
+          "kind": "treasure",
+          "pos": [
+            592,
+            400
+          ],
+          "label": {
+            "zh": "宝箱 F4",
+            "en": "Chest F4"
+          },
+          "item": "F4"
+        }
       ]
     },
     "map_8D": {
@@ -9945,6 +10387,21 @@
             "en": "→ 地图 8C"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_8D_c00",
+          "kind": "treasure",
+          "pos": [
+            336,
+            320
+          ],
+          "label": {
+            "zh": "宝箱 2B",
+            "en": "Chest 2B"
+          },
+          "item": "2B"
+        }
       ]
     },
     "map_8E": {
@@ -10011,6 +10468,21 @@
             "zh": "→ 地图 8F",
             "en": "→ 地图 8F"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_8E_c00",
+          "kind": "treasure",
+          "pos": [
+            144,
+            240
+          ],
+          "label": {
+            "zh": "宝箱 65",
+            "en": "Chest 65"
+          },
+          "item": "65"
         }
       ]
     },
@@ -10574,6 +11046,21 @@
             "en": "→ 地图 97"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_98_c00",
+          "kind": "treasure",
+          "pos": [
+            128,
+            48
+          ],
+          "label": {
+            "zh": "宝箱 B7",
+            "en": "Chest B7"
+          },
+          "item": "B7"
+        }
       ]
     },
     "map_99": {
@@ -10694,6 +11181,47 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_99_c00",
+          "kind": "treasure",
+          "pos": [
+            144,
+            224
+          ],
+          "label": {
+            "zh": "宝箱 F5",
+            "en": "Chest F5"
+          },
+          "item": "F5"
+        },
+        {
+          "id": "map_99_c01",
+          "kind": "treasure",
+          "pos": [
+            192,
+            224
+          ],
+          "label": {
+            "zh": "宝箱 32",
+            "en": "Chest 32"
+          },
+          "item": "32"
+        },
+        {
+          "id": "map_99_c02",
+          "kind": "treasure",
+          "pos": [
+            176,
+            240
+          ],
+          "label": {
+            "zh": "宝箱 BE",
+            "en": "Chest BE"
+          },
+          "item": "BE"
         }
       ]
     },
@@ -10846,6 +11374,21 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_9B_c00",
+          "kind": "treasure",
+          "pos": [
+            32,
+            272
+          ],
+          "label": {
+            "zh": "宝箱 80",
+            "en": "Chest 80"
+          },
+          "item": "80"
         }
       ]
     },
@@ -11414,6 +11957,21 @@
             "en": "→ 地图 A5"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_A4_c00",
+          "kind": "treasure",
+          "pos": [
+            16,
+            96
+          ],
+          "label": {
+            "zh": "宝箱 20",
+            "en": "Chest 20"
+          },
+          "item": "20"
+        }
       ]
     },
     "map_A5": {
@@ -11534,6 +12092,21 @@
             "zh": "→ 地图 A6",
             "en": "→ 地图 A6"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_A5_c00",
+          "kind": "treasure",
+          "pos": [
+            16,
+            160
+          ],
+          "label": {
+            "zh": "宝箱 1A",
+            "en": "Chest 1A"
+          },
+          "item": "1A"
         }
       ]
     },
@@ -11686,7 +12259,22 @@
       "tileSize": 16,
       "width": 480,
       "height": 304,
-      "triggers": []
+      "triggers": [],
+      "pois": [
+        {
+          "id": "map_A7_c00",
+          "kind": "treasure",
+          "pos": [
+            192,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 AE",
+            "en": "Chest AE"
+          },
+          "item": "AE"
+        }
+      ]
     },
     "map_A8": {
       "name": {
@@ -11783,6 +12371,21 @@
             "zh": "→ 地图 AA",
             "en": "→ 地图 AA"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_A9_c00",
+          "kind": "treasure",
+          "pos": [
+            112,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 66",
+            "en": "Chest 66"
+          },
+          "item": "66"
         }
       ]
     },
@@ -12392,6 +12995,21 @@
             "en": "→ 地图 B0"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_B1_c00",
+          "kind": "treasure",
+          "pos": [
+            48,
+            384
+          ],
+          "label": {
+            "zh": "宝箱 F1",
+            "en": "Chest F1"
+          },
+          "item": "F1"
+        }
       ]
     },
     "map_B2": {
@@ -12440,6 +13058,34 @@
             "zh": "→ 地图 B1",
             "en": "→ 地图 B1"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_B2_c00",
+          "kind": "treasure",
+          "pos": [
+            96,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 BF",
+            "en": "Chest BF"
+          },
+          "item": "BF"
+        },
+        {
+          "id": "map_B2_c01",
+          "kind": "treasure",
+          "pos": [
+            96,
+            2048
+          ],
+          "label": {
+            "zh": "宝箱 9B",
+            "en": "Chest 9B"
+          },
+          "item": "9B"
         }
       ]
     },
@@ -13005,6 +13651,34 @@
             "en": "→ 地图 B9"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_B8_c00",
+          "kind": "treasure",
+          "pos": [
+            240,
+            128
+          ],
+          "label": {
+            "zh": "宝箱 37",
+            "en": "Chest 37"
+          },
+          "item": "37"
+        },
+        {
+          "id": "map_B8_c01",
+          "kind": "treasure",
+          "pos": [
+            256,
+            160
+          ],
+          "label": {
+            "zh": "宝箱 18",
+            "en": "Chest 18"
+          },
+          "item": "18"
+        }
       ]
     },
     "map_B9": {
@@ -13102,6 +13776,21 @@
             "zh": "→ 地图 BB",
             "en": "→ 地图 BB"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_BA_c00",
+          "kind": "treasure",
+          "pos": [
+            160,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 C4",
+            "en": "Chest C4"
+          },
+          "item": "C4"
         }
       ]
     },
@@ -13316,6 +14005,34 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_BE_c00",
+          "kind": "treasure",
+          "pos": [
+            272,
+            176
+          ],
+          "label": {
+            "zh": "宝箱 BC",
+            "en": "Chest BC"
+          },
+          "item": "BC"
+        },
+        {
+          "id": "map_BE_c01",
+          "kind": "treasure",
+          "pos": [
+            736,
+            384
+          ],
+          "label": {
+            "zh": "宝箱 15",
+            "en": "Chest 15"
+          },
+          "item": "15"
         }
       ]
     },
@@ -13716,6 +14433,34 @@
             "en": "→ 地图 C2"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_C1_c00",
+          "kind": "treasure",
+          "pos": [
+            128,
+            112
+          ],
+          "label": {
+            "zh": "宝箱 B9",
+            "en": "Chest B9"
+          },
+          "item": "B9"
+        },
+        {
+          "id": "map_C1_c01",
+          "kind": "treasure",
+          "pos": [
+            416,
+            352
+          ],
+          "label": {
+            "zh": "宝箱 6C",
+            "en": "Chest 6C"
+          },
+          "item": "6C"
+        }
       ]
     },
     "map_C2": {
@@ -13764,6 +14509,47 @@
             "zh": "→ 地图 C1",
             "en": "→ 地图 C1"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_C2_c00",
+          "kind": "treasure",
+          "pos": [
+            96,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 51",
+            "en": "Chest 51"
+          },
+          "item": "51"
+        },
+        {
+          "id": "map_C2_c01",
+          "kind": "treasure",
+          "pos": [
+            192,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 50",
+            "en": "Chest 50"
+          },
+          "item": "50"
+        },
+        {
+          "id": "map_C2_c02",
+          "kind": "treasure",
+          "pos": [
+            256,
+            160
+          ],
+          "label": {
+            "zh": "宝箱 4F",
+            "en": "Chest 4F"
+          },
+          "item": "4F"
         }
       ]
     },
@@ -13939,6 +14725,21 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_C3_c00",
+          "kind": "treasure",
+          "pos": [
+            416,
+            528
+          ],
+          "label": {
+            "zh": "宝箱 5E",
+            "en": "Chest 5E"
+          },
+          "item": "5E"
         }
       ]
     },
@@ -14163,6 +14964,21 @@
             "zh": "→ 地图 EA",
             "en": "→ 地图 EA"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_C5_c00",
+          "kind": "treasure",
+          "pos": [
+            16,
+            608
+          ],
+          "label": {
+            "zh": "宝箱 6D",
+            "en": "Chest 6D"
+          },
+          "item": "6D"
         }
       ]
     },
@@ -14543,6 +15359,21 @@
             "en": "Exit"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_CC_c00",
+          "kind": "treasure",
+          "pos": [
+            16,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 1A",
+            "en": "Chest 1A"
+          },
+          "item": "1A"
+        }
       ]
     },
     "map_CD": {
@@ -14628,6 +15459,21 @@
             "en": "Exit"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_CD_c00",
+          "kind": "treasure",
+          "pos": [
+            464,
+            416
+          ],
+          "label": {
+            "zh": "宝箱 BB",
+            "en": "Chest BB"
+          },
+          "item": "BB"
+        }
       ]
     },
     "map_CE": {
@@ -14676,6 +15522,60 @@
             "zh": "→ 地图 CF",
             "en": "→ 地图 CF"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_CE_c00",
+          "kind": "treasure",
+          "pos": [
+            128,
+            208
+          ],
+          "label": {
+            "zh": "宝箱 AA",
+            "en": "Chest AA"
+          },
+          "item": "AA"
+        },
+        {
+          "id": "map_CE_c01",
+          "kind": "treasure",
+          "pos": [
+            656,
+            192
+          ],
+          "label": {
+            "zh": "宝箱 C7",
+            "en": "Chest C7"
+          },
+          "item": "C7"
+        },
+        {
+          "id": "map_CE_c02",
+          "kind": "treasure",
+          "pos": [
+            784,
+            240
+          ],
+          "label": {
+            "zh": "宝箱 A2",
+            "en": "Chest A2"
+          },
+          "item": "A2"
+        },
+        {
+          "id": "map_CE_c03",
+          "kind": "treasure",
+          "pos": [
+            784,
+            272
+          ],
+          "label": {
+            "zh": "宝箱 3C",
+            "en": "Chest 3C"
+          },
+          "item": "3C"
         }
       ]
     },
@@ -14762,6 +15662,73 @@
             "en": "→ 地图 CE"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_CF_c00",
+          "kind": "treasure",
+          "pos": [
+            128,
+            208
+          ],
+          "label": {
+            "zh": "宝箱 AA",
+            "en": "Chest AA"
+          },
+          "item": "AA"
+        },
+        {
+          "id": "map_CF_c01",
+          "kind": "treasure",
+          "pos": [
+            208,
+            160
+          ],
+          "label": {
+            "zh": "宝箱 2D",
+            "en": "Chest 2D"
+          },
+          "item": "2D"
+        },
+        {
+          "id": "map_CF_c02",
+          "kind": "treasure",
+          "pos": [
+            336,
+            112
+          ],
+          "label": {
+            "zh": "宝箱 C8",
+            "en": "Chest C8"
+          },
+          "item": "C8"
+        },
+        {
+          "id": "map_CF_c03",
+          "kind": "treasure",
+          "pos": [
+            656,
+            304
+          ],
+          "label": {
+            "zh": "宝箱 CF",
+            "en": "Chest CF"
+          },
+          "item": "CF"
+        },
+        {
+          "id": "map_CF_c04",
+          "kind": "treasure",
+          "pos": [
+            656,
+            320
+          ],
+          "label": {
+            "zh": "宝箱 AB",
+            "en": "Chest AB"
+          },
+          "item": "AB"
+        }
       ]
     },
     "map_D0": {
@@ -14847,6 +15814,34 @@
             "en": "→ 地图 CF"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_D0_c00",
+          "kind": "treasure",
+          "pos": [
+            608,
+            144
+          ],
+          "label": {
+            "zh": "宝箱 8C",
+            "en": "Chest 8C"
+          },
+          "item": "8C"
+        },
+        {
+          "id": "map_D0_c01",
+          "kind": "treasure",
+          "pos": [
+            608,
+            160
+          ],
+          "label": {
+            "zh": "宝箱 30",
+            "en": "Chest 30"
+          },
+          "item": "30"
+        }
       ]
     },
     "map_D1": {
@@ -14895,6 +15890,60 @@
             "zh": "→ 地图 D0",
             "en": "→ 地图 D0"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_D1_c00",
+          "kind": "treasure",
+          "pos": [
+            176,
+            128
+          ],
+          "label": {
+            "zh": "宝箱 3F",
+            "en": "Chest 3F"
+          },
+          "item": "3F"
+        },
+        {
+          "id": "map_D1_c01",
+          "kind": "treasure",
+          "pos": [
+            208,
+            80
+          ],
+          "label": {
+            "zh": "宝箱 C9",
+            "en": "Chest C9"
+          },
+          "item": "C9"
+        },
+        {
+          "id": "map_D1_c02",
+          "kind": "treasure",
+          "pos": [
+            608,
+            80
+          ],
+          "label": {
+            "zh": "宝箱 3E",
+            "en": "Chest 3E"
+          },
+          "item": "3E"
+        },
+        {
+          "id": "map_D1_c03",
+          "kind": "treasure",
+          "pos": [
+            640,
+            112
+          ],
+          "label": {
+            "zh": "宝箱 0F",
+            "en": "Chest 0F"
+          },
+          "item": "0F"
         }
       ]
     },
@@ -15228,6 +16277,60 @@
             "en": "→ 地图 D5"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_D3_c00",
+          "kind": "treasure",
+          "pos": [
+            176,
+            368
+          ],
+          "label": {
+            "zh": "宝箱 F7",
+            "en": "Chest F7"
+          },
+          "item": "F7"
+        },
+        {
+          "id": "map_D3_c01",
+          "kind": "treasure",
+          "pos": [
+            624,
+            304
+          ],
+          "label": {
+            "zh": "宝箱 F8",
+            "en": "Chest F8"
+          },
+          "item": "F8"
+        },
+        {
+          "id": "map_D3_c02",
+          "kind": "treasure",
+          "pos": [
+            608,
+            400
+          ],
+          "label": {
+            "zh": "宝箱 90",
+            "en": "Chest 90"
+          },
+          "item": "90"
+        },
+        {
+          "id": "map_D3_c03",
+          "kind": "treasure",
+          "pos": [
+            432,
+            544
+          ],
+          "label": {
+            "zh": "宝箱 CF",
+            "en": "Chest CF"
+          },
+          "item": "CF"
+        }
       ]
     },
     "map_D4": {
@@ -15312,6 +16415,60 @@
             "zh": "→ 地图 D7",
             "en": "→ 地图 D7"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_D4_c00",
+          "kind": "treasure",
+          "pos": [
+            288,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 54",
+            "en": "Chest 54"
+          },
+          "item": "54"
+        },
+        {
+          "id": "map_D4_c01",
+          "kind": "treasure",
+          "pos": [
+            304,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 F8",
+            "en": "Chest F8"
+          },
+          "item": "F8"
+        },
+        {
+          "id": "map_D4_c02",
+          "kind": "treasure",
+          "pos": [
+            352,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 62",
+            "en": "Chest 62"
+          },
+          "item": "62"
+        },
+        {
+          "id": "map_D4_c03",
+          "kind": "treasure",
+          "pos": [
+            336,
+            48
+          ],
+          "label": {
+            "zh": "宝箱 22",
+            "en": "Chest 22"
+          },
+          "item": "22"
         }
       ]
     },
@@ -15472,6 +16629,34 @@
             "zh": "→ 地图 95",
             "en": "→ 地图 95"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_D8_c00",
+          "kind": "treasure",
+          "pos": [
+            480,
+            64
+          ],
+          "label": {
+            "zh": "宝箱 12",
+            "en": "Chest 12"
+          },
+          "item": "12"
+        },
+        {
+          "id": "map_D8_c01",
+          "kind": "treasure",
+          "pos": [
+            416,
+            64
+          ],
+          "label": {
+            "zh": "宝箱 FA",
+            "en": "Chest FA"
+          },
+          "item": "FA"
         }
       ]
     },
@@ -15857,6 +17042,21 @@
             "en": "→ 地图 73"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_DE_c00",
+          "kind": "treasure",
+          "pos": [
+            112,
+            32
+          ],
+          "label": {
+            "zh": "宝箱 CA",
+            "en": "Chest CA"
+          },
+          "item": "CA"
+        }
       ]
     },
     "map_DF": {
@@ -16151,6 +17351,21 @@
             "en": "→ 地图 E5"
           }
         }
+      ],
+      "pois": [
+        {
+          "id": "map_E4_c00",
+          "kind": "treasure",
+          "pos": [
+            48,
+            512
+          ],
+          "label": {
+            "zh": "宝箱 85",
+            "en": "Chest 85"
+          },
+          "item": "85"
+        }
       ]
     },
     "map_E5": {
@@ -16217,6 +17432,60 @@
             "zh": "→ 地图 E4",
             "en": "→ 地图 E4"
           }
+        }
+      ],
+      "pois": [
+        {
+          "id": "map_E5_c00",
+          "kind": "treasure",
+          "pos": [
+            64,
+            288
+          ],
+          "label": {
+            "zh": "宝箱 76",
+            "en": "Chest 76"
+          },
+          "item": "76"
+        },
+        {
+          "id": "map_E5_c01",
+          "kind": "treasure",
+          "pos": [
+            640,
+            208
+          ],
+          "label": {
+            "zh": "宝箱 04",
+            "en": "Chest 04"
+          },
+          "item": "04"
+        },
+        {
+          "id": "map_E5_c02",
+          "kind": "treasure",
+          "pos": [
+            640,
+            400
+          ],
+          "label": {
+            "zh": "宝箱 CE",
+            "en": "Chest CE"
+          },
+          "item": "CE"
+        },
+        {
+          "id": "map_E5_c03",
+          "kind": "treasure",
+          "pos": [
+            656,
+            368
+          ],
+          "label": {
+            "zh": "宝箱 FB",
+            "en": "Chest FB"
+          },
+          "item": "FB"
         }
       ]
     },
