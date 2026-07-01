@@ -3,6 +3,10 @@
     {
       "id": "metal_max",
       "configPath": "/res/metal_max/game.json"
+    },
+    {
+      "id": "tenchi2",
+      "configPath": "/res/tenchi2/game.json"
     }
   ]
 }
