@@ -3,8 +3,11 @@ import { i18n } from '../i18n/index.js';
 import type { PoiDef } from '../types';
 
 /**
- * PoiLayer - Renders points of interest (treasure chests, etc.) as icon markers
- * with hover tooltips. Positions come in full-resolution pixels (tile top-left).
+ * PoiLayer - Renders points of interest (treasure chests, etc.) as small marker
+ * glyphs with hover tooltips. The actual chest sprite is baked into the map image
+ * by the decoder; these markers are just fixed-size location pointers (a star for
+ * treasure, a money bag for gold). Positions are full-resolution pixels (tile
+ * top-left).
  */
 export class PoiLayer {
   private _map: L.Map;
@@ -35,7 +38,7 @@ export class PoiLayer {
       const [x, y] = poi.pos;
       // Pixel (x, y) tile top-left → tile centre → LatLng(-y, x) in Simple CRS.
       const center: L.LatLngTuple = [-(y + half), x + half];
-      const glyph = poi.kind === 'gold' ? '💰' : poi.kind === 'treasure' ? '📦' : '📍';
+      const glyph = poi.kind === 'gold' ? '💰' : poi.kind === 'treasure' ? '⭐' : '📍';
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}`,
         html: `<span class="poi-glyph">${glyph}</span>`,
