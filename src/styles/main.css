@@ -446,6 +446,36 @@ html, body {
   text-overflow: ellipsis;
 }
 
+/* Target-map chest list, stacked right under the thumbnail in the same card. */
+.trigger-preview-list {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0, 229, 255, 0.25);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.trigger-preview-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 11px;
+  line-height: 1.7;
+  color: #dfe6f0;
+}
+
+.trigger-preview-item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trigger-preview-coord {
+  color: #7f8ca0;
+  font-family: 'Consolas', 'Courier New', monospace;
+  flex-shrink: 0;
+}
+
 /* Permanent (always-on) trigger labels carry this extra class (Leaflet itself
    does not tag permanent tooltips), letting them read as compact map labels. */
 .leaflet-tooltip.trigger-tooltip-perm {
@@ -697,16 +727,6 @@ html, body {
   color: #667788;
   font-family: 'Consolas', 'Courier New', monospace;
   font-size: 11px;
-}
-
-/* Target-map chest preview: shown below the map while hovering a trigger. */
-.treasure-panel-bottom {
-  top: auto;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  max-height: 42vh;
-  pointer-events: none;   /* pure hover preview — never intercepts the map */
 }
 
 /* Editor interaction cursors */

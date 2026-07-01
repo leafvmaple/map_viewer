@@ -101,6 +101,9 @@ export class MapViewer {
       if (!mc) return null;
       return resolveImagePath(mc.thumbnail ?? mc.image);
     });
+
+    // Provide a target-POIs resolver so the preview can list the destination's chests.
+    this._triggerLayer.setMapPoisResolver((mapId: string) => gameConfig.maps[mapId]?.pois ?? []);
   }
 
   /** Load and display a map by ID. Optionally restore a previous view state. */

@@ -2,28 +2,24 @@ import { i18n } from '../i18n/index.js';
 import type { PoiDef } from '../types';
 
 interface TreasureListOptions {
-  /** Row click handler. Omit for a display-only list. */
-  onSelect?: (poi: PoiDef) => void;
-  /** Extra class for positioning (e.g. 'treasure-panel-bottom'). */
-  className?: string;
+  onSelect: (poi: PoiDef) => void;
 }
 
 /**
- * TreasureList - A panel listing the treasure/gold chests of a map. Used both for
- * the current map (top-right, clickable → pan+flash) and, on trigger hover, for
- * the target map (bottom, display-only). Hidden when there are no chests.
+ * TreasureList - The top-right panel listing the current map's treasure/gold
+ * chests. Clicking a row pans+flashes that chest. Hidden when there are no chests
+ * or while a trigger hover card is showing the destination's chests instead.
  */
 export class TreasureList {
   private _el: HTMLElement;
   private _options: TreasureListOptions;
   private _pois: PoiDef[] = [];
   private _visible = true;
-  private _title: string | null = null;   // null → i18n default
 
-  constructor(options: TreasureListOptions = {}) {
+  constructor(options: TreasureListOptions) {
     this._options = options;
     this._el = document.createElement('div');
-    this._el.className = `treasure-panel ${options.className ?? ''}`.trim();
+    this._el.className = 'treasure-panel';
     this._el.style.display = 'none';
     document.getElementById('app')?.appendChild(this._el);
   }
@@ -31,12 +27,6 @@ export class TreasureList {
   /** Update the list (treasure + gold chests only). */
   setPois(pois: PoiDef[]): void {
     this._pois = (pois ?? []).filter(p => p.kind === 'treasure' || p.kind === 'gold');
-    this._render();
-  }
-
-  /** Override the header title (e.g. the target map's name). null → default. */
-  setTitle(title: string | null): void {
-    this._title = title;
     this._render();
   }
 
@@ -70,24 +60,21 @@ export class TreasureList {
       })
       .join('');
 
-    const title = this._title ?? i18n.t('treasure.listTitle');
     this._el.innerHTML = `
       <div class="treasure-panel-header">
-        📦 ${title}
+        📦 ${i18n.t('treasure.listTitle')}
         <span class="treasure-count">${this._pois.length}</span>
       </div>
       <div class="treasure-panel-body">${rows}</div>
     `;
 
-    if (this._options.onSelect) {
-      this._el.querySelectorAll('.treasure-item').forEach(el => {
-        el.addEventListener('click', () => {
-          const id = (el as HTMLElement).dataset.id!;
-          const poi = this._pois.find(p => p.id === id);
-          if (poi) this._options.onSelect!(poi);
-        });
+    this._el.querySelectorAll('.treasure-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const id = (el as HTMLElement).dataset.id!;
+        const poi = this._pois.find(p => p.id === id);
+        if (poi) this._options.onSelect(poi);
       });
-    }
+    });
 
     this._updateDisplay();
   }

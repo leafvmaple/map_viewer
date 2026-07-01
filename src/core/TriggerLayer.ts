@@ -1,6 +1,6 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
-import type { TriggerDef } from '../types';
+import type { TriggerDef, PoiDef } from '../types';
 
 interface TriggerLayerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -27,6 +27,7 @@ export class TriggerLayer {
   private _visible = true;
   private _mapNameResolver: ((mapId: string) => string) | null = null;
   private _mapImageResolver: ((mapId: string) => string | null) | null = null;
+  private _mapPoisResolver: ((mapId: string) => PoiDef[]) | null = null;
   private _permanentLabels = false;
   private _previewEl: HTMLElement | null = null;
 
@@ -59,7 +60,10 @@ export class TriggerLayer {
   private _createPreviewEl(): HTMLElement {
     const el = L.DomUtil.create('div', 'trigger-preview');
     el.style.display = 'none';
-    el.innerHTML = '<img class="trigger-preview-img" alt="" /><div class="trigger-preview-name"></div>';
+    el.innerHTML =
+      '<img class="trigger-preview-img" alt="" />' +
+      '<div class="trigger-preview-name"></div>' +
+      '<div class="trigger-preview-list"></div>';
     this._map.getContainer().appendChild(el);
     return el;
   }
@@ -142,6 +146,11 @@ export class TriggerLayer {
     this._mapImageResolver = resolver;
   }
 
+  /** Set a function that resolves a mapId to its POIs (for the hover chest list). */
+  setMapPoisResolver(resolver: (mapId: string) => PoiDef[]): void {
+    this._mapPoisResolver = resolver;
+  }
+
   /** Toggle always-on labels (permanent tooltips) vs hover-only. Returns new state. */
   setLabelsPermanent(on: boolean): boolean {
     this._permanentLabels = on;
@@ -159,18 +168,47 @@ export class TriggerLayer {
       : { sticky: true, className: 'trigger-tooltip', direction: 'top', offset: [0, -8] };
   }
 
-  /** Show the hover preview of a trigger's target map. */
+  /** Show the hover preview of a trigger's target map: thumbnail + name + chest list. */
   private _showPreview(trigger: TriggerDef): void {
-    if (!this._previewEl || !this._mapImageResolver || !trigger.target) return;
-    const url = this._mapImageResolver(trigger.target);
-    if (!url) return;
+    if (!this._previewEl || !trigger.target) return;
     const img = this._previewEl.querySelector('.trigger-preview-img') as HTMLImageElement | null;
     const name = this._previewEl.querySelector('.trigger-preview-name') as HTMLElement | null;
-    if (img) img.src = url;
+    const listEl = this._previewEl.querySelector('.trigger-preview-list') as HTMLElement | null;
+
+    const url = this._mapImageResolver ? this._mapImageResolver(trigger.target) : null;
+    if (img) {
+      img.src = url ?? '';
+      img.style.display = url ? 'block' : 'none';
+    }
     if (name) {
       name.textContent = this._mapNameResolver ? this._mapNameResolver(trigger.target) : trigger.target;
     }
+    if (listEl) {
+      const chests = (this._mapPoisResolver ? this._mapPoisResolver(trigger.target) : [])
+        .filter((p) => p.kind === 'treasure' || p.kind === 'gold');
+      listEl.innerHTML = chests
+        .map((p, i) => {
+          const tx = Math.round(p.pos[0] / 16);
+          const ty = Math.round(p.pos[1] / 16);
+          return (
+            `<div class="trigger-preview-row">` +
+            `<span class="trigger-preview-item">${i + 1}. ${this._chestName(p)}</span>` +
+            `<span class="trigger-preview-coord">${tx},${ty}</span>` +
+            `</div>`
+          );
+        })
+        .join('');
+      listEl.style.display = chests.length ? 'block' : 'none';
+    }
     this._previewEl.style.display = 'block';
+  }
+
+  /** Chest item name without the "宝箱 · " prefix, for a compact row. */
+  private _chestName(poi: PoiDef): string {
+    const full = poi.label ? i18n.localize(poi.label) : '';
+    const sep = full.indexOf('·');
+    if (sep >= 0) return full.slice(sep + 1).trim();
+    return full || poi.item || '?';
   }
 
   private _hidePreview(): void {
