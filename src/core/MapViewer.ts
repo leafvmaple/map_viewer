@@ -112,13 +112,24 @@ export class MapViewer {
 
   /** Load a single-image map. */
   private async _loadImageMap(mapConfig: MapConfig, viewState?: ViewState): Promise<void> {
-    const imageUrl = this._resolveImagePath!(mapConfig.image);
-    const { width, height } = await this._getImageDimensions(imageUrl);
+    const fullUrl = this._resolveImagePath!(mapConfig.image);
+
+    // Dimensions define the bounds. Prefer the values declared in game.json
+    // (skips a probe of the full-res image); otherwise fall back to probing it.
+    const { width, height } =
+      mapConfig.width != null && mapConfig.height != null
+        ? { width: mapConfig.width, height: mapConfig.height }
+        : await this._getImageDimensions(fullUrl);
 
     // CRS.Simple: bounds = [[-height, 0], [0, width]] so (0,0) is top-left
     const bounds: L.LatLngBoundsExpression = [[-height, 0], [0, width]];
 
-    this._imageOverlay = L.imageOverlay(imageUrl, bounds, {
+    // Progressive load: if a thumbnail is provided (and we know the dimensions),
+    // paint it instantly, then swap to the full-res image once it finishes loading.
+    const canUseThumb = !!mapConfig.thumbnail && mapConfig.width != null && mapConfig.height != null;
+    const initialUrl = canUseThumb ? this._resolveImagePath!(mapConfig.thumbnail!) : fullUrl;
+
+    this._imageOverlay = L.imageOverlay(initialUrl, bounds, {
       className: 'map-image pixelated',
     }).addTo(this._map);
 
@@ -136,6 +147,17 @@ export class MapViewer {
     }
 
     this._currentDims = { width, height };
+
+    // Upgrade the placeholder to full resolution in the background. Guard against
+    // the user navigating away before the full image finishes loading.
+    if (canUseThumb) {
+      const overlayRef = this._imageOverlay;
+      const full = new Image();
+      full.onload = () => {
+        if (this._imageOverlay === overlayRef) overlayRef.setUrl(fullUrl);
+      };
+      full.src = fullUrl;
+    }
 
     if (this._showGrid && mapConfig.tileSize) {
       this._addGrid(mapConfig.tileSize, width, height);

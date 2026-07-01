@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/game.schema.json",
+  "title": "Game Map Viewer — game.json",
+  "description": "Contract for a single game's map configuration, produced by nes_decoder and consumed by the map_viewer web app. See CONTRACT.md.",
+  "type": "object",
+  "required": ["id", "name", "defaultMap", "maps"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z0-9_]+$",
+      "description": "Stable game identifier. Must match the registry entry and the res/{id}/ folder name."
+    },
+    "name": { "$ref": "#/$defs/localizedString" },
+    "defaultMap": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Key in `maps` shown first and treated as the navigation root (usually \"world_map\")."
+    },
+    "maps": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": { "pattern": "^[A-Za-z0-9_]+$" },
+      "additionalProperties": { "$ref": "#/$defs/map" }
+    }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "description": "Display text keyed by language code. At least one entry required; `en` is the fallback.",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "map": {
+      "type": "object",
+      "required": ["name", "type", "image", "triggers"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/localizedString" },
+        "type": {
+          "enum": ["image", "tiles"],
+          "description": "Render mode. Only \"image\" is currently implemented by the viewer."
+        },
+        "image": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the map image, relative to this game.json's folder (res/{id}/)."
+        },
+        "thumbnail": {
+          "type": "string",
+          "description": "Optional low-res placeholder for progressive loading. Only used when `width` and `height` are also present."
+        },
+        "width": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Optional intrinsic pixel width of `image`. Lets the viewer skip probing the full image."
+        },
+        "height": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Optional intrinsic pixel height of `image`."
+        },
+        "tileSize": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "description": "Tile size in pixels; drives the grid overlay and the editor's snap-to-grid. Typically 16."
+        },
+        "maxZoom": { "type": "number" },
+        "tilesPath": { "type": "string", "description": "Tile URL template (reserved for future type=tiles)." },
+        "triggers": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/trigger" }
+        }
+      }
+    },
+    "trigger": {
+      "type": "object",
+      "description": "A clickable zone that navigates to another map (a door / exit / warp).",
+      "required": ["id", "bounds", "target", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique within the map. Convention: {mapId}_t{NN}."
+        },
+        "bounds": { "$ref": "#/$defs/bounds" },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key of the destination map within this same game's `maps`. Must reference an existing map (referential integrity is not expressible in JSON Schema — validate separately)."
+        },
+        "label": { "$ref": "#/$defs/localizedString" }
+      }
+    },
+    "bounds": {
+      "type": "array",
+      "description": "Axis-aligned rectangle in FULL-RESOLUTION image pixels: [[x1, y1], [x2, y2]], top-left origin.",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": { "type": "number" }
+      }
+    }
+  }
+}

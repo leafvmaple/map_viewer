@@ -36,6 +36,19 @@ export interface MapConfig {
   tileSize?: number;
   /** Max zoom for tile maps */
   maxZoom?: number;
+  /**
+   * Optional intrinsic pixel size of `image`. When both are provided the viewer
+   * skips the image-probe step (faster first paint) and — together with
+   * `thumbnail` — can render a low-res placeholder before the full image loads.
+   */
+  width?: number;
+  height?: number;
+  /**
+   * Optional low-resolution placeholder image, displayed instantly and scaled to
+   * the same bounds as `image`, then swapped for the full-res image once it loads.
+   * Requires `width`/`height` to take effect (they define the bounds).
+   */
+  thumbnail?: string;
   /** Trigger definitions */
   triggers: TriggerDef[];
 }

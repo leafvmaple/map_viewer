@@ -1,0 +1,23 @@
+{
+  // 一键预览：启动 Vite 开发服务器（preLaunchTask）后，打开带调试器的浏览器。
+  // 在「运行和调试」面板选择配置后按 F5 即可。
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "预览 map_viewer (Edge)",
+      "type": "msedge",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite: dev"
+    },
+    {
+      "name": "预览 map_viewer (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}",
+      "preLaunchTask": "vite: dev"
+    }
+  ]
+}

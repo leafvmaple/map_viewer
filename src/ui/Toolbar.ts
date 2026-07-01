@@ -18,6 +18,7 @@ export class Toolbar {
   private _triggersVisible = true;
   private _gridVisible = false;
   private _editMode = false;
+  private _backEnabled = false;
   private _backBtn!: HTMLButtonElement;
 
   constructor(container: HTMLElement, options: ToolbarOptions) {
@@ -41,7 +42,7 @@ export class Toolbar {
         </select>
       </div>
       <div class="toolbar-group">
-        <button class="toolbar-btn btn-triggers active" title="${i18n.t('toolbar.triggersShow')}">
+        <button class="toolbar-btn btn-triggers" title="${i18n.t('toolbar.triggersShow')}">
           ⚡ ${i18n.t('toolbar.triggers')}
         </button>
         <button class="toolbar-btn btn-grid" title="${i18n.t('toolbar.grid')}">
@@ -86,16 +87,42 @@ export class Toolbar {
         ? `✏ ${i18n.t('toolbar.editModeOn')}`
         : `✏ ${i18n.t('toolbar.editMode')}`;
     });
+
+    // Reflect current state onto the freshly-rendered buttons.
+    this._applyState();
+  }
+
+  /**
+   * Re-apply the toolbar's live state (back-enabled + toggle actives) onto the
+   * DOM. Needed after every _render(), since re-rendering resets the markup to
+   * its defaults and would otherwise drop the active toggles / back-button state.
+   */
+  private _applyState(): void {
+    this._backBtn.disabled = !this._backEnabled;
+
+    const trigBtn = this._el.querySelector('.btn-triggers');
+    trigBtn?.classList.toggle('active', this._triggersVisible);
+
+    const gridBtn = this._el.querySelector('.btn-grid');
+    gridBtn?.classList.toggle('active', this._gridVisible);
+
+    const editBtn = this._el.querySelector('.btn-edit');
+    if (editBtn) {
+      editBtn.classList.toggle('active', this._editMode);
+      editBtn.textContent = this._editMode
+        ? `✏ ${i18n.t('toolbar.editModeOn')}`
+        : `✏ ${i18n.t('toolbar.editMode')}`;
+    }
   }
 
   /** Enable or disable back button. */
   setBackEnabled(enabled: boolean): void {
+    this._backEnabled = enabled;
     this._backBtn.disabled = !enabled;
   }
 
-  /** Refresh labels after language change. */
+  /** Refresh labels after language change (re-renders, then restores live state). */
   refreshLabels(): void {
     this._render();
-    this._backBtn.disabled = !this._options.onBack; // Re-check state after re-render
   }
 }

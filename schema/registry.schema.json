@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/registry.schema.json",
+  "title": "Game Map Viewer — registry.json",
+  "description": "Lists the games available to the viewer. Lives at public/games/registry.json. See CONTRACT.md.",
+  "type": "object",
+  "required": ["games"],
+  "additionalProperties": false,
+  "properties": {
+    "games": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "configPath"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "^[a-z0-9_]+$",
+            "description": "Game identifier; must match the `id` inside the referenced game.json."
+          },
+          "configPath": {
+            "type": "string",
+            "pattern": "^/.*game\\.json$",
+            "description": "Absolute server path to the game's config, e.g. /res/metal_max/game.json."
+          }
+        }
+      }
+    }
+  }
+}
