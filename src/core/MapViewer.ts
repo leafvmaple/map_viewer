@@ -6,6 +6,8 @@ import type { GameConfig, MapConfig, TriggerDef, ViewState } from '../types';
 
 interface MapViewerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
+  onTriggerHover?: (trigger: TriggerDef) => void;
+  onTriggerHoverOut?: () => void;
   onMapLoaded?: (mapId: string, mapConfig: MapConfig) => void;
 }
 
@@ -55,6 +57,8 @@ export class MapViewer {
     // Trigger layer
     this._triggerLayer = new TriggerLayer(this._map, {
       onTriggerClick: (trigger) => this._onTriggerClick(trigger),
+      onTriggerHover: options.onTriggerHover,
+      onTriggerHoverOut: options.onTriggerHoverOut,
     });
 
     // Points of interest (treasure chests, etc.)

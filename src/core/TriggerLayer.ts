@@ -4,6 +4,8 @@ import type { TriggerDef } from '../types';
 
 interface TriggerLayerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
+  onTriggerHover?: (trigger: TriggerDef) => void;
+  onTriggerHoverOut?: () => void;
 }
 
 interface TriggerRectangle extends L.Rectangle {
@@ -18,6 +20,8 @@ interface TriggerRectangle extends L.Rectangle {
 export class TriggerLayer {
   private _map: L.Map;
   private _onTriggerClick: (trigger: TriggerDef) => void;
+  private _onTriggerHover: (trigger: TriggerDef) => void;
+  private _onTriggerHoverOut: () => void;
   private _layerGroup: L.LayerGroup;
   private _triggers: TriggerDef[] = [];
   private _visible = true;
@@ -45,6 +49,8 @@ export class TriggerLayer {
   constructor(leafletMap: L.Map, options: TriggerLayerOptions = {}) {
     this._map = leafletMap;
     this._onTriggerClick = options.onTriggerClick ?? (() => {});
+    this._onTriggerHover = options.onTriggerHover ?? (() => {});
+    this._onTriggerHoverOut = options.onTriggerHoverOut ?? (() => {});
     this._layerGroup = L.layerGroup().addTo(this._map);
     this._previewEl = this._createPreviewEl();
   }
@@ -78,10 +84,12 @@ export class TriggerLayer {
         rect.setStyle(this._hoverStyle);
         rect.openTooltip();
         this._showPreview(trigger);
+        this._onTriggerHover(trigger);
       });
       rect.on('mouseout', () => {
         rect.setStyle(this._defaultStyle);
         this._hidePreview();
+        this._onTriggerHoverOut();
       });
       rect.on('click', (e: L.LeafletMouseEvent) => {
         L.DomEvent.stopPropagation(e.originalEvent);

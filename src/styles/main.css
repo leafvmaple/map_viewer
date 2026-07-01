@@ -699,6 +699,16 @@ html, body {
   font-size: 11px;
 }
 
+/* Target-map chest preview: shown below the map while hovering a trigger. */
+.treasure-panel-bottom {
+  top: auto;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  max-height: 42vh;
+  pointer-events: none;   /* pure hover preview — never intercepts the map */
+}
+
 /* Editor interaction cursors */
 .trigger-edit-rect { cursor: move; }
 .trigger-handle { cursor: pointer; }

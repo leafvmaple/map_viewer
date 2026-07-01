@@ -24,7 +24,8 @@ let triggerEditor: TriggerEditor;
 let sidebar: Sidebar;
 let breadcrumb: Breadcrumb;
 let toolbar: Toolbar;
-let treasureList: TreasureList;
+let treasureList: TreasureList;   // current map (top-right, clickable)
+let targetList: TreasureList;     // hovered trigger's target map (bottom, preview)
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
@@ -44,6 +45,8 @@ async function init(): Promise<void> {
 
   mapViewer = new MapViewer('map', {
     onTriggerClick: handleTriggerClick,
+    onTriggerHover: handleTriggerHover,
+    onTriggerHoverOut: handleTriggerHoverOut,
     onMapLoaded: handleMapLoaded,
   });
 
@@ -69,6 +72,8 @@ async function init(): Promise<void> {
   treasureList = new TreasureList({
     onSelect: (poi) => mapViewer.poiLayer.focusPoi(poi.id),
   });
+  // Target-map chest preview, shown below the map while hovering a trigger.
+  targetList = new TreasureList({ className: 'treasure-panel-bottom' });
 
   // Subscribe to nav stack changes
   navStack.onChange((path) => {
@@ -168,6 +173,23 @@ function handleTriggerClick(trigger: TriggerDef): void {
   if (triggerEditor.active) return; // Don't navigate in edit mode
   if (!currentGameConfig || !trigger.target) return;
   navigateToMap(currentGameConfig.id, trigger.target);
+}
+
+/** Hovering a trigger: hide the current-map chest list, preview the target map's. */
+function handleTriggerHover(trigger: TriggerDef): void {
+  if (triggerEditor.active || !currentGameConfig || !trigger.target) return;
+  const mc = currentGameConfig.maps[trigger.target];
+  const chests = (mc?.pois ?? []).filter(p => p.kind === 'treasure' || p.kind === 'gold');
+  if (!mc || chests.length === 0) return; // target has no chests → leave the current list
+  treasureList.setVisible(false);
+  targetList.setTitle(i18n.localize(mc.name));
+  targetList.setPois(mc.pois ?? []);
+  targetList.setVisible(true);
+}
+
+function handleTriggerHoverOut(): void {
+  targetList.setVisible(false);
+  treasureList.setVisible(mapViewer.poiLayer.visible && !triggerEditor.active);
 }
 
 function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
