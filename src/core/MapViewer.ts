@@ -85,6 +85,13 @@ export class MapViewer {
       const mc = gameConfig.maps[mapId];
       return mc ? i18n.localize(mc.name) : mapId;
     });
+
+    // Provide a target-image resolver so hovering a trigger can preview its destination.
+    this._triggerLayer.setMapImageResolver((mapId: string) => {
+      const mc = gameConfig.maps[mapId];
+      if (!mc) return null;
+      return resolveImagePath(mc.thumbnail ?? mc.image);
+    });
   }
 
   /** Load and display a map by ID. Optionally restore a previous view state. */

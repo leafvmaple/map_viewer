@@ -41,5 +41,8 @@
   "sidebar.cancel": "キャンセル",
   "sidebar.renameTip": "ダブルクリックで名前変更",
   "sidebar.mapExists": "マップIDは既に存在します",
-  "sidebar.mapIdRequired": "マップIDは必須です"
+  "sidebar.mapIdRequired": "マップIDは必須です",
+  "toolbar.labels": "ラベル",
+  "toolbar.labelsShow": "ラベル表示",
+  "toolbar.labelsHide": "ラベル非表示"
 }

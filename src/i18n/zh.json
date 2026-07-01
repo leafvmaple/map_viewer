@@ -41,5 +41,8 @@
   "sidebar.cancel": "取消",
   "sidebar.renameTip": "双击名称可重命名",
   "sidebar.mapExists": "地图 ID 已存在",
-  "sidebar.mapIdRequired": "地图 ID 不能为空"
+  "sidebar.mapIdRequired": "地图 ID 不能为空",
+  "toolbar.labels": "标签",
+  "toolbar.labelsShow": "显示标签",
+  "toolbar.labelsHide": "隐藏标签"
 }

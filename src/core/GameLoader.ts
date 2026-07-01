@@ -44,6 +44,11 @@ export class GameLoader {
     return (gameConfig._basePath ?? '/') + relativePath;
   }
 
+  /** Get an already-loaded (cached) game config, or undefined if not loaded yet. */
+  getCached(gameId: string): GameConfig | undefined {
+    return this._cache.get(gameId);
+  }
+
   /** Get list of all map IDs and their names from a loaded game config. */
   getMapList(gameConfig: GameConfig): MapListItem[] {
     return Object.entries(gameConfig.maps).map(([id, map]) => ({

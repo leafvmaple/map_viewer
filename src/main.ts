@@ -51,6 +51,8 @@ async function init(): Promise<void> {
   toolbar = new Toolbar(document.getElementById('toolbar')!, {
     onLanguageChange: handleLanguageChange,
     onTriggersToggle: () => mapViewer.triggerLayer.toggle(),
+    onLabelsToggle: () =>
+      mapViewer.triggerLayer.setLabelsPermanent(!mapViewer.triggerLayer.labelsPermanent),
     onGridToggle: () => mapViewer.toggleGrid(),
     onEditModeToggle: handleEditModeToggle,
     onBack: handleBack,
@@ -72,9 +74,16 @@ async function init(): Promise<void> {
     const games = await gameLoader.fetchRegistry();
     sidebar.setGames(games);
 
-    if (games.length > 0) {
+    // Deep link (URL hash) selects the initial game/map/view when present.
+    const target = parseHash();
+    if (target && games.some(g => g.id === target.gameId)) {
+      await handleGameSelect(target.gameId, target.mapId, target.view);
+    } else if (games.length > 0) {
       await handleGameSelect(games[0].id);
     }
+
+    // Keep the URL hash in sync with pan/zoom so links are shareable & survive refresh.
+    mapViewer.leafletMap.on('moveend', updateHash);
   } catch (err) {
     console.error('Failed to initialize:', err);
     showError(String(err));
@@ -83,7 +92,7 @@ async function init(): Promise<void> {
 
 // ─── Event Handlers ─────────────────────────────────────────
 
-async function handleGameSelect(gameId: string): Promise<void> {
+async function handleGameSelect(gameId: string, initialMapId?: string, initialView?: ViewState): Promise<void> {
   try {
     currentGameConfig = await gameLoader.loadGame(gameId);
 
@@ -109,7 +118,7 @@ async function handleGameSelect(gameId: string): Promise<void> {
 
     // Update game names in sidebar (localized)
     const gameNames = gameLoader.registry.map(g => {
-      const config = gameLoader['_cache'].get(g.id) as GameConfig | undefined;
+      const config = gameLoader.getCached(g.id);
       return {
         id: g.id,
         name: config ? i18n.localize(config.name) : g.id,
@@ -126,9 +135,12 @@ async function handleGameSelect(gameId: string): Promise<void> {
     triggerEditor.setGameConfig(currentGameConfig);
     breadcrumb.setGameConfig(currentGameConfig);
 
-    // Navigate to default map
+    // Navigate to the requested map (deep link) or the default map
     navStack.clear();
-    await navigateToMap(gameId, currentGameConfig.defaultMap);
+    const startMap = initialMapId && currentGameConfig.maps[initialMapId]
+      ? initialMapId
+      : currentGameConfig.defaultMap;
+    await navigateToMap(gameId, startMap, initialView);
   } catch (err) {
     console.error('Failed to load game:', err);
     showError(String(err));
@@ -276,7 +288,7 @@ function handleMapAdd(mapId: string, name: LocalizedString, imagePath: string): 
 
 // ─── Navigation ─────────────────────────────────────────────
 
-async function navigateToMap(gameId: string, mapId: string): Promise<void> {
+async function navigateToMap(gameId: string, mapId: string, viewState?: ViewState): Promise<void> {
   // Save current view state before leaving
   if (navStack.current) {
     navStack.saveViewState(mapViewer.getViewState());
@@ -287,7 +299,43 @@ async function navigateToMap(gameId: string, mapId: string): Promise<void> {
     navStack.clear();
   }
   navStack.push(gameId, mapId);
-  await mapViewer.loadMap(mapId);
+  await mapViewer.loadMap(mapId, viewState);
+  updateHash();
+}
+
+// ─── URL Deep Link (hash routing) ───────────────────────────
+
+interface HashTarget {
+  gameId: string;
+  mapId: string;
+  view?: ViewState;
+}
+
+let lastHash = '';
+
+/** Parse `#gameId/mapId@lat,lng,zoom` from the URL, or null if absent/invalid. */
+function parseHash(): HashTarget | null {
+  const raw = location.hash.replace(/^#/, '');
+  if (!raw) return null;
+  const m = raw.match(/^([^/]+)\/([^@]+)(?:@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?))?$/);
+  if (!m) return null;
+  const [, gameId, mapId, lat, lng, zoom] = m;
+  const view: ViewState | undefined = lat != null
+    ? { center: [parseFloat(lat), parseFloat(lng)] as [number, number], zoom: parseFloat(zoom) }
+    : undefined;
+  return { gameId: decodeURIComponent(gameId), mapId: decodeURIComponent(mapId), view };
+}
+
+/** Write the current game/map/view into the URL hash (shareable, refresh-safe). */
+function updateHash(): void {
+  if (!currentGameConfig || !mapViewer?.currentMapId) return;
+  const vs = mapViewer.getViewState();
+  const g = encodeURIComponent(currentGameConfig.id);
+  const mp = encodeURIComponent(mapViewer.currentMapId);
+  const hash = `#${g}/${mp}@${vs.center[0].toFixed(1)},${vs.center[1].toFixed(1)},${vs.zoom.toFixed(2)}`;
+  if (hash === lastHash) return;
+  lastHash = hash;
+  history.replaceState(null, '', hash);
 }
 
 // ─── Language Refresh ───────────────────────────────────────
@@ -302,7 +350,7 @@ function refreshAllLabels(): void {
   // Refresh game names
   if (currentGameConfig) {
     const gameNames = gameLoader.registry.map(g => {
-      const config = gameLoader['_cache'].get(g.id) as GameConfig | undefined;
+      const config = gameLoader.getCached(g.id);
       return {
         id: g.id,
         name: config ? i18n.localize(config.name) : g.id,

@@ -41,5 +41,8 @@
   "sidebar.cancel": "Cancel",
   "sidebar.renameTip": "Double-click name to rename",
   "sidebar.mapExists": "Map ID already exists",
-  "sidebar.mapIdRequired": "Map ID is required"
+  "sidebar.mapIdRequired": "Map ID is required",
+  "toolbar.labels": "Labels",
+  "toolbar.labelsShow": "Show Labels",
+  "toolbar.labelsHide": "Hide Labels"
 }

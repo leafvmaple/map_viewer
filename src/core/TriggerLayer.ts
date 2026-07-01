@@ -12,7 +12,8 @@ interface TriggerRectangle extends L.Rectangle {
 
 /**
  * TriggerLayer - Manages the visual trigger overlay on the map.
- * Renders trigger zones as interactive rectangles with tooltips.
+ * Renders trigger zones as interactive rectangles with tooltips, an optional
+ * always-on label mode, and a hover preview of the target map.
  */
 export class TriggerLayer {
   private _map: L.Map;
@@ -21,6 +22,9 @@ export class TriggerLayer {
   private _triggers: TriggerDef[] = [];
   private _visible = true;
   private _mapNameResolver: ((mapId: string) => string) | null = null;
+  private _mapImageResolver: ((mapId: string) => string | null) | null = null;
+  private _permanentLabels = false;
+  private _previewEl: HTMLElement | null = null;
 
   private readonly _defaultStyle: L.PathOptions = {
     color: '#00e5ff',
@@ -42,6 +46,16 @@ export class TriggerLayer {
     this._map = leafletMap;
     this._onTriggerClick = options.onTriggerClick ?? (() => {});
     this._layerGroup = L.layerGroup().addTo(this._map);
+    this._previewEl = this._createPreviewEl();
+  }
+
+  /** Create the (hidden) hover-preview panel inside the map container. */
+  private _createPreviewEl(): HTMLElement {
+    const el = L.DomUtil.create('div', 'trigger-preview');
+    el.style.display = 'none';
+    el.innerHTML = '<img class="trigger-preview-img" alt="" /><div class="trigger-preview-name"></div>';
+    this._map.getContainer().appendChild(el);
+    return el;
   }
 
   /** Load and render triggers for a map. */
@@ -58,19 +72,16 @@ export class TriggerLayer {
       const rect: TriggerRectangle = L.rectangle(bounds, { ...this._defaultStyle });
 
       const label = this._resolveLabel(trigger);
-      rect.bindTooltip(label, {
-        sticky: true,
-        className: 'trigger-tooltip',
-        direction: 'top',
-        offset: [0, -8],
-      });
+      rect.bindTooltip(label, this._tooltipOptions());
 
       rect.on('mouseover', () => {
         rect.setStyle(this._hoverStyle);
         rect.openTooltip();
+        this._showPreview(trigger);
       });
       rect.on('mouseout', () => {
         rect.setStyle(this._defaultStyle);
+        this._hidePreview();
       });
       rect.on('click', (e: L.LeafletMouseEvent) => {
         L.DomEvent.stopPropagation(e.originalEvent);
@@ -92,19 +103,8 @@ export class TriggerLayer {
 
   /** Update tooltip labels (e.g. after language change). */
   refreshLabels(): void {
-    this._layerGroup.eachLayer(layer => {
-      const rect = layer as TriggerRectangle;
-      if (rect._triggerData) {
-        const label = this._resolveLabel(rect._triggerData);
-        rect.unbindTooltip();
-        rect.bindTooltip(label, {
-          sticky: true,
-          className: 'trigger-tooltip',
-          direction: 'top',
-          offset: [0, -8],
-        });
-      }
-    });
+    // Rebuild layers so labels — and the permanent/hover tooltip mode — stay in sync.
+    this.setTriggers(this._triggers);
   }
 
   /** Show or hide triggers. */
@@ -116,6 +116,7 @@ export class TriggerLayer {
       }
     } else {
       this._map.removeLayer(this._layerGroup);
+      this._hidePreview();
     }
   }
 
@@ -126,6 +127,46 @@ export class TriggerLayer {
   /** Set a function that resolves a mapId to its localized display name. */
   setMapNameResolver(resolver: (mapId: string) => string): void {
     this._mapNameResolver = resolver;
+  }
+
+  /** Set a function that resolves a mapId to a preview image URL (or null). */
+  setMapImageResolver(resolver: (mapId: string) => string | null): void {
+    this._mapImageResolver = resolver;
+  }
+
+  /** Toggle always-on labels (permanent tooltips) vs hover-only. Returns new state. */
+  setLabelsPermanent(on: boolean): boolean {
+    this._permanentLabels = on;
+    this.setTriggers(this._triggers); // rebuild with the new tooltip mode
+    return this._permanentLabels;
+  }
+
+  get labelsPermanent(): boolean {
+    return this._permanentLabels;
+  }
+
+  private _tooltipOptions(): L.TooltipOptions {
+    return this._permanentLabels
+      ? { permanent: true, className: 'trigger-tooltip trigger-tooltip-perm', direction: 'center', opacity: 0.92 }
+      : { sticky: true, className: 'trigger-tooltip', direction: 'top', offset: [0, -8] };
+  }
+
+  /** Show the hover preview of a trigger's target map. */
+  private _showPreview(trigger: TriggerDef): void {
+    if (!this._previewEl || !this._mapImageResolver || !trigger.target) return;
+    const url = this._mapImageResolver(trigger.target);
+    if (!url) return;
+    const img = this._previewEl.querySelector('.trigger-preview-img') as HTMLImageElement | null;
+    const name = this._previewEl.querySelector('.trigger-preview-name') as HTMLElement | null;
+    if (img) img.src = url;
+    if (name) {
+      name.textContent = this._mapNameResolver ? this._mapNameResolver(trigger.target) : trigger.target;
+    }
+    this._previewEl.style.display = 'block';
+  }
+
+  private _hidePreview(): void {
+    if (this._previewEl) this._previewEl.style.display = 'none';
   }
 
   /**
@@ -154,6 +195,7 @@ export class TriggerLayer {
   clear(): void {
     this._layerGroup.clearLayers();
     this._triggers = [];
+    this._hidePreview();
   }
 
   /** Get all current trigger definitions. */
