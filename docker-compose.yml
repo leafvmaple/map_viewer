@@ -3,7 +3,7 @@ services:
     # Built + pushed to the Gitea container registry by CI (.gitea/workflows/ci.yml).
     # The NAS never builds — it just `docker compose pull && up -d`. Set MAP_IMAGE
     # in .env to the registry path, e.g.
-    #   10.0.0.20:42197/leafvmaple/map_viewer:latest
+    #   10.0.0.20:42197/leafvmaple/map-viewer:latest
     image: ${MAP_IMAGE:?set MAP_IMAGE to the Gitea registry image path in .env}
     container_name: map-viewer
     restart: unless-stopped

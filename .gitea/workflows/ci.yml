@@ -1,36 +1,44 @@
-# Build the frontend image and push it to the Gitea container registry on every
-# push to main. The NAS then `docker compose pull && up -d`. Mirrors
-# vn-resource-vault. Requires repo secrets REGISTRY_USER / REGISTRY_TOKEN, and
-# the runner must trust the (HTTP) registry host.
-name: build-and-push
+name: CI
+
+# Runs on the self-hosted Gitea act_runner. On push to main it builds the static
+# frontend image and pushes it to Gitea's built-in container registry; the NAS
+# then pulls it (`docker compose pull && up -d`). Nothing leaves the NAS — no
+# GitHub, no ghcr.io. Mirrors vn-resource-vault's CI.
 on:
   push:
-    branches: [ main ]
-
-env:
-  REGISTRY: 10.0.0.20:42197
-  IMAGE: 10.0.0.20:42197/leafvmaple/map_viewer
+    branches: [main]
 
 jobs:
-  build:
+  build-push:
+    # Match a label your act_runner registered with. `ubuntu-latest` is the
+    # common default; change it if your runner uses a different label.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Derive registry + image metadata
+        id: meta
+        run: |
+          # github.server_url is Gitea's ROOT_URL, e.g. http://10.0.0.20:42197
+          # -> registry host 10.0.0.20:42197. github.repository -> leafvmaple/map-viewer.
+          REGISTRY=$(echo "${{ github.server_url }}" | sed -E 's#^https?://##')
+          echo "registry=$REGISTRY" >> "$GITHUB_OUTPUT"
+          echo "image=$REGISTRY/${{ github.repository }}" >> "$GITHUB_OUTPUT"
 
-      - name: Log in to Gitea registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USER }}
-          password: ${{ secrets.REGISTRY_TOKEN }}
+      - name: Log in to the Gitea container registry
+        # The auto-provided token can push packages for the repo owner. If your
+        # instance restricts that, add a REGISTRY_TOKEN secret (PAT, write:package).
+        run: |
+          echo "${{ secrets.REGISTRY_TOKEN || secrets.GITHUB_TOKEN }}" \
+            | docker login "${{ steps.meta.outputs.registry }}" \
+                -u "${{ github.actor }}" --password-stdin
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+      - name: Build + push (versioned + latest)
+        run: |
+          IMAGE="${{ steps.meta.outputs.image }}"
+          docker build -t "$IMAGE:latest" -t "$IMAGE:v${{ github.run_number }}" .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:v${{ github.run_number }}"
+
+      - name: Prune dangling images
+        run: docker image prune -f
