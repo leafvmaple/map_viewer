@@ -127,7 +127,10 @@ export class MapViewer {
     }
 
     this._triggerLayer.setTriggers(mapConfig.triggers ?? []);
-    this._poiLayer.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
+    // Star/gold glyphs only on the (huge) overworld; scene maps show the baked-in
+    // chest sprite and just get invisible hover zones for the info tooltip.
+    const showGlyphs = mapId === this._gameConfig?.defaultMap;
+    this._poiLayer.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16, showGlyphs);
     this._onMapLoaded(mapId, mapConfig);
   }
 

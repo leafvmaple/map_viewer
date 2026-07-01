@@ -654,6 +654,11 @@ html, body {
   50% { transform: scale(1.8); filter: drop-shadow(0 0 6px #ffb300); }
 }
 
+/* Invisible hover zone over a baked-in scene chest (tooltip on hover). */
+.poi-hover {
+  cursor: help;
+}
+
 /* ─── Treasure list panel (right) ───────────────────────────── */
 
 .treasure-panel {
