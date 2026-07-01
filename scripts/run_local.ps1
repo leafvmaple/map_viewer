@@ -8,7 +8,7 @@ docker build -t map-viewer:local .
 docker rm -f map-viewer-local 2>$null | Out-Null
 docker run -d --name map-viewer-local -p 42199:80 `
     -v "${PWD}\res:/data/res:ro" `
-    -v "${PWD}\public\games:/data/games:ro" `
+    -v "${PWD}\public:/data/public:ro" `
     map-viewer:local | Out-Null
 
 Write-Host "map-viewer running at http://localhost:42199  (docker logs -f map-viewer-local)"

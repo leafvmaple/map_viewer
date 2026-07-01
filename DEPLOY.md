@@ -32,12 +32,12 @@ Point `MAP_DATA_ROOT` at a directory laid out exactly like the repo's dev data:
   res/
     metal_max/{game.json, world_map/*.png, scene_maps/*.png}
     tenchi2/{game.json, ...}
-  games/
+  public/games/
     registry.json
 ```
 
-The easiest way to produce it: run the `nes_decoder` export with `viewer_root`
-pointing at `<MAP_DATA_ROOT>`'s parent (it writes `res/` and `games/registry.json`).
+The easiest way to produce it: point the `retro_decoder` export's `viewer_root`
+(in `export.ini`) at `<MAP_DATA_ROOT>` — it writes `res/` and `public/games/registry.json` there.
 
 ## First deploy (on the NAS)
 
@@ -50,7 +50,7 @@ docker compose up -d
 
 ## Updating
 
-- **New maps / data** (from a fresh nes_decoder export): overwrite the files under
+- **New maps / data** (from a fresh retro_decoder export): overwrite the files under
   `<MAP_DATA_ROOT>` — no image rebuild, just refresh the browser.
 - **App/code changes**: push to `main` → CI rebuilds → `docker compose pull && up -d`.
 
