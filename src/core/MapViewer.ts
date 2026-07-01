@@ -2,7 +2,7 @@ import L from 'leaflet';
 import { TriggerLayer } from './TriggerLayer.js';
 import { PoiLayer } from './PoiLayer.js';
 import { i18n } from '../i18n/index.js';
-import type { GameConfig, MapConfig, TriggerDef, ViewState } from '../types';
+import type { GameConfig, MapConfig, TriggerDef, ViewState, EventDef } from '../types';
 
 interface MapViewerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -34,6 +34,7 @@ export class MapViewer {
   private _resolveImagePath: ((relativePath: string) => string) | null = null;
 
   private _imageOverlay: L.ImageOverlay | null = null;
+  private _eventOverlays = new Map<string, L.ImageOverlay>();
   private _gridLayer: L.LayerGroup | null = null;
   private _showGrid = false;
   private _coordControl: L.Control;
@@ -218,6 +219,7 @@ export class MapViewer {
     this._triggerLayer.clear();
     this._poiLayer.clear();
     this._removeGrid();
+    this.clearEventOverlays();
     this._currentMapId = null;
     this._currentMapConfig = null;
     this._currentDims = null;
@@ -279,6 +281,30 @@ export class MapViewer {
 
   get poiLayer(): PoiLayer {
     return this._poiLayer;
+  }
+
+  /** Toggle a map event's changed-tiles overlay (rendered above the base image). */
+  setEventOverlay(event: EventDef, active: boolean): void {
+    const existing = this._eventOverlays.get(event.id);
+    if (active) {
+      if (existing || !this._resolveImagePath) return;
+      const [[x1, y1], [x2, y2]] = event.bounds;
+      const overlay = L.imageOverlay(this._resolveImagePath(event.overlay), [[-y1, x1], [-y2, x2]], {
+        interactive: false,
+        className: 'event-overlay',
+      }).addTo(this._map);
+      overlay.bringToFront(); // sit above the base map image
+      this._eventOverlays.set(event.id, overlay);
+    } else if (existing) {
+      this._map.removeLayer(existing);
+      this._eventOverlays.delete(event.id);
+    }
+  }
+
+  /** Remove all active event overlays (e.g. when changing maps). */
+  clearEventOverlays(): void {
+    this._eventOverlays.forEach(ov => this._map.removeLayer(ov));
+    this._eventOverlays.clear();
   }
 
   get leafletMap(): L.Map {

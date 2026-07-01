@@ -1503,6 +1503,27 @@
             "en": "Exit"
           }
         }
+      ],
+      "events": [
+        {
+          "id": "4C",
+          "label": {
+            "zh": "事件 4C",
+            "en": "Event 4C"
+          },
+          "bounds": [
+            [
+              240,
+              192
+            ],
+            [
+              272,
+              224
+            ]
+          ],
+          "overlay": "events/map_01_e4C.png",
+          "tiles": 4
+        }
       ]
     },
     "map_02": {
@@ -1761,6 +1782,160 @@
             "en": "8 Gold"
           },
           "item": "F0"
+        }
+      ],
+      "events": [
+        {
+          "id": "28",
+          "label": {
+            "zh": "事件 28",
+            "en": "Event 28"
+          },
+          "bounds": [
+            [
+              16,
+              112
+            ],
+            [
+              32,
+              144
+            ]
+          ],
+          "overlay": "events/map_03_e28.png",
+          "tiles": 2
+        },
+        {
+          "id": "29",
+          "label": {
+            "zh": "事件 29",
+            "en": "Event 29"
+          },
+          "bounds": [
+            [
+              32,
+              16
+            ],
+            [
+              48,
+              32
+            ]
+          ],
+          "overlay": "events/map_03_e29.png",
+          "tiles": 1
+        },
+        {
+          "id": "2A",
+          "label": {
+            "zh": "事件 2A",
+            "en": "Event 2A"
+          },
+          "bounds": [
+            [
+              80,
+              96
+            ],
+            [
+              96,
+              128
+            ]
+          ],
+          "overlay": "events/map_03_e2A.png",
+          "tiles": 2
+        },
+        {
+          "id": "2B",
+          "label": {
+            "zh": "事件 2B",
+            "en": "Event 2B"
+          },
+          "bounds": [
+            [
+              128,
+              112
+            ],
+            [
+              144,
+              144
+            ]
+          ],
+          "overlay": "events/map_03_e2B.png",
+          "tiles": 2
+        },
+        {
+          "id": "2C",
+          "label": {
+            "zh": "事件 2C",
+            "en": "Event 2C"
+          },
+          "bounds": [
+            [
+              64,
+              16
+            ],
+            [
+              80,
+              48
+            ]
+          ],
+          "overlay": "events/map_03_e2C.png",
+          "tiles": 2
+        },
+        {
+          "id": "2D",
+          "label": {
+            "zh": "事件 2D",
+            "en": "Event 2D"
+          },
+          "bounds": [
+            [
+              64,
+              112
+            ],
+            [
+              80,
+              144
+            ]
+          ],
+          "overlay": "events/map_03_e2D.png",
+          "tiles": 2
+        },
+        {
+          "id": "2E",
+          "label": {
+            "zh": "事件 2E",
+            "en": "Event 2E"
+          },
+          "bounds": [
+            [
+              48,
+              16
+            ],
+            [
+              64,
+              48
+            ]
+          ],
+          "overlay": "events/map_03_e2E.png",
+          "tiles": 2
+        },
+        {
+          "id": "2F",
+          "label": {
+            "zh": "事件 2F",
+            "en": "Event 2F"
+          },
+          "bounds": [
+            [
+              112,
+              48
+            ],
+            [
+              176,
+              96
+            ]
+          ],
+          "overlay": "events/map_03_e2F.png",
+          "tiles": 11
         }
       ]
     },
@@ -2883,6 +3058,27 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "events": [
+        {
+          "id": "17",
+          "label": {
+            "zh": "事件 17",
+            "en": "Event 17"
+          },
+          "bounds": [
+            [
+              256,
+              192
+            ],
+            [
+              272,
+              224
+            ]
+          ],
+          "overlay": "events/map_11_e17.png",
+          "tiles": 2
         }
       ]
     },
@@ -5912,6 +6108,27 @@
             "en": "Exit"
           }
         }
+      ],
+      "events": [
+        {
+          "id": "22",
+          "label": {
+            "zh": "事件 22",
+            "en": "Event 22"
+          },
+          "bounds": [
+            [
+              160,
+              80
+            ],
+            [
+              192,
+              112
+            ]
+          ],
+          "overlay": "events/map_47_e22.png",
+          "tiles": 4
+        }
       ]
     },
     "map_48": {
@@ -8827,6 +9044,27 @@
             "en": "Exit"
           }
         }
+      ],
+      "events": [
+        {
+          "id": "48",
+          "label": {
+            "zh": "事件 48",
+            "en": "Event 48"
+          },
+          "bounds": [
+            [
+              80,
+              304
+            ],
+            [
+              112,
+              320
+            ]
+          ],
+          "overlay": "events/map_76_e48.png",
+          "tiles": 2
+        }
       ]
     },
     "map_77": {
@@ -9027,6 +9265,27 @@
             "zh": "出口 → 地图 78",
             "en": "Exit"
           }
+        }
+      ],
+      "events": [
+        {
+          "id": "2E",
+          "label": {
+            "zh": "事件 2E",
+            "en": "Event 2E"
+          },
+          "bounds": [
+            [
+              160,
+              16
+            ],
+            [
+              176,
+              48
+            ]
+          ],
+          "overlay": "events/map_79_e2E.png",
+          "tiles": 2
         }
       ]
     },
@@ -9898,6 +10157,27 @@
             "en": "Exit"
           }
         }
+      ],
+      "events": [
+        {
+          "id": "8C",
+          "label": {
+            "zh": "事件 8C",
+            "en": "Event 8C"
+          },
+          "bounds": [
+            [
+              240,
+              272
+            ],
+            [
+              272,
+              288
+            ]
+          ],
+          "overlay": "events/map_86_e8C.png",
+          "tiles": 2
+        }
       ]
     },
     "map_87": {
@@ -9946,6 +10226,27 @@
             "zh": "→ 地图 88",
             "en": "→ 地图 88"
           }
+        }
+      ],
+      "events": [
+        {
+          "id": "B6",
+          "label": {
+            "zh": "事件 B6",
+            "en": "Event B6"
+          },
+          "bounds": [
+            [
+              144,
+              176
+            ],
+            [
+              176,
+              208
+            ]
+          ],
+          "overlay": "events/map_87_eB6.png",
+          "tiles": 4
         }
       ]
     },
@@ -10175,6 +10476,27 @@
             "en": "Chest · 皮衣"
           },
           "item": "0A"
+        }
+      ],
+      "events": [
+        {
+          "id": "18",
+          "label": {
+            "zh": "事件 18",
+            "en": "Event 18"
+          },
+          "bounds": [
+            [
+              336,
+              272
+            ],
+            [
+              368,
+              320
+            ]
+          ],
+          "overlay": "events/map_8B_e18.png",
+          "tiles": 6
         }
       ]
     },
@@ -14276,6 +14598,46 @@
             "en": "→ 地图 C1"
           }
         }
+      ],
+      "events": [
+        {
+          "id": "97",
+          "label": {
+            "zh": "事件 97",
+            "en": "Event 97"
+          },
+          "bounds": [
+            [
+              352,
+              48
+            ],
+            [
+              368,
+              80
+            ]
+          ],
+          "overlay": "events/map_C0_e97.png",
+          "tiles": 2
+        },
+        {
+          "id": "8E",
+          "label": {
+            "zh": "事件 8E",
+            "en": "Event 8E"
+          },
+          "bounds": [
+            [
+              208,
+              80
+            ],
+            [
+              224,
+              112
+            ]
+          ],
+          "overlay": "events/map_C0_e8E.png",
+          "tiles": 2
+        }
       ]
     },
     "map_C1": {
@@ -14980,6 +15342,27 @@
           },
           "item": "6D"
         }
+      ],
+      "events": [
+        {
+          "id": "8D",
+          "label": {
+            "zh": "事件 8D",
+            "en": "Event 8D"
+          },
+          "bounds": [
+            [
+              304,
+              320
+            ],
+            [
+              320,
+              352
+            ]
+          ],
+          "overlay": "events/map_C5_e8D.png",
+          "tiles": 2
+        }
       ]
     },
     "map_C6": {
@@ -15474,6 +15857,27 @@
           },
           "item": "BB"
         }
+      ],
+      "events": [
+        {
+          "id": "8B",
+          "label": {
+            "zh": "事件 8B",
+            "en": "Event 8B"
+          },
+          "bounds": [
+            [
+              544,
+              416
+            ],
+            [
+              592,
+              448
+            ]
+          ],
+          "overlay": "events/map_CD_e8B.png",
+          "tiles": 6
+        }
       ]
     },
     "map_CE": {
@@ -15729,6 +16133,46 @@
           },
           "item": "AB"
         }
+      ],
+      "events": [
+        {
+          "id": "98",
+          "label": {
+            "zh": "事件 98",
+            "en": "Event 98"
+          },
+          "bounds": [
+            [
+              160,
+              64
+            ],
+            [
+              208,
+              96
+            ]
+          ],
+          "overlay": "events/map_CF_e98.png",
+          "tiles": 4
+        },
+        {
+          "id": "99",
+          "label": {
+            "zh": "事件 99",
+            "en": "Event 99"
+          },
+          "bounds": [
+            [
+              640,
+              368
+            ],
+            [
+              672,
+              400
+            ]
+          ],
+          "overlay": "events/map_CF_e99.png",
+          "tiles": 4
+        }
       ]
     },
     "map_D0": {
@@ -15841,6 +16285,46 @@
             "en": "Chest · 长枪"
           },
           "item": "30"
+        }
+      ],
+      "events": [
+        {
+          "id": "9A",
+          "label": {
+            "zh": "事件 9A",
+            "en": "Event 9A"
+          },
+          "bounds": [
+            [
+              624,
+              64
+            ],
+            [
+              672,
+              96
+            ]
+          ],
+          "overlay": "events/map_D0_e9A.png",
+          "tiles": 4
+        },
+        {
+          "id": "9B",
+          "label": {
+            "zh": "事件 9B",
+            "en": "Event 9B"
+          },
+          "bounds": [
+            [
+              144,
+              368
+            ],
+            [
+              192,
+              400
+            ]
+          ],
+          "overlay": "events/map_D0_e9B.png",
+          "tiles": 4
         }
       ]
     },
@@ -16470,6 +16954,27 @@
           },
           "item": "22"
         }
+      ],
+      "events": [
+        {
+          "id": "B8",
+          "label": {
+            "zh": "事件 B8",
+            "en": "Event B8"
+          },
+          "bounds": [
+            [
+              320,
+              144
+            ],
+            [
+              592,
+              176
+            ]
+          ],
+          "overlay": "events/map_D4_eB8.png",
+          "tiles": 4
+        }
       ]
     },
     "map_D5": {
@@ -16580,6 +17085,27 @@
             "zh": "→ 地图 D4",
             "en": "→ 地图 D4"
           }
+        }
+      ],
+      "events": [
+        {
+          "id": "5F",
+          "label": {
+            "zh": "事件 5F",
+            "en": "Event 5F"
+          },
+          "bounds": [
+            [
+              160,
+              48
+            ],
+            [
+              192,
+              96
+            ]
+          ],
+          "overlay": "events/map_D7_e5F.png",
+          "tiles": 6
         }
       ]
     },
@@ -17571,6 +18097,27 @@
             "zh": "出口 → 世界地图",
             "en": "Exit"
           }
+        }
+      ],
+      "events": [
+        {
+          "id": "89",
+          "label": {
+            "zh": "事件 89",
+            "en": "Event 89"
+          },
+          "bounds": [
+            [
+              256,
+              96
+            ],
+            [
+              352,
+              112
+            ]
+          ],
+          "overlay": "events/map_E6_e89.png",
+          "tiles": 6
         }
       ]
     },

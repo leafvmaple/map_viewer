@@ -82,7 +82,29 @@
           "type": "array",
           "description": "Points of interest (treasure chests, etc.) shown as icons.",
           "items": { "$ref": "#/$defs/poi" }
+        },
+        "events": {
+          "type": "array",
+          "description": "Event-driven tile changes (e.g. a wall opening); each is a toggleable overlay.",
+          "items": { "$ref": "#/$defs/event" }
         }
+      }
+    },
+    "event": {
+      "type": "object",
+      "description": "A terrain change a map applies when a story event fires; toggled by a checkbox in the viewer.",
+      "required": ["id", "bounds", "overlay"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "Event id (hex) within the map." },
+        "label": { "$ref": "#/$defs/localizedString" },
+        "bounds": { "$ref": "#/$defs/bounds" },
+        "overlay": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Path to the changed-tiles overlay image, relative to this game.json's folder."
+        },
+        "tiles": { "type": "integer", "description": "Number of tiles this event changes." }
       }
     },
     "trigger": {

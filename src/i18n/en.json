@@ -46,5 +46,6 @@
   "toolbar.labelsShow": "Show Labels",
   "toolbar.labelsHide": "Hide Labels",
   "toolbar.treasures": "Treasures",
-  "treasure.listTitle": "Treasures"
+  "treasure.listTitle": "Treasures",
+  "event.listTitle": "Terrain events"
 }

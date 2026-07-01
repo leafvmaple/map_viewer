@@ -66,6 +66,21 @@ export interface MapConfig {
   triggers: TriggerDef[];
   /** Points of interest (treasure chests, etc.) */
   pois?: PoiDef[];
+  /** Event-driven tile changes (e.g. a wall opening), toggled by the viewer. */
+  events?: EventDef[];
+}
+
+/** A terrain change a map applies when a story event fires (toggleable overlay). */
+export interface EventDef {
+  id: string;
+  /** Pixel rectangle [[x1, y1], [x2, y2]] the overlay covers. */
+  bounds: [[number, number], [number, number]];
+  /** Overlay image path (changed tiles only), relative to the game's res dir. */
+  overlay: string;
+  /** Display label. */
+  label?: LocalizedString;
+  /** Number of tiles this event changes. */
+  tiles?: number;
 }
 
 /** Full game configuration (game.json) */

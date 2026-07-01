@@ -46,5 +46,6 @@
   "toolbar.labelsShow": "显示标签",
   "toolbar.labelsHide": "隐藏标签",
   "toolbar.treasures": "宝箱",
-  "treasure.listTitle": "宝箱列表"
+  "treasure.listTitle": "宝箱列表",
+  "event.listTitle": "地形事件"
 }

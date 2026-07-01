@@ -7,6 +7,7 @@ import { Sidebar } from './ui/Sidebar.js';
 import { Breadcrumb } from './ui/Breadcrumb.js';
 import { Toolbar } from './ui/Toolbar.js';
 import { TreasureList } from './ui/TreasureList.js';
+import { EventPanel } from './ui/EventPanel.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
 import { Prefs } from './core/Prefs.js';
@@ -26,6 +27,7 @@ let sidebar: Sidebar;
 let breadcrumb: Breadcrumb;
 let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
+let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
@@ -71,6 +73,10 @@ async function init(): Promise<void> {
 
   treasureList = new TreasureList({
     onSelect: (poi) => mapViewer.poiLayer.focusPoi(poi.id),
+  });
+
+  eventPanel = new EventPanel({
+    onToggle: (event, active) => mapViewer.setEventOverlay(event, active),
   });
 
   // Subscribe to nav stack changes
@@ -206,6 +212,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
 
       triggerEditor.setCurrentMap(mapId, triggers, mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? []);
+      eventPanel.setEvents(mapConfig.events ?? []);
     }
   }
 
@@ -399,6 +406,7 @@ function refreshAllLabels(): void {
   mapViewer.triggerLayer.refreshLabels();
   mapViewer.poiLayer.refreshLabels();
   treasureList.refreshLabels();
+  eventPanel.refreshLabels();
   mapViewer.refreshCoordLabel();
 
   // Refresh game names
