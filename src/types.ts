@@ -38,6 +38,12 @@ export interface PoiDef {
   icon?: string;
   /** Native pixel size [w, h] of `icon` (defaults to [16, 32]). */
   iconSize?: [number, number];
+  /**
+   * True when the collectible has NO visible sprite in the rendered map image
+   * (buried / Itemfinder-style items). Only these get an attention glyph —
+   * visible chests are covered by their baked-in sprite + a hover zone.
+   */
+  hidden?: boolean;
 }
 
 /** Map rendering type */

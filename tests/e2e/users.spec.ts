@@ -83,11 +83,11 @@ test.describe('chest marks', () => {
     const total = await page.locator('.treasure-item').count();
     await expect(page.locator('.treasure-count')).toHaveText(`0/${total}`);
 
-    // mark the first chest via its checkbox
+    // mark the first chest via its checkbox — the baked chest gets a ✓ shade
     await page.locator('.treasure-item .treasure-mark').first().check();
     await expect(page.locator('.treasure-count')).toHaveText(`1/${total}`);
     await expect(page.locator('.treasure-item.marked')).toHaveCount(1);
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(1);
+    await expect(page.locator('.poi-check')).toHaveCount(1);
 
     // survives a reload
     await page.reload({ waitUntil: 'networkidle' });
@@ -102,20 +102,20 @@ test.describe('chest marks', () => {
     await expect(page.locator('.treasure-count')).toHaveText(`1/${total}`);
   });
 
-  test('marking by clicking the map glyph toggles it', async ({ page }) => {
+  test('marking by clicking a chest zone on the map toggles it', async ({ page }) => {
     await openApp(page);
-    const glyphs = await page.locator('.poi-marker').count();
-    test.skip(glyphs === 0, 'current world map has no POI glyphs');
+    const zones = await page.locator('#map path.poi-hover').count();
+    test.skip(zones === 0, 'current world map has no chest zones');
 
-    // The incremental update re-appends the toggled marker (DOM order shifts),
+    // The incremental update replaces the toggled layer (DOM order shifts),
     // so click the same MAP POSITION twice instead of the same DOM index.
-    const box = await page.locator('.poi-marker').first().boundingBox();
+    const box = await page.locator('#map path.poi-hover').first().boundingBox();
     const cx = box!.x + box!.width / 2;
     const cy = box!.y + box!.height / 2;
     await page.mouse.click(cx, cy);
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(1);
+    await expect(page.locator('.poi-check')).toHaveCount(1);
     await page.mouse.click(cx, cy);
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(0);
+    await expect(page.locator('.poi-check')).toHaveCount(0);
   });
 
   test('export/import moves marks between users', async ({ page }) => {

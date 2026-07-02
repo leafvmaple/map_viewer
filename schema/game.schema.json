@@ -155,6 +155,10 @@
           "minItems": 2,
           "maxItems": 2,
           "items": { "type": "integer", "minimum": 1 }
+        },
+        "hidden": {
+          "type": "boolean",
+          "description": "True when the collectible has NO visible sprite in the rendered map image (buried / Itemfinder-style items). Only these get an attention glyph in the viewer; visible chests rely on their baked-in sprite + a hover zone."
         }
       }
     },

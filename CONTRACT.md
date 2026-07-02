@@ -107,7 +107,8 @@ hover zones with a chest list, and users can mark them as collected:
     "label": { "zh": "宝箱 · 长枪", "en": "Chest · Spear" },
     "item":  "0x1C",                     // optional raw item id, fallback display
     "icon":  "sprites/trainer_05.png",   // optional sprite marker (e.g. an NPC)
-    "iconSize": [16, 32]                 // native px size of `icon`; default [16, 32]
+    "iconSize": [16, 32],                // native px size of `icon`; default [16, 32]
+    "hidden": false                      // true ONLY if invisible in the map image
   }
 ]
 ```
@@ -118,6 +119,7 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. |
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
+| `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
 
 ### Optional map events (terrain changes)
 

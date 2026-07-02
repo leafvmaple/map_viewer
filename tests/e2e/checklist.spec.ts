@@ -81,18 +81,18 @@ test.describe('hide collected on the map', () => {
     test.skip(!panelVisible, 'current world map has no treasure list');
 
     await page.locator('.treasure-item .treasure-mark').first().check();
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(1);
+    await expect(page.locator('.poi-check')).toHaveCount(1);
 
     await page.locator('.poi-filter input[data-hide-marked]').check();
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(0);
+    await expect(page.locator('.poi-check')).toHaveCount(0);
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForSelector('.poi-filter-item');
     await expect(page.locator('.poi-filter input[data-hide-marked]')).toBeChecked();
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(0);
+    await expect(page.locator('.poi-check')).toHaveCount(0);
 
     await page.locator('.poi-filter input[data-hide-marked]').uncheck();
-    await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(1);
+    await expect(page.locator('.poi-check')).toHaveCount(1);
   });
 });
 
@@ -111,8 +111,7 @@ test.describe('poi deep link', () => {
     await expect
       .poll(() => page.evaluate(() => location.hash))
       .toContain(`&poi=${poiId}`);
-    // the anchored chest is on screen (focusPoi panned to it)
-    const marker = page.locator('.poi-marker').first();
-    await expect(marker).toBeVisible();
+    // the anchored chest zone is on screen (focusPoi panned to it)
+    await expect(page.locator('#map path.poi-hover').first()).toBeVisible();
   });
 });

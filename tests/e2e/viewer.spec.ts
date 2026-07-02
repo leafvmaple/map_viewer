@@ -64,7 +64,8 @@ test.describe('viewer basics', () => {
     await openApp(page);
     const worldHash = await page.evaluate(() => location.hash);
 
-    const trigger = page.locator('#map path.leaflet-interactive').first();
+    // exclude POI chest zones — they are interactive svg paths too
+    const trigger = page.locator('#map path.leaflet-interactive:not(.poi-hover)').first();
     const box = await trigger.boundingBox();
     expect(box).not.toBeNull();
     await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);

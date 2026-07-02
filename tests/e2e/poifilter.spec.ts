@@ -14,22 +14,22 @@ test.describe('poi category legend', () => {
     const rows = await page.locator('.poi-filter-item').count();
     expect(rows).toBeGreaterThan(0);
 
-    // pick the first category and count its markers
+    // pick the first category and count its markers/zones (.poi-{kind} matches both)
     const kind = await page.locator('.poi-filter-item input').first().getAttribute('data-kind');
-    const markersBefore = await page.locator(`.poi-marker.poi-${kind}`).count();
+    const markersBefore = await page.locator(`#map .poi-${kind}`).count();
     expect(markersBefore).toBeGreaterThan(0);
 
     await page.locator('.poi-filter-item input').first().uncheck();
-    await expect(page.locator(`.poi-marker.poi-${kind}`)).toHaveCount(0);
+    await expect(page.locator(`#map .poi-${kind}`)).toHaveCount(0);
 
     // other categories stay (if the map has more than one)
     if (rows > 1) {
-      const totalLeft = await page.locator('.poi-marker').count();
+      const totalLeft = await page.locator('#map .poi-marker, #map path.poi-hover').count();
       expect(totalLeft).toBeGreaterThan(0);
     }
 
     await page.locator('.poi-filter-item input').first().check();
-    await expect(page.locator(`.poi-marker.poi-${kind}`)).toHaveCount(markersBefore);
+    await expect(page.locator(`#map .poi-${kind}`)).toHaveCount(markersBefore);
   });
 
   test('filter persists across reload and is per user', async ({ page }) => {
@@ -39,12 +39,12 @@ test.describe('poi category legend', () => {
 
     const kind = await page.locator('.poi-filter-item input').first().getAttribute('data-kind');
     await page.locator('.poi-filter-item input').first().uncheck();
-    await expect(page.locator(`.poi-marker.poi-${kind}`)).toHaveCount(0);
+    await expect(page.locator(`#map .poi-${kind}`)).toHaveCount(0);
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForSelector('.poi-filter-item');
     await expect(page.locator('.poi-filter-item input').first()).not.toBeChecked();
-    await expect(page.locator(`.poi-marker.poi-${kind}`)).toHaveCount(0);
+    await expect(page.locator(`#map .poi-${kind}`)).toHaveCount(0);
 
     // a fresh user sees everything again
     await page.click('.user-menu-btn');
@@ -52,7 +52,7 @@ test.describe('poi category legend', () => {
     await page.click('.user-menu-add');
     await expect(page.locator('.poi-filter-item input').first()).toBeChecked();
     await expect
-      .poll(() => page.locator(`.poi-marker.poi-${kind}`).count())
+      .poll(() => page.locator(`#map .poi-${kind}`).count())
       .toBeGreaterThan(0);
   });
 
@@ -61,19 +61,18 @@ test.describe('poi category legend', () => {
     const panelVisible = await page.locator('.treasure-panel').isVisible();
     test.skip(!panelVisible, 'current world map has no treasure list');
 
-    // tag every marker element, toggle one mark, then verify untouched markers
-    // kept their DOM nodes (incremental update, not clearLayers + rebuild).
-    await page.evaluate(() => {
-      document.querySelectorAll('.leaflet-marker-icon').forEach((el, i) => {
-        (el as HTMLElement).dataset.probe = String(i);
-      });
+    // tag every svg path (chest zones + triggers), toggle one mark, then verify
+    // untouched elements kept their DOM nodes (incremental update, not a rebuild).
+    const before = await page.evaluate(() => {
+      const paths = document.querySelectorAll('#map svg path');
+      paths.forEach((el, i) => { (el as SVGPathElement).dataset.probe = String(i); });
+      return paths.length;
     });
     await page.locator('.treasure-item .treasure-mark').first().check();
     await expect(page.locator('.treasure-count')).toContainText('1/');
     const surviving = await page.evaluate(
-      () => document.querySelectorAll('.leaflet-marker-icon[data-probe]').length,
+      () => document.querySelectorAll('#map svg path[data-probe]').length,
     );
-    const total = await page.locator('.leaflet-marker-icon').count();
-    expect(surviving).toBeGreaterThan(total - 3); // only the toggled marker was rebuilt
+    expect(surviving).toBeGreaterThan(before - 3); // only the toggled zone was rebuilt
   });
 });

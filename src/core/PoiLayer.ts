@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { CHEST_KINDS } from './PoiIndex.js';
 import type { PoiDef } from '../types';
 
 interface PoiLayerOptions {
@@ -128,6 +129,13 @@ export class PoiLayer {
     const layers: L.Layer[] = [];
     let layer: L.Layer;
 
+    // Chests (treasure/gold) whose sprite is baked into the map image need no
+    // attention glyph — the image itself shows them; they only get a hover/click
+    // zone. A glyph is drawn ONLY for `hidden` collectibles (nothing visible in
+    // the image) and, on the overworld, for non-chest kinds without a sprite.
+    const needsGlyph = poi.hidden || (this._showGlyphs && !CHEST_KINDS.has(poi.kind));
+    let renderedAsZone = false;
+
     if (poi.icon && this._resolveIcon) {
       // Sprite marker (e.g. a trainer's NPC sprite) — shown on every map,
       // anchored so the sprite's feet stand on its tile.
@@ -139,7 +147,7 @@ export class PoiLayer {
         iconAnchor: [w / 2, h - half],
       });
       layer = L.marker([-(y + half), x + half], { icon, interactive: true, keyboard: false });
-    } else if (this._showGlyphs) {
+    } else if (needsGlyph) {
       // Visible marker (star for a chest, money bag for gold); dimmed when collected.
       const glyph = poi.kind === 'gold' ? '💰' : poi.kind === 'treasure' ? '⭐' : '📍';
       const icon = L.divIcon({
@@ -150,22 +158,24 @@ export class PoiLayer {
       });
       layer = L.marker([-(y + half), x + half], { icon, interactive: true, keyboard: false });
     } else if (isMarked) {
-      // Collected scene chest: shade the baked sprite so it reads as "done".
+      // Collected baked-in chest: shade its sprite so it reads as "done".
+      renderedAsZone = true;
       layer = L.rectangle([[-y, x], [-(y + t), x + t]], {
         stroke: false,
         fill: true,
         fillColor: '#000000',
         fillOpacity: 0.55,
-        className: 'poi-hover poi-hover-marked',
+        className: `poi-hover poi-hover-marked poi-${poi.kind}`,
         interactive: true,
       });
     } else {
       // Invisible, tile-sized hover zone over the baked chest sprite.
+      renderedAsZone = true;
       layer = L.rectangle([[-y, x], [-(y + t), x + t]], {
         stroke: false,
         fill: true,
         fillOpacity: 0,
-        className: 'poi-hover',
+        className: `poi-hover poi-${poi.kind}`,
         interactive: true,
       });
     }
@@ -183,7 +193,7 @@ export class PoiLayer {
     layers.push(layer);
 
     // Check glyph on top of the shaded tile so the state is legible at a glance.
-    if (isMarked && !this._showGlyphs && !(poi.icon && this._resolveIcon)) {
+    if (isMarked && renderedAsZone) {
       const check = L.marker([-(y + half), x + half], {
         icon: L.divIcon({
           className: 'poi-check',
