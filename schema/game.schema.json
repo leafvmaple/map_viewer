@@ -40,13 +40,13 @@
     },
     "map": {
       "type": "object",
-      "required": ["name", "type", "image", "triggers"],
+      "required": ["name", "type", "triggers"],
       "additionalProperties": false,
       "properties": {
         "name": { "$ref": "#/$defs/localizedString" },
         "type": {
           "enum": ["image", "tiles"],
-          "description": "Render mode. Only \"image\" is currently implemented by the viewer."
+          "description": "Render mode: a single image, or a pre-rendered tile pyramid (tilesPath)."
         },
         "image": {
           "type": "string",
@@ -73,7 +73,8 @@
           "description": "Tile size in pixels; drives the grid overlay and the editor's snap-to-grid. Typically 16."
         },
         "maxZoom": { "type": "number" },
-        "tilesPath": { "type": "string", "description": "Tile URL template (reserved for future type=tiles)." },
+        "tilesPath": { "type": "string", "description": "Tile URL template for type=tiles, relative to the game res dir (e.g. world_tiles/{z}/{x}_{y}.png); latlng space stays full-res pixels." },
+        "minNativeZoom": { "type": "number", "description": "Lowest pre-rendered pyramid level for type=tiles (default -5)." },
         "triggers": {
           "type": "array",
           "items": { "$ref": "#/$defs/trigger" }

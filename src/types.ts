@@ -55,8 +55,10 @@ export interface MapConfig {
   type: MapType;
   /** Relative image path (for type=image) */
   image: string;
-  /** Tile URL template (for type=tiles, future) */
+  /** Tile URL template (for type=tiles), e.g. "world_tiles/{z}/{x}_{y}.png" */
   tilesPath?: string;
+  /** Lowest pre-rendered pyramid level for type=tiles (default -5). */
+  minNativeZoom?: number;
   /** Tile size in pixels (used for grid overlay) */
   tileSize?: number;
   /** Max zoom for tile maps */

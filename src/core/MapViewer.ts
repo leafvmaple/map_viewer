@@ -40,6 +40,7 @@ export class MapViewer {
   private _isPoiMarked: ((poiId: string) => boolean) | null = null;
 
   private _imageOverlay: L.ImageOverlay | null = null;
+  private _tileLayer: L.TileLayer | null = null;
   private _eventOverlays = new Map<string, L.ImageOverlay>();
   private _gridLayer: L.Polyline | null = null;
   private _showGrid = false;
@@ -150,7 +151,7 @@ export class MapViewer {
     this._currentMapConfig = mapConfig;
 
     if (mapConfig.type === 'tiles') {
-      await this._loadTileMap(mapConfig);
+      await this._loadTileMap(mapConfig, viewState);
     } else {
       await this._loadImageMap(mapConfig, viewState);
     }
@@ -233,11 +234,54 @@ export class MapViewer {
     }
   }
 
-  /** Placeholder for tile-based map loading (future extension). */
-  private async _loadTileMap(mapConfig: MapConfig): Promise<void> {
-    console.warn('Tile-based maps not yet implemented, falling back to image mode');
-    if (mapConfig.image) {
-      await this._loadImageMap(mapConfig);
+  /**
+   * Tile-pyramid map (huge full-res maps, e.g. HGSS Johto+Kanto at 16 px/tile).
+   *
+   * The pyramid keeps latlng = full-resolution pixels (same coordinate space as
+   * triggers/POIs): zoom 0 tiles are native resolution, negative zooms are
+   * pre-downscaled halvings down to `minNativeZoom`. Missing tiles = empty map
+   * regions (their 404s are expected and left silent).
+   */
+  private async _loadTileMap(mapConfig: MapConfig, viewState?: ViewState): Promise<void> {
+    if (!mapConfig.tilesPath || mapConfig.width == null || mapConfig.height == null) {
+      console.warn('type=tiles needs tilesPath + width/height; falling back to image mode');
+      if (mapConfig.image) await this._loadImageMap(mapConfig, viewState);
+      return;
+    }
+    const { width, height } = mapConfig;
+    const bounds: L.LatLngBoundsExpression = [[-height, 0], [0, width]];
+
+    this._tileLayer = L.tileLayer(this._resolveImagePath!(mapConfig.tilesPath), {
+      tileSize: 256,
+      bounds,
+      minNativeZoom: mapConfig.minNativeZoom ?? -5,
+      maxNativeZoom: 0,
+      minZoom: this._map.getMinZoom(),
+      maxZoom: this._map.getMaxZoom(),
+      noWrap: true,
+      keepBuffer: 4,
+      className: 'map-image pixelated',
+    }).addTo(this._map);
+
+    if (viewState) {
+      this._map.setView(viewState.center, viewState.zoom, { animate: false });
+    } else {
+      this._map.fitBounds(bounds, { animate: false });
+    }
+    this._updateSpriteScale();
+
+    const scale = Math.pow(2, this._map.getZoom());
+    const size = this._map.getSize();
+    const marginX = Math.max(200, (size.x / scale) * 0.5);
+    const marginY = Math.max(200, (size.y / scale) * 0.5);
+    this._map.setMaxBounds([
+      [-height - marginY, -marginX],
+      [marginY, width + marginX],
+    ]);
+
+    this._currentDims = { width, height };
+    if (this._showGrid && mapConfig.tileSize) {
+      this._addGrid(mapConfig.tileSize, width, height);
     }
   }
 
@@ -260,6 +304,10 @@ export class MapViewer {
     if (this._imageOverlay) {
       this._map.removeLayer(this._imageOverlay);
       this._imageOverlay = null;
+    }
+    if (this._tileLayer) {
+      this._map.removeLayer(this._tileLayer);
+      this._tileLayer = null;
     }
     this._triggerLayer.clear();
     this._poiLayer.clear();

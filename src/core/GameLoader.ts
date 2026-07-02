@@ -91,7 +91,9 @@ export class GameLoader {
       if (map.type !== 'image' && map.type !== 'tiles') {
         warnings.push(`map "${mapId}" has invalid type "${map.type}"`);
       }
-      if (!map.image) warnings.push(`map "${mapId}" is missing "image"`);
+      if (!map.image && !(map.type === 'tiles' && map.tilesPath)) {
+        warnings.push(`map "${mapId}" is missing "image"`);
+      }
 
       const triggers = map.triggers ?? [];
       if (!Array.isArray(triggers)) {
