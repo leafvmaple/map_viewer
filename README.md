@@ -27,6 +27,12 @@ generated locally by `nes_decoder` (and mounted from the NAS in production, see
 - 💾 Edits (triggers, renames, added maps) persist in `localStorage` over the read-only base data.
 - 🚀 Progressive image loading (low-res placeholder → full image) when the data provides it.
 - 🔗 URL hash deep links; map navigation integrates with browser history (back/forward work).
+- 👤 **Local user profiles** (no auth — create by name, switch freely): language,
+  layer toggles, and per-map views are stored per user, with JSON export/import.
+  Map edits stay global.
+- ✅ **Collected marks**: click a chest (on the map or in the list) to mark it
+  collected for the current user — the marker dims, the list shows `n/total`
+  progress, and hover cards grey out collected chests.
 
 ## Tech stack
 
@@ -47,8 +53,15 @@ Other scripts:
 npm run typecheck  # tsc --noEmit
 npm run build      # type-check + production build to dist/
 npm run preview    # preview the production build
-npm test           # vitest unit tests (pure logic: nav stack, hash routing, escaping)
+npm test           # vitest unit tests (storage, users, marks, i18n, routing)
+npm run test:e2e   # Playwright end-to-end suite (starts its own dev server;
+                   #   needs local game data + `npx playwright install chromium`)
 ```
+
+Unit tests also gate the Docker image build (`RUN npm run test` in the
+Dockerfile), so a red suite never ships. The E2E suite drives the real app in
+headless Chromium — navigation/history, editor interactions, user profiles,
+chest marks — and adapts to whatever games are exported locally.
 
 The dev server also serves the `res/` folder statically (see `vite.config.ts`),
 so `game.json` and the map images load from `/res/{gameId}/...`.

@@ -143,7 +143,19 @@
           "items": { "type": "number" }
         },
         "label": { "$ref": "#/$defs/localizedString" },
-        "item": { "type": "string", "description": "Optional item id/hex for treasure POIs." }
+        "item": { "type": "string", "description": "Optional item id/hex for treasure POIs." },
+        "icon": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional sprite image path (relative to the game's res dir); rendered as the marker instead of a glyph, on every map."
+        },
+        "iconSize": {
+          "type": "array",
+          "description": "Native pixel size [w, h] of `icon` (defaults to [16, 32]).",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        }
       }
     },
     "bounds": {

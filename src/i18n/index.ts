@@ -1,11 +1,11 @@
 import en from './en.json';
 import zh from './zh.json';
 import ja from './ja.json';
+import { userStore } from '../core/UserStore.js';
 import type { LangCode, LangOption, LocalizedString } from '../types';
 
 type LocaleMap = Record<string, string>;
 const locales: Record<LangCode, LocaleMap> = { en, zh, ja };
-const STORAGE_KEY = 'map_viewer_lang';
 
 type ChangeListener = (lang: LangCode) => void;
 
@@ -18,10 +18,10 @@ class I18n {
   }
 
   private _detectLanguage(): LangCode {
-    const stored = localStorage.getItem(STORAGE_KEY) as LangCode | null;
+    const stored = userStore.getItem<LangCode>('lang');
     if (stored && locales[stored]) return stored;
 
-    const nav = navigator.language.toLowerCase();
+    const nav = typeof navigator !== 'undefined' ? (navigator.language ?? '').toLowerCase() : '';
     if (nav.startsWith('zh')) return 'zh';
     if (nav.startsWith('ja')) return 'ja';
     return 'en';
@@ -34,8 +34,19 @@ class I18n {
   set lang(value: LangCode) {
     if (!locales[value]) return;
     this._lang = value;
-    localStorage.setItem(STORAGE_KEY, value);
+    userStore.setItem('lang', value);
     this._listeners.forEach(fn => fn(value));
+  }
+
+  /**
+   * Re-read the language from the (possibly different) current user's storage.
+   * Notifies listeners only when the language actually changed.
+   */
+  reload(): void {
+    const lang = this._detectLanguage();
+    if (lang === this._lang) return;
+    this._lang = lang;
+    this._listeners.forEach(fn => fn(lang));
   }
 
   get availableLanguages(): LangOption[] {

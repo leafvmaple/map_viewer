@@ -47,5 +47,16 @@
   "toolbar.labelsHide": "ラベル非表示",
   "toolbar.treasures": "宝箱",
   "treasure.listTitle": "宝箱一覧",
-  "event.listTitle": "地形イベント"
+  "treasure.collected": "回収済み",
+  "event.listTitle": "地形イベント",
+  "user.menu": "ユーザー",
+  "user.newPlaceholder": "新しいユーザー名…",
+  "user.add": "追加",
+  "user.export": "データ出力",
+  "user.import": "データ取込",
+  "user.delete": "現在のユーザーを削除",
+  "user.deleteConfirm": "ユーザー「{name}」を削除しますか？マークと設定も削除されます。",
+  "user.lastUserError": "ユーザーは最低1人必要です",
+  "user.importError": "取込に失敗：ファイル形式が不正です",
+  "user.renameTip": "名前変更"
 }

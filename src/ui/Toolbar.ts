@@ -162,6 +162,16 @@ export class Toolbar {
     this._applyState();
   }
 
+  /** Re-read the (per-user) prefs into the toggle buttons, e.g. after a user switch. */
+  syncPrefs(): void {
+    const prefs = Prefs.load();
+    this._triggersVisible = prefs.triggers;
+    this._labelsVisible = prefs.labels;
+    this._treasuresVisible = prefs.treasures;
+    this._gridVisible = prefs.grid;
+    this._applyState();
+  }
+
   /** Refresh labels after language change — update text in place (no re-render). */
   refreshLabels(): void {
     this._backBtn.title = i18n.t('nav.back');

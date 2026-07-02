@@ -47,5 +47,16 @@
   "toolbar.labelsHide": "Hide Labels",
   "toolbar.treasures": "Treasures",
   "treasure.listTitle": "Treasures",
-  "event.listTitle": "Terrain events"
+  "treasure.collected": "Collected",
+  "event.listTitle": "Terrain events",
+  "user.menu": "User",
+  "user.newPlaceholder": "New user name…",
+  "user.add": "Add",
+  "user.export": "Export data",
+  "user.import": "Import data",
+  "user.delete": "Delete current user",
+  "user.deleteConfirm": "Delete user \"{name}\"? Their marks and preferences will be removed.",
+  "user.lastUserError": "At least one user must remain",
+  "user.importError": "Import failed: invalid file format",
+  "user.renameTip": "Rename"
 }

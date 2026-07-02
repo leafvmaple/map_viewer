@@ -2,7 +2,7 @@ import L from 'leaflet';
 import { TriggerLayer } from './TriggerLayer.js';
 import { PoiLayer } from './PoiLayer.js';
 import { i18n } from '../i18n/index.js';
-import type { GameConfig, MapConfig, TriggerDef, ViewState, EventDef } from '../types';
+import type { GameConfig, MapConfig, PoiDef, TriggerDef, ViewState, EventDef } from '../types';
 
 interface MapViewerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -11,6 +11,8 @@ interface MapViewerOptions {
   onMapLoaded?: (mapId: string, mapConfig: MapConfig) => void;
   /** Called when a map/event image fails to load (bad path, missing file). */
   onImageError?: (url: string) => void;
+  /** Click on a POI marker/zone (used to toggle its collected mark). */
+  onPoiClick?: (poi: PoiDef) => void;
 }
 
 interface ImageDimensions {
@@ -68,7 +70,7 @@ export class MapViewer {
     });
 
     // Points of interest (treasure chests, etc.)
-    this._poiLayer = new PoiLayer(this._map);
+    this._poiLayer = new PoiLayer(this._map, { onPoiClick: options.onPoiClick });
 
     // Pixel coordinate display
     this._coordControl = new L.Control({ position: 'bottomleft' });
@@ -89,20 +91,30 @@ export class MapViewer {
   }
 
   /** Set the active game configuration. Call before loadMap(). */
-  setGameConfig(gameConfig: GameConfig, resolveImagePath: (path: string) => string): void {
+  setGameConfig(
+    gameConfig: GameConfig,
+    resolveImagePath: (path: string) => string,
+    isPoiMarked?: (poiId: string) => boolean,
+  ): void {
     this._gameConfig = gameConfig;
     this._resolveImagePath = resolveImagePath;
+    this._poiLayer.setIconResolver(resolveImagePath);
 
     // Resolve a trigger's target map to everything the hover UI needs
-    // (localized name, preview image, chest list, tile size).
+    // (localized name, preview image, chest list + collected state, tile size).
+    // Runs per hover, so the marked set is always current.
     this._triggerLayer.setTargetMapResolver((mapId: string) => {
       const mc = gameConfig.maps[mapId];
       if (!mc) return null;
+      const pois = mc.pois ?? [];
       return {
         name: i18n.localize(mc.name) || mapId,
         image: mc.image ? resolveImagePath(mc.thumbnail ?? mc.image) : null,
-        pois: mc.pois ?? [],
+        pois,
         tileSize: mc.tileSize ?? 16,
+        marked: isPoiMarked
+          ? new Set(pois.filter(p => isPoiMarked(p.id)).map(p => p.id))
+          : undefined,
       };
     });
   }

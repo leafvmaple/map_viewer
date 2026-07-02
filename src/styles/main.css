@@ -264,7 +264,9 @@ html, body {
   background: #16213e;
   border-bottom: 1px solid #0f3460;
   gap: 8px;
-  z-index: 900;
+  /* Above the floating panels (treasure 1050 / editor 1100): the toolbar's
+     stacking context contains the user-menu dropdown, which must overlay them. */
+  z-index: 1150;
   flex-shrink: 0;
 }
 
@@ -646,6 +648,22 @@ html, body {
   line-height: 1;
 }
 
+/* Sprite-image POI marker (e.g. a trainer's NPC sprite). */
+.poi-sprite {
+  display: block;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+}
+
+.poi-sprite.poi-flash {
+  animation: poiFlash 0.5s ease-in-out 3;
+}
+
+.poi-marker.poi-marked .poi-sprite {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
 .poi-glyph.poi-flash {
   animation: poiFlash 0.5s ease-in-out 3;
 }
@@ -866,4 +884,177 @@ html, body {
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+/* ─── User menu (profile switcher, toolbar) ─────────────────── */
+
+.user-menu {
+  position: relative;
+  margin-left: 8px;
+}
+
+.user-menu-btn {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 240px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  padding: 8px;
+  z-index: 1200;
+}
+
+.user-menu-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  color: #aabbcc;
+}
+
+.user-menu-item:hover {
+  background: rgba(0, 229, 255, 0.1);
+}
+
+.user-menu-item.active {
+  color: #00e5ff;
+}
+
+.user-menu-check {
+  width: 14px;
+  color: #00e5ff;
+}
+
+.user-menu-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-menu-edit {
+  background: none;
+  border: none;
+  color: #667788;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 2px;
+  visibility: hidden;
+}
+
+.user-menu-item:hover .user-menu-edit {
+  visibility: visible;
+}
+
+.user-menu-edit:hover {
+  color: #00e5ff;
+}
+
+.user-rename-input {
+  width: 100%;
+  background: #1a1a2e;
+  border: 1px solid #00e5ff;
+  border-radius: 3px;
+  color: #e0e6ed;
+  font-size: 12px;
+  padding: 2px 5px;
+  outline: none;
+}
+
+.user-menu-new {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #0f3460;
+  margin-bottom: 8px;
+}
+
+.user-menu-input {
+  flex: 1;
+  min-width: 0;
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  border-radius: 6px;
+  color: #e0e6ed;
+  font-size: 12px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.user-menu-input:focus {
+  border-color: #00e5ff;
+}
+
+.user-menu-actions {
+  display: flex;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #0f3460;
+}
+
+.user-menu-actions .btn {
+  flex: 1;
+  padding: 5px 4px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* ─── Collected (marked) POIs ───────────────────────────────── */
+
+/* Overworld glyph markers: dim + desaturate when collected. */
+.poi-marker.poi-marked .poi-glyph {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+
+/* Check glyph over a shaded scene-map chest tile. */
+.poi-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #7fe57f;
+  font-size: 12px;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  pointer-events: none;
+}
+
+/* Treasure list: checkbox + dimmed collected rows. */
+.treasure-mark {
+  accent-color: #ffb300;
+  cursor: pointer;
+  margin: 0;
+}
+
+.treasure-item.marked .treasure-name,
+.treasure-item.marked .treasure-idx,
+.treasure-item.marked .treasure-pos {
+  opacity: 0.45;
+}
+
+.treasure-item.marked .treasure-name {
+  text-decoration: line-through;
+}
+
+/* Trigger hover card: dim collected chests in the destination list. */
+.trigger-preview-row.marked {
+  opacity: 0.45;
 }

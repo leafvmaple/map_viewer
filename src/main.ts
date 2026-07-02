@@ -12,8 +12,11 @@ import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
 import { Prefs } from './core/Prefs.js';
 import { parseHash, formatHash } from './core/hashRoute.js';
+import { userStore } from './core/UserStore.js';
+import { MarkStorage } from './core/MarkStorage.js';
+import { UserMenu } from './ui/UserMenu.js';
 import { i18n } from './i18n/index.js';
-import type { GameConfig, LangCode, LocalizedString, MapConfig, TriggerDef, ViewState } from './types';
+import type { GameConfig, LangCode, LocalizedString, MapConfig, PoiDef, TriggerDef, ViewState } from './types';
 
 // ─── Application State ─────────────────────────────────────
 
@@ -36,6 +39,10 @@ let breadcrumb: Breadcrumb;
 let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
 let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
+let userMenu: UserMenu;           // profile switcher (toolbar)
+
+/** Current game's marked ("collected") POI ids for the CURRENT user. */
+let markedPois = new Set<string>();
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
@@ -59,6 +66,7 @@ async function init(): Promise<void> {
     onTriggerHoverOut: handleTriggerHoverOut,
     onMapLoaded: handleMapLoaded,
     onImageError: (url) => showError(url),
+    onPoiClick: handlePoiToggle,
   });
 
   triggerEditor = new TriggerEditor(mapViewer.leafletMap, {
@@ -84,10 +92,23 @@ async function init(): Promise<void> {
 
   treasureList = new TreasureList({
     onSelect: (poi) => mapViewer.poiLayer.focusPoi(poi.id),
+    onToggleMark: handlePoiToggle,
   });
 
   eventPanel = new EventPanel({
     onToggle: (event, active) => mapViewer.setEventOverlay(event, active),
+  });
+
+  userMenu = new UserMenu(document.getElementById('toolbar')!);
+
+  // Switching (or importing/creating) a user re-applies everything personal:
+  // language, layer toggles, saved views, and chest marks.
+  userStore.onChange(() => {
+    loadViews();
+    reloadMarks();
+    toolbar.syncPrefs();
+    applyLayerPrefs();
+    i18n.reload(); // notifies (→ refreshAllLabels) only if the language differs
   });
 
   // Subscribe to nav stack changes
@@ -103,6 +124,7 @@ async function init(): Promise<void> {
 
   // Load registry and default game
   try {
+    loadViews(); // per-user saved views, before the first navigation
     const games = await gameLoader.fetchRegistry();
 
     // Deep link (URL hash) selects the initial game/map/view when present.
@@ -176,8 +198,10 @@ async function handleGameSelect(
     refreshGameNames(gameId);
 
     // Configure MapViewer
-    mapViewer.setGameConfig(currentGameConfig, (path) =>
-      gameLoader.resolveImagePath(currentGameConfig!, path)
+    mapViewer.setGameConfig(
+      currentGameConfig,
+      (path) => gameLoader.resolveImagePath(currentGameConfig!, path),
+      (poiId) => markedPois.has(poiId),
     );
 
     // Configure editor and breadcrumb
@@ -245,11 +269,29 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
+      reloadMarks();
     }
   }
 
   // Re-apply persisted layer toggles so they survive a refresh / map change.
   applyLayerPrefs();
+}
+
+// ─── Per-user POI marks ─────────────────────────────────────
+
+/** Reload the current user's marks for the current game into all consumers. */
+function reloadMarks(): void {
+  markedPois = currentGameConfig ? MarkStorage.markedIds(currentGameConfig.id) : new Set();
+  mapViewer.poiLayer.setMarks(markedPois);
+  treasureList.setMarks(markedPois);
+}
+
+/** Toggle a chest's collected mark (map click or list checkbox). */
+function handlePoiToggle(poi: PoiDef): void {
+  if (!currentGameConfig || triggerEditor.active) return;
+  if (poi.kind !== 'treasure' && poi.kind !== 'gold') return;
+  MarkStorage.toggle(currentGameConfig.id, poi.id);
+  reloadMarks();
 }
 
 /** Sync the live layers to the persisted toggle prefs (see Prefs / Toolbar). */
@@ -391,6 +433,16 @@ function saveCurrentView(): void {
   const vs = mapViewer.getViewState();
   navStack.saveViewState(vs);
   lastView.set(viewKey(displayedGameId, mapViewer.currentMapId), vs);
+  userStore.setItem('views', Object.fromEntries(lastView));
+}
+
+/** Replace the in-memory view cache with the current user's persisted one. */
+function loadViews(): void {
+  lastView.clear();
+  const saved = userStore.getItem<Record<string, ViewState>>('views');
+  if (saved) {
+    for (const [key, vs] of Object.entries(saved)) lastView.set(key, vs);
+  }
 }
 
 async function navigateToMap(
@@ -464,6 +516,7 @@ function refreshAllLabels(): void {
   sidebar.refreshLabels();
   breadcrumb.refreshLabels(navStack.path);
   toolbar.refreshLabels();
+  userMenu.refreshLabels();
   mapViewer.triggerLayer.refreshLabels();
   mapViewer.poiLayer.refreshLabels();
   treasureList.refreshLabels();

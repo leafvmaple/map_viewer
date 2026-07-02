@@ -1,7 +1,12 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 
 export default defineConfig({
+  test: {
+    setupFiles: ['./src/test/setup.ts'],
+    exclude: ['node_modules/**', 'dist/**', 'tests/e2e/**'],
+  },
   root: '.',
   publicDir: 'public',
   resolve: {

@@ -4,18 +4,23 @@ import type { PoiDef } from '../types';
 
 interface TreasureListOptions {
   onSelect: (poi: PoiDef) => void;
+  /** Checkbox toggled: mark/unmark a chest as collected (per user). */
+  onToggleMark?: (poi: PoiDef) => void;
 }
 
 /**
  * TreasureList - The top-right panel listing the current map's treasure/gold
- * chests. Clicking a row pans+flashes that chest. Hidden when there are no chests
- * or while a trigger hover card is showing the destination's chests instead.
+ * chests. Clicking a row pans+flashes that chest; the row checkbox marks it as
+ * collected (per user) and dims it. The header shows collected/total progress.
+ * Hidden when there are no chests or while a trigger hover card is showing the
+ * destination's chests instead.
  */
 export class TreasureList {
   private _el: HTMLElement;
   private _options: TreasureListOptions;
   private _pois: PoiDef[] = [];
   private _tileSize = 16;
+  private _marked = new Set<string>();
   private _visible = true;
 
   constructor(options: TreasureListOptions) {
@@ -24,12 +29,36 @@ export class TreasureList {
     this._el.className = 'treasure-panel';
     this._el.style.display = 'none';
     document.getElementById('app')?.appendChild(this._el);
+
+    // Delegated events: one listener each for row clicks and checkbox toggles.
+    this._el.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement;
+      const row = target.closest<HTMLElement>('.treasure-item');
+      if (!row?.dataset.id) return;
+      const poi = this._pois.find(p => p.id === row.dataset.id);
+      if (!poi) return;
+      if (target.closest('.treasure-mark')) return; // handled by 'change' below
+      this._options.onSelect(poi);
+    });
+    this._el.addEventListener('change', (e) => {
+      const input = e.target as HTMLInputElement;
+      if (!input.classList.contains('treasure-mark')) return;
+      const row = input.closest<HTMLElement>('.treasure-item');
+      const poi = row?.dataset.id ? this._pois.find(p => p.id === row.dataset.id) : undefined;
+      if (poi) this._options.onToggleMark?.(poi);
+    });
   }
 
   /** Update the list (treasure + gold chests only). */
   setPois(pois: PoiDef[], tileSize = 16): void {
     this._pois = (pois ?? []).filter(p => p.kind === 'treasure' || p.kind === 'gold');
     this._tileSize = tileSize;
+    this._render();
+  }
+
+  /** Set which chest ids the current user marked as collected, and re-render. */
+  setMarks(marked: Set<string>): void {
+    this._marked = marked;
     this._render();
   }
 
@@ -55,7 +84,9 @@ export class TreasureList {
       .map((p, i) => {
         const tx = Math.round(p.pos[0] / this._tileSize);
         const ty = Math.round(p.pos[1] / this._tileSize);
-        return `<div class="treasure-item" data-id="${escapeHtml(p.id)}">
+        const marked = this._marked.has(p.id);
+        return `<div class="treasure-item${marked ? ' marked' : ''}" data-id="${escapeHtml(p.id)}">
+          <input type="checkbox" class="treasure-mark" title="${escapeHtml(i18n.t('treasure.collected'))}" ${marked ? 'checked' : ''} />
           <span class="treasure-idx">${i + 1}</span>
           <span class="treasure-name">${escapeHtml(this._itemName(p))}</span>
           <span class="treasure-pos">${tx},${ty}</span>
@@ -63,21 +94,14 @@ export class TreasureList {
       })
       .join('');
 
+    const collected = this._pois.filter(p => this._marked.has(p.id)).length;
     this._el.innerHTML = `
       <div class="treasure-panel-header">
         📦 ${i18n.t('treasure.listTitle')}
-        <span class="treasure-count">${this._pois.length}</span>
+        <span class="treasure-count">${collected}/${this._pois.length}</span>
       </div>
       <div class="treasure-panel-body">${rows}</div>
     `;
-
-    this._el.querySelectorAll('.treasure-item').forEach(el => {
-      el.addEventListener('click', () => {
-        const id = (el as HTMLElement).dataset.id!;
-        const poi = this._pois.find(p => p.id === id);
-        if (poi) this._options.onSelect(poi);
-      });
-    });
 
     this._updateDisplay();
   }

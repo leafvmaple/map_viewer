@@ -23,6 +23,8 @@ export interface TargetMapInfo {
   pois: PoiDef[];
   /** Tile size in pixels (for tile-coordinate display). */
   tileSize: number;
+  /** POI ids the current user marked as collected (dimmed in the list). */
+  marked?: Set<string>;
 }
 
 /**
@@ -194,9 +196,10 @@ export class TriggerLayer {
         .map((p, i) => {
           const tx = Math.round(p.pos[0] / tileSize);
           const ty = Math.round(p.pos[1] / tileSize);
+          const marked = info?.marked?.has(p.id) ?? false;
           return (
-            `<div class="trigger-preview-row">` +
-            `<span class="trigger-preview-item">${i + 1}. ${escapeHtml(this._chestName(p))}</span>` +
+            `<div class="trigger-preview-row${marked ? ' marked' : ''}">` +
+            `<span class="trigger-preview-item">${marked ? '✓' : `${i + 1}.`} ${escapeHtml(this._chestName(p))}</span>` +
             `<span class="trigger-preview-coord">${tx},${ty}</span>` +
             `</div>`
           );

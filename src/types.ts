@@ -32,6 +32,12 @@ export interface PoiDef {
   label?: LocalizedString;
   /** Optional item id/hex for treasure POIs */
   item?: string;
+  /** Optional sprite image (relative to the game's res dir, like map `image`).
+   *  When set, the POI renders as this sprite instead of a glyph — on every
+   *  map, not just the overworld (e.g. trainer NPC sprites). */
+  icon?: string;
+  /** Native pixel size [w, h] of `icon` (defaults to [16, 32]). */
+  iconSize?: [number, number];
 }
 
 /** Map rendering type */

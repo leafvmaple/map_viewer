@@ -93,6 +93,38 @@ map_viewer/
 - Origin is **top-left**; `x` grows right, `y` grows down.
 - The viewer maps pixel `(x, y)` → Leaflet `LatLng(-y, x)` in `CRS.Simple` internally — the producer does **not** need to know that; just emit plain pixels.
 
+### Optional POIs (treasure chests etc.)
+
+A map **may** carry points of interest; the viewer renders them as markers /
+hover zones with a chest list, and users can mark them as collected:
+
+```jsonc
+"pois": [
+  {
+    "id":    "map_01_chest_00",          // see stability rule below
+    "kind":  "treasure",                 // "treasure" | "gold" | anything else = generic pin
+    "pos":   [192, 120],                 // px of the tile's TOP-LEFT corner, top-left origin
+    "label": { "zh": "宝箱 · 长枪", "en": "Chest · Spear" },
+    "item":  "0x1C",                     // optional raw item id, fallback display
+    "icon":  "sprites/trainer_05.png",   // optional sprite marker (e.g. an NPC)
+    "iconSize": [16, 32]                 // native px size of `icon`; default [16, 32]
+  }
+]
+```
+
+| Field | Rule |
+| --- | --- |
+| `pois[*].id` | Unique within its map — and **STABLE across re-exports**: per-user "collected" marks are keyed by this id, so a re-export that renames ids silently wipes every user's progress. Derive it from stable facts (map + tile position or ROM table index), never from enumeration order of a mutable list. |
+| `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. |
+| `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
+| `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
+
+### Optional map events (terrain changes)
+
+`events` (toggleable terrain-change overlays) follow the same pixel-bounds
+conventions; `events[*].id` should be stable for the same reason, though
+nothing user-persistent references it yet.
+
 ### Optional performance fields (progressive loading)
 
 The viewer can paint a low-res placeholder instantly and swap in the full image

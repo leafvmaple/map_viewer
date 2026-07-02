@@ -47,5 +47,16 @@
   "toolbar.labelsHide": "隐藏标签",
   "toolbar.treasures": "宝箱",
   "treasure.listTitle": "宝箱列表",
-  "event.listTitle": "地形事件"
+  "treasure.collected": "已收集",
+  "event.listTitle": "地形事件",
+  "user.menu": "用户",
+  "user.newPlaceholder": "新用户名…",
+  "user.add": "添加",
+  "user.export": "导出数据",
+  "user.import": "导入数据",
+  "user.delete": "删除当前用户",
+  "user.deleteConfirm": "删除用户「{name}」？其标记与偏好将一并清除。",
+  "user.lastUserError": "至少需要保留一个用户",
+  "user.importError": "导入失败：文件格式不正确",
+  "user.renameTip": "重命名"
 }
