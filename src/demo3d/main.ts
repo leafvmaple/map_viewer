@@ -13,6 +13,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { clone as cloneSkinned } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 const BASE = '/res/pokemon_hgss_3d/';
 const CHUNK = 512;
@@ -95,8 +96,18 @@ function loadBuilding(model: number): Promise<THREE.Object3D | null> {
   if (!p) {
     const name = `b${String(model).padStart(3, '0')}.glb`;
     p = loader.loadAsync(BASE + 'build/' + name)
-      .then((g) => { toUnlit(g.scene); return g.scene; })
-      .catch(() => null);
+      .then((g) => {
+        toUnlit(g.scene);
+        // Some building models carry NaN vertices (also seen in the 2D
+        // rasterizer): the NaN bounding sphere makes three.js frustum-cull
+        // them unconditionally. Skip culling — buildings are small anyway.
+        g.scene.traverse((o) => {
+          const mesh = o as THREE.Mesh;
+          if (mesh.isMesh) mesh.frustumCulled = false;
+        });
+        return g.scene;
+      })
+      .catch((e) => { console.warn('[building]', name, e?.message ?? e); return null; });
     buildingProto.set(model, p);
   }
   return p;
@@ -122,15 +133,18 @@ async function loadCell(cell: Cell): Promise<void> {
     await Promise.all(placements.map(async (b) => {
       const proto = await loadBuilding(b.m);
       if (!proto) return;
-      const inst = proto.clone(true);
+      // apicula exports buildings as one-joint skinned meshes; plain clone()
+      // leaves the copy bound to the prototype's skeleton (not in our scene)
+      // and it never renders — SkeletonUtils.clone rebinds properly.
+      const inst = cloneSkinned(proto);
       inst.position.set(b.x, b.y, b.z);
       group.add(inst);
     }));
     scene.add(group);
     cell.group = group;
     loadedCount++;
-  } catch {
-    /* missing chunk — leave void */
+  } catch (e) {
+    console.warn('[chunk]', name, (e as Error)?.message ?? e);
   } finally {
     cell.loading = false;
   }
@@ -138,11 +152,10 @@ async function loadCell(cell: Cell): Promise<void> {
 
 function unloadCell(cell: Cell): void {
   if (!cell.group) return;
+  // Detach only — building geometries are SHARED with their prototypes
+  // (clone() shares buffers), so disposing here would destroy every other
+  // instance of the same model. ~34MB of assets fits comfortably in memory.
   scene.remove(cell.group);
-  cell.group.traverse((obj) => {
-    const mesh = obj as THREE.Mesh;
-    if (mesh.isMesh) mesh.geometry?.dispose();
-  });
   cell.group = undefined;
   loadedCount--;
 }
@@ -176,3 +189,6 @@ renderer.setAnimationLoop(() => {
 });
 
 void init();
+
+// dev/debug handle (playwright verification etc.)
+(window as unknown as Record<string, unknown>).__demo3d = { scene, controls, camera };
