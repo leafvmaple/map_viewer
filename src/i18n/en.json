@@ -58,5 +58,12 @@
   "user.deleteConfirm": "Delete user \"{name}\"? Their marks and preferences will be removed.",
   "user.lastUserError": "At least one user must remain",
   "user.importError": "Import failed: invalid file format",
-  "user.renameTip": "Rename"
+  "user.renameTip": "Rename",
+  "poiFilter.title": "Legend",
+  "poi.kind.treasure": "Treasure",
+  "poi.kind.gold": "Gold",
+  "poi.kind.trainer": "Trainer",
+  "poi.kind.sign": "Sign",
+  "poi.kind.heal": "Heal spot",
+  "poi.kind.cut": "Cut tree"
 }

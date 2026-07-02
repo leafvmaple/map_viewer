@@ -15,6 +15,7 @@ import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
 import { UserMenu } from './ui/UserMenu.js';
+import { PoiFilter } from './ui/PoiFilter.js';
 import { i18n } from './i18n/index.js';
 import type { GameConfig, LangCode, LocalizedString, MapConfig, PoiDef, TriggerDef, ViewState } from './types';
 
@@ -40,9 +41,16 @@ let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
 let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
 let userMenu: UserMenu;           // profile switcher (toolbar)
+let poiFilter: PoiFilter;         // POI category legend (bottom-right)
 
 /** Current game's marked ("collected") POI ids for the CURRENT user. */
 let markedPois = new Set<string>();
+/** POI kinds the CURRENT user hides on the current game's maps. */
+let hiddenKinds = new Set<string>();
+
+function loadHiddenKinds(gameId: string): Set<string> {
+  return new Set(userStore.getItem<string[]>(`poi_filters_${gameId}`) ?? []);
+}
 
 // ─── Bootstrap ──────────────────────────────────────────────
 
@@ -83,6 +91,7 @@ async function init(): Promise<void> {
     onTreasuresToggle: () => {
       const visible = mapViewer.poiLayer.toggle();
       treasureList.setVisible(visible);
+      poiFilter.setVisible(visible);
       return visible;
     },
     onGridToggle: () => mapViewer.toggleGrid(),
@@ -101,11 +110,22 @@ async function init(): Promise<void> {
 
   userMenu = new UserMenu(document.getElementById('toolbar')!);
 
+  poiFilter = new PoiFilter({
+    onChange: (hidden) => {
+      hiddenKinds = hidden;
+      if (currentGameConfig) {
+        userStore.setItem(`poi_filters_${currentGameConfig.id}`, [...hidden]);
+      }
+      mapViewer.poiLayer.setKindFilter(hidden);
+    },
+  });
+
   // Switching (or importing/creating) a user re-applies everything personal:
-  // language, layer toggles, saved views, and chest marks.
+  // language, layer toggles, saved views, chest marks, and category filters.
   userStore.onChange(() => {
     loadViews();
     reloadMarks();
+    reloadFilters();
     toolbar.syncPrefs();
     applyLayerPrefs();
     i18n.reload(); // notifies (→ refreshAllLabels) only if the language differs
@@ -192,6 +212,12 @@ async function handleGameSelect(
       }
     }
 
+    // This game's marks/filters must be in place BEFORE the first loadMap —
+    // its initial render reads them (poi ids may collide across games).
+    markedPois = MarkStorage.markedIds(gameId);
+    hiddenKinds = loadHiddenKinds(gameId);
+    mapViewer.poiLayer.setKindFilter(hiddenKinds);
+
     // Update UI
     const mapList = gameLoader.getMapList(currentGameConfig);
     sidebar.setMaps(mapList);
@@ -269,6 +295,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
+      poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds);
       reloadMarks();
     }
   }
@@ -294,6 +321,15 @@ function handlePoiToggle(poi: PoiDef): void {
   reloadMarks();
 }
 
+/** Re-apply the current user's category filter (user switch / import). */
+function reloadFilters(): void {
+  if (!currentGameConfig) return;
+  hiddenKinds = loadHiddenKinds(currentGameConfig.id);
+  mapViewer.poiLayer.setKindFilter(hiddenKinds);
+  const mapConfig = mapViewer.currentMapId ? currentGameConfig.maps[mapViewer.currentMapId] : null;
+  poiFilter.setPois(mapConfig?.pois ?? [], hiddenKinds);
+}
+
 /** Sync the live layers to the persisted toggle prefs (see Prefs / Toolbar). */
 function applyLayerPrefs(): void {
   const p = Prefs.load();
@@ -302,6 +338,7 @@ function applyLayerPrefs(): void {
   mapViewer.triggerLayer.setVisible(!triggerEditor.active && p.triggers);
   mapViewer.poiLayer.setVisible(p.treasures);
   treasureList.setVisible(p.treasures && !triggerEditor.active);
+  poiFilter.setVisible(p.treasures);
   if (p.grid !== mapViewer.gridVisible) mapViewer.toggleGrid();
 }
 
@@ -521,6 +558,7 @@ function refreshAllLabels(): void {
   mapViewer.poiLayer.refreshLabels();
   treasureList.refreshLabels();
   eventPanel.refreshLabels();
+  poiFilter.refreshLabels();
   mapViewer.refreshCoordLabel();
 
   // Refresh game names

@@ -56,10 +56,24 @@ export class TreasureList {
     this._render();
   }
 
-  /** Set which chest ids the current user marked as collected, and re-render. */
+  /**
+   * Set which chest ids the current user marked as collected. Updates rows in
+   * place (class + checkbox + header count) — no innerHTML rebuild, so a single
+   * toggle stays cheap even with thousands of rows.
+   */
   setMarks(marked: Set<string>): void {
     this._marked = marked;
-    this._render();
+    this._el.querySelectorAll<HTMLElement>('.treasure-item').forEach(row => {
+      const isMarked = marked.has(row.dataset.id ?? '');
+      row.classList.toggle('marked', isMarked);
+      const cb = row.querySelector<HTMLInputElement>('.treasure-mark');
+      if (cb) cb.checked = isMarked;
+    });
+    const countEl = this._el.querySelector('.treasure-count');
+    if (countEl) {
+      const collected = this._pois.filter(p => marked.has(p.id)).length;
+      countEl.textContent = `${collected}/${this._pois.length}`;
+    }
   }
 
   setVisible(visible: boolean): void {

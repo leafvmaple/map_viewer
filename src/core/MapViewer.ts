@@ -37,6 +37,7 @@ export class MapViewer {
   private _currentDims: ImageDimensions | null = null;
   private _gameConfig: GameConfig | null = null;
   private _resolveImagePath: ((relativePath: string) => string) | null = null;
+  private _isPoiMarked: ((poiId: string) => boolean) | null = null;
 
   private _imageOverlay: L.ImageOverlay | null = null;
   private _eventOverlays = new Map<string, L.ImageOverlay>();
@@ -98,6 +99,7 @@ export class MapViewer {
   ): void {
     this._gameConfig = gameConfig;
     this._resolveImagePath = resolveImagePath;
+    this._isPoiMarked = isPoiMarked ?? null;
     this._poiLayer.setIconResolver(resolveImagePath);
 
     // Resolve a trigger's target map to everything the hover UI needs
@@ -142,7 +144,13 @@ export class MapViewer {
     // Star/gold glyphs only on the (huge) overworld; scene maps show the baked-in
     // chest sprite and just get invisible hover zones for the info tooltip.
     const showGlyphs = mapId === this._gameConfig?.defaultMap;
-    this._poiLayer.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16, showGlyphs);
+    const pois = mapConfig.pois ?? [];
+    // Include the user's collected marks in the FIRST render — a later
+    // setMarks() with the same set is then a no-op diff (no double render).
+    const marked = this._isPoiMarked
+      ? new Set(pois.filter(p => this._isPoiMarked!(p.id)).map(p => p.id))
+      : undefined;
+    this._poiLayer.setPois(pois, mapConfig.tileSize ?? 16, showGlyphs, marked);
     this._onMapLoaded(mapId, mapConfig);
   }
 

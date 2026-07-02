@@ -58,5 +58,12 @@
   "user.deleteConfirm": "删除用户「{name}」？其标记与偏好将一并清除。",
   "user.lastUserError": "至少需要保留一个用户",
   "user.importError": "导入失败：文件格式不正确",
-  "user.renameTip": "重命名"
+  "user.renameTip": "重命名",
+  "poiFilter.title": "图例",
+  "poi.kind.treasure": "宝箱",
+  "poi.kind.gold": "金币",
+  "poi.kind.trainer": "训练师",
+  "poi.kind.sign": "告示牌",
+  "poi.kind.heal": "回复点",
+  "poi.kind.cut": "居合斩"
 }

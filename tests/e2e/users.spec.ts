@@ -107,9 +107,14 @@ test.describe('chest marks', () => {
     const glyphs = await page.locator('.poi-marker').count();
     test.skip(glyphs === 0, 'current world map has no POI glyphs');
 
-    await page.locator('.poi-marker').first().click();
+    // The incremental update re-appends the toggled marker (DOM order shifts),
+    // so click the same MAP POSITION twice instead of the same DOM index.
+    const box = await page.locator('.poi-marker').first().boundingBox();
+    const cx = box!.x + box!.width / 2;
+    const cy = box!.y + box!.height / 2;
+    await page.mouse.click(cx, cy);
     await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(1);
-    await page.locator('.poi-marker').first().click();
+    await page.mouse.click(cx, cy);
     await expect(page.locator('.poi-marker.poi-marked')).toHaveCount(0);
   });
 

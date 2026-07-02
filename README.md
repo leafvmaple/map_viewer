@@ -33,6 +33,8 @@ generated locally by `nes_decoder` (and mounted from the NAS in production, see
 - ✅ **Collected marks**: click a chest (on the map or in the list) to mark it
   collected for the current user — the marker dims, the list shows `n/total`
   progress, and hover cards grey out collected chests.
+- 🗺 **Category legend** (bottom-right): per-kind checkboxes with counts —
+  hide trainers / signs / chests independently, persisted per user + game.
 
 ## Tech stack
 
@@ -135,3 +137,31 @@ preserves hand-authored names) to make them permanent.
 - `type: "tiles"` is declared in the schema but not yet implemented — it falls back to single-image mode.
 - Large world maps load as one image; supply `width`/`height`/`thumbnail` in `game.json`
   (see CONTRACT.md) to enable the progressive low-res-first load path.
+
+## Performance roadmap (marker scaling)
+
+Measured baseline (2026-07, Pokémon FRLG world map: 368 markers incl. 164
+sprite `<img>`s + 129 trigger paths): pan ~59 fps, zoom ~56 fps, full POI
+rebuild 10 ms, no long tasks. Current safeguards: marks apply **incrementally**
+(O(changed), not a full rebuild), the first render already includes marks (no
+double render), the treasure list updates rows in place, the grid is a single
+multi-polyline, and the category legend keeps marker counts down.
+
+Not needed yet — implement when a single map approaches these thresholds:
+
+1. **Viewport culling** (~2 000+ elements on one map). Only add markers inside
+   the current view (+ one screen of margin); diff add/remove on `moveend`.
+   Game POIs are static and tile-aligned, so a trivial grid-bucket index (or
+   even a flat AABB filter — ~1 ms for 5 000 points) suffices. This caps live
+   DOM at a few hundred regardless of data size and also fixes Leaflet's
+   O(n) per-marker reposition at zoom end. Prefer culling over clustering:
+   guide maps need exact positions.
+2. **Canvas rendering** (~10 000+ elements, after culling stops being enough).
+   First step: a `L.canvas()` renderer for vector layers (trigger rects, hover
+   zones) — thousands of paths stop being DOM nodes. Final step: a custom
+   canvas marker layer (draw all glyphs/sprites onto one canvas, hit-test via
+   the same grid index) — zero marker DOM, but tooltip/click handling must be
+   reimplemented, so only do this under real pressure.
+3. **Cheap knobs before either**: zoom-threshold display (below zoom X render
+   sprites as dots / hide low-priority kinds), and virtualizing the treasure
+   list if a map ever lists 1 000+ chests.

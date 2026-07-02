@@ -58,5 +58,12 @@
   "user.deleteConfirm": "ユーザー「{name}」を削除しますか？マークと設定も削除されます。",
   "user.lastUserError": "ユーザーは最低1人必要です",
   "user.importError": "取込に失敗：ファイル形式が不正です",
-  "user.renameTip": "名前変更"
+  "user.renameTip": "名前変更",
+  "poiFilter.title": "凡例",
+  "poi.kind.treasure": "宝箱",
+  "poi.kind.gold": "お金",
+  "poi.kind.trainer": "トレーナー",
+  "poi.kind.sign": "看板",
+  "poi.kind.heal": "回復スポット",
+  "poi.kind.cut": "いあいぎりの木"
 }
