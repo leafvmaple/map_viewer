@@ -660,6 +660,12 @@ html, body {
   transform-origin: 50% calc(100% - 8px);
 }
 
+/* Resize in step with Leaflet's zoom animation (same duration + curve as
+   .leaflet-zoom-animated), driven by the zoomanim update above. */
+.leaflet-zoom-anim .poi-sprite {
+  transition: transform 0.25s cubic-bezier(0, 0, 0.25, 1);
+}
+
 .poi-sprite.poi-flash {
   animation: poiFlash 0.5s ease-in-out 3;
 }
