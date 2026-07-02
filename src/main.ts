@@ -117,6 +117,13 @@ async function init(): Promise<void> {
       await handleGameSelect(initialGame.gameId, initialGame.mapId, initialGame.view, false);
     }
 
+    // Prefetch the remaining games' configs in the background: the dropdown can
+    // only show a game's localized name once its game.json is loaded (until then
+    // it falls back to the raw id), and later switches become instant.
+    void Promise.allSettled(games.map(g => gameLoader.loadGame(g.id))).then(() => {
+      if (currentGameConfig) refreshGameNames(currentGameConfig.id);
+    });
+
     // Keep the URL hash in sync with pan/zoom so links are shareable & survive refresh.
     mapViewer.leafletMap.on('moveend', () => updateHash());
     // Browser back/forward (and manually edited hashes) navigate the app.
