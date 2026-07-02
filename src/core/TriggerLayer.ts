@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { TriggerDef, PoiDef } from '../types';
 
 interface TriggerLayerOptions {
@@ -10,6 +11,18 @@ interface TriggerLayerOptions {
 
 interface TriggerRectangle extends L.Rectangle {
   _triggerData?: TriggerDef;
+}
+
+/** Everything the layer needs to know about a trigger's target map. */
+export interface TargetMapInfo {
+  /** Localized display name. */
+  name: string;
+  /** Preview image URL (thumbnail if available), or null if none. */
+  image: string | null;
+  /** The target map's POIs (for the hover chest list). */
+  pois: PoiDef[];
+  /** Tile size in pixels (for tile-coordinate display). */
+  tileSize: number;
 }
 
 /**
@@ -25,9 +38,7 @@ export class TriggerLayer {
   private _layerGroup: L.LayerGroup;
   private _triggers: TriggerDef[] = [];
   private _visible = true;
-  private _mapNameResolver: ((mapId: string) => string) | null = null;
-  private _mapImageResolver: ((mapId: string) => string | null) | null = null;
-  private _mapPoisResolver: ((mapId: string) => PoiDef[]) | null = null;
+  private _targetResolver: ((mapId: string) => TargetMapInfo | null) | null = null;
   private _permanentLabels = false;
   private _previewEl: HTMLElement | null = null;
 
@@ -82,7 +93,7 @@ export class TriggerLayer {
       const rect: TriggerRectangle = L.rectangle(bounds, { ...this._defaultStyle });
 
       const label = this._resolveLabel(trigger);
-      rect.bindTooltip(label, this._tooltipOptions());
+      rect.bindTooltip(escapeHtml(label), this._tooltipOptions());
 
       rect.on('mouseover', () => {
         rect.setStyle(this._hoverStyle);
@@ -136,23 +147,14 @@ export class TriggerLayer {
     return this._visible;
   }
 
-  /** Set a function that resolves a mapId to its localized display name. */
-  setMapNameResolver(resolver: (mapId: string) => string): void {
-    this._mapNameResolver = resolver;
-  }
-
-  /** Set a function that resolves a mapId to a preview image URL (or null). */
-  setMapImageResolver(resolver: (mapId: string) => string | null): void {
-    this._mapImageResolver = resolver;
-  }
-
-  /** Set a function that resolves a mapId to its POIs (for the hover chest list). */
-  setMapPoisResolver(resolver: (mapId: string) => PoiDef[]): void {
-    this._mapPoisResolver = resolver;
+  /** Set a function that resolves a target mapId to its display info. */
+  setTargetMapResolver(resolver: (mapId: string) => TargetMapInfo | null): void {
+    this._targetResolver = resolver;
   }
 
   /** Toggle always-on labels (permanent tooltips) vs hover-only. Returns new state. */
   setLabelsPermanent(on: boolean): boolean {
+    if (on === this._permanentLabels) return this._permanentLabels; // no rebuild needed
     this._permanentLabels = on;
     this.setTriggers(this._triggers); // rebuild with the new tooltip mode
     return this._permanentLabels;
@@ -171,28 +173,30 @@ export class TriggerLayer {
   /** Show the hover preview of a trigger's target map: thumbnail + name + chest list. */
   private _showPreview(trigger: TriggerDef): void {
     if (!this._previewEl || !trigger.target) return;
+    const info = this._targetResolver ? this._targetResolver(trigger.target) : null;
+
     const img = this._previewEl.querySelector('.trigger-preview-img') as HTMLImageElement | null;
     const name = this._previewEl.querySelector('.trigger-preview-name') as HTMLElement | null;
     const listEl = this._previewEl.querySelector('.trigger-preview-list') as HTMLElement | null;
 
-    const url = this._mapImageResolver ? this._mapImageResolver(trigger.target) : null;
+    const url = info?.image ?? null;
     if (img) {
       img.src = url ?? '';
       img.style.display = url ? 'block' : 'none';
     }
     if (name) {
-      name.textContent = this._mapNameResolver ? this._mapNameResolver(trigger.target) : trigger.target;
+      name.textContent = info?.name ?? trigger.target;
     }
     if (listEl) {
-      const chests = (this._mapPoisResolver ? this._mapPoisResolver(trigger.target) : [])
-        .filter((p) => p.kind === 'treasure' || p.kind === 'gold');
+      const tileSize = info?.tileSize ?? 16;
+      const chests = (info?.pois ?? []).filter((p) => p.kind === 'treasure' || p.kind === 'gold');
       listEl.innerHTML = chests
         .map((p, i) => {
-          const tx = Math.round(p.pos[0] / 16);
-          const ty = Math.round(p.pos[1] / 16);
+          const tx = Math.round(p.pos[0] / tileSize);
+          const ty = Math.round(p.pos[1] / tileSize);
           return (
             `<div class="trigger-preview-row">` +
-            `<span class="trigger-preview-item">${i + 1}. ${this._chestName(p)}</span>` +
+            `<span class="trigger-preview-item">${i + 1}. ${escapeHtml(this._chestName(p))}</span>` +
             `<span class="trigger-preview-coord">${tx},${ty}</span>` +
             `</div>`
           );
@@ -224,8 +228,8 @@ export class TriggerLayer {
   private _resolveLabel(trigger: TriggerDef): string {
     const explicit = i18n.localize(trigger.label);
     if (explicit) return explicit;
-    if (trigger.target && this._mapNameResolver) {
-      const mapName = this._mapNameResolver(trigger.target);
+    if (trigger.target && this._targetResolver) {
+      const mapName = this._targetResolver(trigger.target)?.name;
       if (mapName) return mapName;
     }
     return i18n.t('trigger.unnamed');

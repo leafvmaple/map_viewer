@@ -24,7 +24,7 @@
   "editor.delete": "Delete",
   "editor.exportJson": "Export JSON",
   "editor.exportAll": "Export game.json",
-  "editor.instructions": "Drag empty space to draw · drag a zone to move · drag corners to resize · Ctrl+Z to undo",
+  "editor.instructions": "Drag empty space to draw · drag a zone to move · drag corners to resize · hold Space to pan · Delete removes selection · Esc deselects/exits · Ctrl+Z to undo",
   "editor.editTrigger": "Edit Trigger",
   "editor.newTrigger": "New Trigger",
   "trigger.unnamed": "Unnamed Trigger",

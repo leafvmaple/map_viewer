@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { LocalizedString, MapListItem, RegistryEntry } from '../types';
 
 interface SidebarOptions {
@@ -68,6 +69,22 @@ export class Sidebar {
     });
     this._searchEl.addEventListener('input', () => this._filterMaps());
     this._addMapBtn.addEventListener('click', () => this._showAddMapDialog());
+
+    // Delegated events for the map list: two listeners total instead of two per
+    // row (the list re-renders on every search keystroke / rename / language change).
+    this._mapListEl.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.map-rename-input')) return; // renaming
+      const item = (e.target as HTMLElement).closest<HTMLElement>('.map-list-item');
+      if (item?.dataset.mapId) this._options.onMapSelect(item.dataset.mapId);
+    });
+    this._mapListEl.addEventListener('dblclick', (e) => {
+      const nameEl = (e.target as HTMLElement).closest<HTMLElement>('.map-list-name');
+      const item = nameEl?.closest<HTMLElement>('.map-list-item');
+      if (!nameEl || !item?.dataset.mapId) return;
+      if (nameEl.querySelector('.map-rename-input')) return; // already renaming
+      e.stopPropagation();
+      this._startRename(nameEl, item.dataset.mapId, nameEl.textContent ?? item.dataset.mapId);
+    });
   }
 
   // ─── Add Map Dialog ──────────────────────────────────────
@@ -193,15 +210,18 @@ export class Sidebar {
   /** Populate the game dropdown. */
   setGames(games: RegistryEntry[], currentGameId?: string): void {
     this._gameSelectEl.innerHTML = games
-      .map(g => `<option value="${g.id}" ${g.id === currentGameId ? 'selected' : ''}>${g.id}</option>`)
+      .map(g => `<option value="${escapeHtml(g.id)}" ${g.id === currentGameId ? 'selected' : ''}>${escapeHtml(g.id)}</option>`)
       .join('');
   }
 
-  /** Update game options to show localized names. */
-  setGameNames(games: Array<{ id: string; name: string }>): void {
-    const currentVal = this._gameSelectEl.value;
+  /**
+   * Update game options to show localized names. Pass `currentGameId` to set the
+   * selection explicitly (deep links can load a game the dropdown never clicked).
+   */
+  setGameNames(games: Array<{ id: string; name: string }>, currentGameId?: string): void {
+    const selectedId = currentGameId ?? this._gameSelectEl.value;
     this._gameSelectEl.innerHTML = games
-      .map(g => `<option value="${g.id}" ${g.id === currentVal ? 'selected' : ''}>${g.name}</option>`)
+      .map(g => `<option value="${escapeHtml(g.id)}" ${g.id === selectedId ? 'selected' : ''}>${escapeHtml(g.name)}</option>`)
       .join('');
   }
 
@@ -222,36 +242,21 @@ export class Sidebar {
   }
 
   private _renderMapList(maps: MapListItem[]): void {
+    // Clicks/dblclicks are handled by the delegated listeners bound in _render().
     this._mapListEl.innerHTML = maps
       .map(m => {
-        const name = i18n.localize(m.name);
+        const name = escapeHtml(i18n.localize(m.name));
         const triggerBadge = m.hasTriggers
           ? '<span class="map-badge trigger-badge" title="Has triggers">⚡</span>'
           : '';
         const active = m.id === this._currentMapId ? 'active' : '';
-        return `<div class="map-list-item ${active}" data-map-id="${m.id}">
+        return `<div class="map-list-item ${active}" data-map-id="${escapeHtml(m.id)}">
           <span class="map-list-name" title="${i18n.t('sidebar.renameTip')}">${name}</span>
-          <span class="map-list-id">${m.id}</span>
+          <span class="map-list-id">${escapeHtml(m.id)}</span>
           ${triggerBadge}
         </div>`;
       })
       .join('');
-
-    // Bind click (navigate) and dblclick (rename) on each item
-    this._mapListEl.querySelectorAll('.map-list-item').forEach(el => {
-      const mapId = (el as HTMLElement).dataset.mapId!;
-      const nameEl = el.querySelector('.map-list-name') as HTMLElement;
-
-      el.addEventListener('click', () => {
-        this._options.onMapSelect(mapId);
-      });
-
-      nameEl.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        const currentName = nameEl.textContent ?? mapId;
-        this._startRename(nameEl, mapId, currentName);
-      });
-    });
   }
 
   private _filterMaps(): void {

@@ -1,10 +1,13 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { GameConfig, TriggerDef } from '../types';
 
 interface TriggerEditorOptions {
   /** Called when triggers are modified (add/edit/move/resize/delete/undo). */
   onTriggersChanged?: (triggers: TriggerDef[]) => void;
+  /** Called when the user asks to leave edit mode from inside (Esc). */
+  onExitRequest?: () => void;
 }
 
 type BoundsPx = [[number, number], [number, number]];
@@ -17,6 +20,8 @@ type EditMode = 'idle' | 'draw' | 'move' | 'resize';
  *   - Drag an existing zone to move it (grid-snapped)
  *   - Drag a corner handle to resize it
  *   - Click a zone to edit properties (target, label) / delete it
+ *   - Hold Space to pan the map (dragging is otherwise reserved for drawing)
+ *   - Delete/Backspace removes the selected zone; Esc deselects, then exits
  *   - Ctrl+Z / Ctrl+Shift+Z (or Ctrl+Y) to undo / redo
  *   - Export triggers as JSON
  */
@@ -42,6 +47,7 @@ export class TriggerEditor {
   private _resizeCorner = 0; // 0=TL 1=TR 2=BR 3=BL
   private _preDrag: TriggerDef[] | null = null;
   private _dirtied = false;
+  private _spacePan = false; // Space held → map dragging temporarily re-enabled
 
   // Undo / redo (snapshots of the trigger list)
   private _undo: TriggerDef[][] = [];
@@ -86,6 +92,7 @@ export class TriggerEditor {
     this._onMouseMove = this._onMouseMove.bind(this);
     this._onMouseUp = this._onMouseUp.bind(this);
     this._onKeyDown = this._onKeyDown.bind(this);
+    this._onKeyUp = this._onKeyUp.bind(this);
   }
 
   /** Set the game config (needed for target map dropdown). */
@@ -120,6 +127,7 @@ export class TriggerEditor {
     this._map.on('mousemove', this._onMouseMove);
     this._map.on('mouseup', this._onMouseUp);
     document.addEventListener('keydown', this._onKeyDown);
+    document.addEventListener('keyup', this._onKeyUp);
 
     this._showPanel();
   }
@@ -134,6 +142,7 @@ export class TriggerEditor {
     this._handleLayer.clearLayers();
     this._selectedId = null;
     this._mode = 'idle';
+    this._spacePan = false;
 
     this._map.dragging.enable();
     this._map.getContainer().style.cursor = '';
@@ -141,6 +150,7 @@ export class TriggerEditor {
     this._map.off('mousemove', this._onMouseMove);
     this._map.off('mouseup', this._onMouseUp);
     document.removeEventListener('keydown', this._onKeyDown);
+    document.removeEventListener('keyup', this._onKeyUp);
 
     this._hidePanel();
   }
@@ -189,6 +199,7 @@ export class TriggerEditor {
 
   private _onMouseDown(e: L.LeafletMouseEvent): void {
     if (!this._active) return;
+    if (this._spacePan) return; // Space held → let Leaflet's drag handler pan
     if ((e.originalEvent as MouseEvent).button !== 0) return;
     if (this._mode !== 'idle') return; // a zone/handle already grabbed the pointer
 
@@ -310,10 +321,46 @@ export class TriggerEditor {
     this._notifyChange();
   }
 
-  // ─── Undo / Redo ────────────────────────────────────────────
+  // ─── Keyboard (pan / delete / esc / undo / redo) ────────────
 
   private _onKeyDown(e: KeyboardEvent): void {
-    if (!this._active || !e.ctrlKey) return;
+    if (!this._active) return;
+
+    const tag = (e.target as HTMLElement | null)?.tagName;
+    const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+    if (!typing && e.code === 'Space') {
+      if (!this._spacePan) {
+        this._spacePan = true;
+        this._map.dragging.enable();
+        this._map.getContainer().style.cursor = 'grab';
+      }
+      e.preventDefault(); // don't scroll the page
+      return;
+    }
+
+    if (!typing && (e.key === 'Delete' || e.key === 'Backspace')) {
+      if (this._selectedId) {
+        this._deleteTrigger(this._selectedId);
+        e.preventDefault();
+      }
+      return;
+    }
+
+    if (!typing && e.key === 'Escape') {
+      if (this._selectedId) {
+        // First Esc: deselect (and clear the form).
+        this._selectedId = null;
+        this._renderEditTriggers();
+        this._resetForm();
+      } else {
+        // Second Esc (nothing selected): ask the host to leave edit mode.
+        this._options.onExitRequest?.();
+      }
+      return;
+    }
+
+    if (!e.ctrlKey) return;
     const k = e.key.toLowerCase();
     if (k === 'z') {
       if (e.shiftKey) this._redoAction();
@@ -322,6 +369,15 @@ export class TriggerEditor {
     } else if (k === 'y') {
       this._redoAction();
       e.preventDefault();
+    }
+  }
+
+  private _onKeyUp(e: KeyboardEvent): void {
+    if (e.code !== 'Space' || !this._spacePan) return;
+    this._spacePan = false;
+    if (this._active) {
+      this._map.dragging.disable();
+      this._map.getContainer().style.cursor = 'crosshair';
     }
   }
 
@@ -386,10 +442,11 @@ export class TriggerEditor {
         className: 'trigger-edit-rect',
       });
       const label = i18n.localize(trigger.label) || trigger.id;
-      rect.bindTooltip(label, { sticky: true, direction: 'top' });
+      rect.bindTooltip(escapeHtml(label), { sticky: true, direction: 'top' });
 
       rect.on('mousedown', (e: L.LeafletMouseEvent) => {
-        if (!this._active || (e.originalEvent as MouseEvent).button !== 0) return;
+        if (!this._active || this._spacePan) return;
+        if ((e.originalEvent as MouseEvent).button !== 0) return;
         L.DomEvent.stop(e.originalEvent);
         this._mode = 'move';
         this._dragTrigger = trigger;
@@ -426,7 +483,8 @@ export class TriggerEditor {
         interactive: true,
       });
       handle.on('mousedown', (e: L.LeafletMouseEvent) => {
-        if (!this._active || (e.originalEvent as MouseEvent).button !== 0) return;
+        if (!this._active || this._spacePan) return;
+        if ((e.originalEvent as MouseEvent).button !== 0) return;
         L.DomEvent.stop(e.originalEvent);
         this._mode = 'resize';
         this._resizeCorner = i;
@@ -497,7 +555,7 @@ export class TriggerEditor {
     const mapOptions = this._gameConfig
       ? Object.entries(this._gameConfig.maps)
           .filter(([id]) => id !== this._currentMapId)
-          .map(([id, m]) => `<option value="${id}" ${id === trigger.target ? 'selected' : ''}>${i18n.localize(m.name)} (${id})</option>`)
+          .map(([id, m]) => `<option value="${escapeHtml(id)}" ${id === trigger.target ? 'selected' : ''}>${escapeHtml(i18n.localize(m.name))} (${escapeHtml(id)})</option>`)
           .join('')
       : '';
 
@@ -506,7 +564,7 @@ export class TriggerEditor {
         <h4>${trigger.target ? i18n.t('editor.editTrigger') : i18n.t('editor.newTrigger')}</h4>
         <div class="form-group">
           <label>ID</label>
-          <input type="text" class="form-input" value="${trigger.id}" data-field="id" readonly />
+          <input type="text" class="form-input" value="${escapeHtml(trigger.id)}" data-field="id" readonly />
         </div>
         <div class="form-group">
           <label>${i18n.t('editor.selectTarget')}</label>
@@ -517,15 +575,15 @@ export class TriggerEditor {
         </div>
         <div class="form-group">
           <label>${i18n.t('editor.label')} (EN)</label>
-          <input type="text" class="form-input" data-field="label_en" value="${trigger.label.en ?? ''}" />
+          <input type="text" class="form-input" data-field="label_en" value="${escapeHtml(trigger.label.en)}" />
         </div>
         <div class="form-group">
           <label>${i18n.t('editor.label')} (中文)</label>
-          <input type="text" class="form-input" data-field="label_zh" value="${trigger.label.zh ?? ''}" />
+          <input type="text" class="form-input" data-field="label_zh" value="${escapeHtml(trigger.label.zh)}" />
         </div>
         <div class="form-group">
           <label>${i18n.t('editor.label')} (日本語)</label>
-          <input type="text" class="form-input" data-field="label_ja" value="${trigger.label.ja ?? ''}" />
+          <input type="text" class="form-input" data-field="label_ja" value="${escapeHtml(trigger.label.ja)}" />
         </div>
         <div class="form-group">
           <label>Bounds (px)</label>
@@ -554,13 +612,18 @@ export class TriggerEditor {
     });
 
     formArea.querySelector('.btn-delete')!.addEventListener('click', () => {
-      this._pushUndo();
-      this._triggers = this._triggers.filter(t => t.id !== trigger.id);
-      this._selectedId = null;
-      this._renderEditTriggers();
-      this._resetForm();
-      this._notifyChange();
+      this._deleteTrigger(trigger.id);
     });
+  }
+
+  /** Delete a trigger by ID (shared by the form button and the Delete key). */
+  private _deleteTrigger(id: string): void {
+    this._pushUndo();
+    this._triggers = this._triggers.filter(t => t.id !== id);
+    this._selectedId = null;
+    this._renderEditTriggers();
+    this._resetForm();
+    this._notifyChange();
   }
 
   // ─── Export ─────────────────────────────────────────────────
@@ -597,8 +660,15 @@ export class TriggerEditor {
 
   private _generateId(): string {
     const prefix = this._currentMapId ?? 'trg';
-    const idx = this._triggers.length + 1;
-    return `${prefix}_t${String(idx).padStart(2, '0')}`;
+    // Next sequence number = max existing suffix + 1 (NOT list length — after a
+    // deletion, length+1 would collide with a surviving trigger's ID).
+    const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}_t(\\d+)$`);
+    let max = 0;
+    for (const t of this._triggers) {
+      const m = t.id.match(pattern);
+      if (m) max = Math.max(max, parseInt(m[1], 10));
+    }
+    return `${prefix}_t${String(max + 1).padStart(2, '0')}`;
   }
 
   private _notifyChange(): void {

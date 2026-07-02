@@ -11,6 +11,7 @@ import { EventPanel } from './ui/EventPanel.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
 import { Prefs } from './core/Prefs.js';
+import { parseHash, formatHash } from './core/hashRoute.js';
 import { i18n } from './i18n/index.js';
 import type { GameConfig, LangCode, LocalizedString, MapConfig, TriggerDef, ViewState } from './types';
 
@@ -21,6 +22,13 @@ const navStack = new NavigationStack();
 const lastView = new Map<string, ViewState>();
 
 let currentGameConfig: GameConfig | null = null;
+/**
+ * The game that owns the map currently DISPLAYED. During a game switch,
+ * `currentGameConfig` is already the new game while the old game's map is
+ * still on screen — saving views under the new game's key would leak one
+ * game's pan/zoom into another.
+ */
+let displayedGameId: string | null = null;
 let mapViewer: MapViewer;
 let triggerEditor: TriggerEditor;
 let sidebar: Sidebar;
@@ -50,10 +58,13 @@ async function init(): Promise<void> {
     onTriggerHover: handleTriggerHover,
     onTriggerHoverOut: handleTriggerHoverOut,
     onMapLoaded: handleMapLoaded,
+    onImageError: (url) => showError(url),
   });
 
   triggerEditor = new TriggerEditor(mapViewer.leafletMap, {
     onTriggersChanged: handleTriggersChanged,
+    // Esc with nothing selected → leave edit mode (keep the toolbar button in sync).
+    onExitRequest: () => toolbar.setEditMode(handleEditModeToggle()),
   });
 
   toolbar = new Toolbar(document.getElementById('toolbar')!, {
@@ -93,18 +104,23 @@ async function init(): Promise<void> {
   // Load registry and default game
   try {
     const games = await gameLoader.fetchRegistry();
-    sidebar.setGames(games);
 
     // Deep link (URL hash) selects the initial game/map/view when present.
-    const target = parseHash();
-    if (target && games.some(g => g.id === target.gameId)) {
-      await handleGameSelect(target.gameId, target.mapId, target.view);
-    } else if (games.length > 0) {
-      await handleGameSelect(games[0].id);
+    const target = parseHash(location.hash);
+    const initialGame = target && games.some(g => g.id === target.gameId)
+      ? target
+      : games.length > 0 ? { gameId: games[0].id, mapId: undefined, view: undefined } : null;
+
+    sidebar.setGames(games, initialGame?.gameId);
+    if (initialGame) {
+      // replace (not push): the initial URL is already the current history entry.
+      await handleGameSelect(initialGame.gameId, initialGame.mapId, initialGame.view, false);
     }
 
     // Keep the URL hash in sync with pan/zoom so links are shareable & survive refresh.
-    mapViewer.leafletMap.on('moveend', updateHash);
+    mapViewer.leafletMap.on('moveend', () => updateHash());
+    // Browser back/forward (and manually edited hashes) navigate the app.
+    window.addEventListener('hashchange', () => { void applyHashTarget(); });
   } catch (err) {
     console.error('Failed to initialize:', err);
     showError(String(err));
@@ -113,7 +129,12 @@ async function init(): Promise<void> {
 
 // ─── Event Handlers ─────────────────────────────────────────
 
-async function handleGameSelect(gameId: string, initialMapId?: string, initialView?: ViewState): Promise<void> {
+async function handleGameSelect(
+  gameId: string,
+  initialMapId?: string,
+  initialView?: ViewState,
+  pushHistory = true,
+): Promise<void> {
   try {
     currentGameConfig = await gameLoader.loadGame(gameId);
 
@@ -133,19 +154,19 @@ async function handleGameSelect(gameId: string, initialMapId?: string, initialVi
       }
     }
 
+    // Apply saved trigger edits from localStorage once, up front, so every
+    // consumer (viewer, editor, hover previews, export) sees the same data.
+    const triggerOverrides = TriggerStorage.loadGame(gameId);
+    for (const [mapId, triggers] of Object.entries(triggerOverrides)) {
+      if (currentGameConfig.maps[mapId]) {
+        currentGameConfig.maps[mapId].triggers = triggers;
+      }
+    }
+
     // Update UI
     const mapList = gameLoader.getMapList(currentGameConfig);
     sidebar.setMaps(mapList);
-
-    // Update game names in sidebar (localized)
-    const gameNames = gameLoader.registry.map(g => {
-      const config = gameLoader.getCached(g.id);
-      return {
-        id: g.id,
-        name: config ? i18n.localize(config.name) : g.id,
-      };
-    });
-    sidebar.setGameNames(gameNames);
+    refreshGameNames(gameId);
 
     // Configure MapViewer
     mapViewer.setGameConfig(currentGameConfig, (path) =>
@@ -161,11 +182,23 @@ async function handleGameSelect(gameId: string, initialMapId?: string, initialVi
     const startMap = initialMapId && currentGameConfig.maps[initialMapId]
       ? initialMapId
       : currentGameConfig.defaultMap;
-    await navigateToMap(gameId, startMap, initialView);
+    await navigateToMap(gameId, startMap, initialView, pushHistory);
   } catch (err) {
     console.error('Failed to load game:', err);
     showError(String(err));
   }
+}
+
+/** Sync the sidebar's game dropdown: localized names + the active selection. */
+function refreshGameNames(currentGameId: string): void {
+  const gameNames = gameLoader.registry.map(g => {
+    const config = gameLoader.getCached(g.id);
+    return {
+      id: g.id,
+      name: config ? i18n.localize(config.name) : g.id,
+    };
+  });
+  sidebar.setGameNames(gameNames, currentGameId);
 }
 
 async function handleMapSelect(mapId: string): Promise<void> {
@@ -195,23 +228,15 @@ function handleTriggerHoverOut(): void {
 
 function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
   sidebar.setActiveMap(mapId);
+  displayedGameId = currentGameConfig?.id ?? null;
 
   if (currentGameConfig) {
     const mapConfig = currentGameConfig.maps[mapId];
     if (mapConfig) {
-      // Load trigger overrides from localStorage (if any), otherwise use game.json defaults
-      const saved = TriggerStorage.load(currentGameConfig.id, mapId);
-      const triggers = saved ?? (mapConfig.triggers ?? []);
-
-      // Sync overrides into in-memory config so everything stays consistent
-      if (saved) {
-        mapConfig.triggers = saved;
-        // Also refresh the display layer with saved data
-        mapViewer.triggerLayer.setTriggers(saved);
-      }
-
-      triggerEditor.setCurrentMap(mapId, triggers, mapConfig.tileSize);
-      treasureList.setPois(mapConfig.pois ?? []);
+      // Saved trigger edits were merged into the config at game load, so
+      // mapConfig.triggers is already the authoritative list here.
+      triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
+      treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
     }
   }
@@ -231,21 +256,35 @@ function applyLayerPrefs(): void {
   if (p.grid !== mapViewer.gridVisible) mapViewer.toggleGrid();
 }
 
-function handleBreadcrumbNavigate(index: number): void {
+async function handleBreadcrumbNavigate(index: number): Promise<void> {
   saveCurrentView();
   const entry = navStack.goTo(index);
   if (entry && currentGameConfig) {
-    mapViewer.loadMap(entry.mapId, entry.viewState);
+    pendingPush = true; // in-app navigation → a real browser-history entry
+    await loadMapSafe(entry.mapId, entry.viewState);
     sidebar.setActiveMap(entry.mapId);
+    updateHash();
   }
 }
 
-function handleBack(): void {
+async function handleBack(): Promise<void> {
   saveCurrentView();
   const entry = navStack.back();
   if (entry && currentGameConfig) {
-    mapViewer.loadMap(entry.mapId, entry.viewState);
+    pendingPush = true;
+    await loadMapSafe(entry.mapId, entry.viewState);
     sidebar.setActiveMap(entry.mapId);
+    updateHash();
+  }
+}
+
+/** loadMap with user-visible error reporting instead of an unhandled rejection. */
+async function loadMapSafe(mapId: string, viewState?: ViewState): Promise<void> {
+  try {
+    await mapViewer.loadMap(mapId, viewState);
+  } catch (err) {
+    console.error('Failed to load map:', err);
+    showError(String(err));
   }
 }
 
@@ -341,13 +380,18 @@ function viewKey(gameId: string, mapId: string): string {
 
 /** Persist the current map's view — to the nav stack and the per-map cache. */
 function saveCurrentView(): void {
-  if (!currentGameConfig || !mapViewer.currentMapId) return;
+  if (!displayedGameId || !mapViewer.currentMapId) return;
   const vs = mapViewer.getViewState();
   navStack.saveViewState(vs);
-  lastView.set(viewKey(currentGameConfig.id, mapViewer.currentMapId), vs);
+  lastView.set(viewKey(displayedGameId, mapViewer.currentMapId), vs);
 }
 
-async function navigateToMap(gameId: string, mapId: string, viewState?: ViewState): Promise<void> {
+async function navigateToMap(
+  gameId: string,
+  mapId: string,
+  viewState?: ViewState,
+  pushHistory = true,
+): Promise<void> {
   saveCurrentView(); // remember where we were on the map we're leaving
 
   // World map is always the root — reset stack when navigating back to it
@@ -358,43 +402,53 @@ async function navigateToMap(gameId: string, mapId: string, viewState?: ViewStat
 
   // Restore this map's last view when the caller didn't pass one (first visit → fitBounds).
   const view = viewState ?? lastView.get(viewKey(gameId, mapId));
-  await mapViewer.loadMap(mapId, view);
+  pendingPush = pushHistory;
+  await loadMapSafe(mapId, view);
   updateHash();
 }
 
-// ─── URL Deep Link (hash routing) ───────────────────────────
-
-interface HashTarget {
-  gameId: string;
-  mapId: string;
-  view?: ViewState;
-}
+// ─── URL Deep Link (hash routing + browser history) ────────
+//
+// Map-to-map navigation PUSHES a history entry (browser back = go back a map);
+// pan/zoom only REPLACES the current entry. `pendingPush` bridges the two write
+// paths: loadMap's setView fires `moveend` synchronously, so whichever
+// updateHash() call runs first consumes the push.
 
 let lastHash = '';
-
-/** Parse `#gameId/mapId@lat,lng,zoom` from the URL, or null if absent/invalid. */
-function parseHash(): HashTarget | null {
-  const raw = location.hash.replace(/^#/, '');
-  if (!raw) return null;
-  const m = raw.match(/^([^/]+)\/([^@]+)(?:@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?))?$/);
-  if (!m) return null;
-  const [, gameId, mapId, lat, lng, zoom] = m;
-  const view: ViewState | undefined = lat != null
-    ? { center: [parseFloat(lat), parseFloat(lng)] as [number, number], zoom: parseFloat(zoom) }
-    : undefined;
-  return { gameId: decodeURIComponent(gameId), mapId: decodeURIComponent(mapId), view };
-}
+let pendingPush = false;
 
 /** Write the current game/map/view into the URL hash (shareable, refresh-safe). */
 function updateHash(): void {
   if (!currentGameConfig || !mapViewer?.currentMapId) return;
-  const vs = mapViewer.getViewState();
-  const g = encodeURIComponent(currentGameConfig.id);
-  const mp = encodeURIComponent(mapViewer.currentMapId);
-  const hash = `#${g}/${mp}@${vs.center[0].toFixed(1)},${vs.center[1].toFixed(1)},${vs.zoom.toFixed(2)}`;
+  const hash = formatHash(currentGameConfig.id, mapViewer.currentMapId, mapViewer.getViewState());
+  const push = pendingPush;
+  pendingPush = false;
   if (hash === lastHash) return;
   lastHash = hash;
-  history.replaceState(null, '', hash);
+  if (push) history.pushState(null, '', hash);
+  else history.replaceState(null, '', hash);
+}
+
+/** React to browser back/forward or a manually edited hash. */
+async function applyHashTarget(): Promise<void> {
+  const hash = location.hash;
+  if (hash === lastHash) return; // echo of our own write
+  const target = parseHash(hash);
+  if (!target) return;
+  lastHash = hash;
+
+  if (!currentGameConfig || target.gameId !== currentGameConfig.id) {
+    if (gameLoader.registry.some(g => g.id === target.gameId)) {
+      await handleGameSelect(target.gameId, target.mapId, target.view, false);
+    }
+  } else if (target.mapId !== mapViewer.currentMapId) {
+    if (currentGameConfig.maps[target.mapId]) {
+      await navigateToMap(target.gameId, target.mapId, target.view, false);
+    }
+  } else if (target.view) {
+    // Same map, different view (e.g. back over a pan boundary).
+    mapViewer.restoreViewState(target.view);
+  }
 }
 
 // ─── Language Refresh ───────────────────────────────────────
@@ -411,15 +465,9 @@ function refreshAllLabels(): void {
 
   // Refresh game names
   if (currentGameConfig) {
-    const gameNames = gameLoader.registry.map(g => {
-      const config = gameLoader.getCached(g.id);
-      return {
-        id: g.id,
-        name: config ? i18n.localize(config.name) : g.id,
-      };
-    });
-    sidebar.setGameNames(gameNames);
+    refreshGameNames(currentGameConfig.id);
     sidebar.setMaps(gameLoader.getMapList(currentGameConfig));
+    if (mapViewer.currentMapId) sidebar.setActiveMap(mapViewer.currentMapId);
   }
 }
 

@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { EventDef } from '../types';
 
 interface EventPanelOptions {
@@ -47,11 +48,11 @@ export class EventPanel {
 
     const rows = this._events
       .map(ev => {
-        const name = ev.label ? i18n.localize(ev.label) : ev.id;
+        const name = escapeHtml(ev.label ? i18n.localize(ev.label) : ev.id);
         const checked = this._active.has(ev.id) ? 'checked' : '';
-        const count = ev.tiles ? `<span class="event-count">${ev.tiles}</span>` : '';
+        const count = ev.tiles ? `<span class="event-count">${escapeHtml(ev.tiles)}</span>` : '';
         return `<label class="event-item">
-          <input type="checkbox" data-id="${ev.id}" ${checked} />
+          <input type="checkbox" data-id="${escapeHtml(ev.id)}" ${checked} />
           <span class="event-name">${name}</span>
           ${count}
         </label>`;

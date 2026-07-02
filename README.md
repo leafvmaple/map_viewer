@@ -23,6 +23,7 @@ Currently bundled: **Metal Max** (重装机兵) and **Tenchi wo Kurau II** (吞�
 - 🟦 Optional tile grid overlay and a live pixel-coordinate readout.
 - 💾 Edits (triggers, renames, added maps) persist in `localStorage` over the read-only base data.
 - 🚀 Progressive image loading (low-res placeholder → full image) when the data provides it.
+- 🔗 URL hash deep links; map navigation integrates with browser history (back/forward work).
 
 ## Tech stack
 
@@ -43,6 +44,7 @@ Other scripts:
 npm run typecheck  # tsc --noEmit
 npm run build      # type-check + production build to dist/
 npm run preview    # preview the production build
+npm test           # vitest unit tests (pure logic: nav stack, hash routing, escaping)
 ```
 
 The dev server also serves the `res/` folder statically (see `vite.config.ts`),
@@ -98,6 +100,9 @@ the console.
 2. **Drag** on the map to draw a new trigger (it snaps to the `tileSize` grid).
 3. Click a trigger to set its **target map** and **labels**, or delete it.
 4. **Export game.json** (full config) or **Export JSON** (this map's triggers).
+
+Editor shortcuts: hold **Space** to pan the map, **Delete** removes the selected
+zone, **Esc** deselects (then exits edit mode), **Ctrl+Z / Ctrl+Y** undo/redo.
 
 Edits are saved to `localStorage` immediately and layered over the base
 `game.json`, so they survive refreshes without touching the source files. Feed the

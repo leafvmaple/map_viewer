@@ -1,5 +1,6 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { PoiDef } from '../types';
 
 /**
@@ -63,7 +64,7 @@ export class PoiLayer {
           interactive: true,
         });
       }
-      layer.bindTooltip(this._label(poi), {
+      layer.bindTooltip(escapeHtml(this._label(poi)), {
         direction: 'top',
         className: 'poi-tooltip',
         offset: [0, -6],

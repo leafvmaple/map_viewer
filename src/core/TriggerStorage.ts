@@ -47,6 +47,20 @@ export class TriggerStorage {
     return localStorage.getItem(this._key(gameId, mapId)) !== null;
   }
 
+  /** Load ALL saved trigger overrides for a game, keyed by mapId. */
+  static loadGame(gameId: string): Record<string, TriggerDef[]> {
+    const prefix = `${STORAGE_PREFIX}${gameId}_`;
+    const overrides: Record<string, TriggerDef[]> = {};
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(prefix)) continue;
+      const mapId = key.slice(prefix.length);
+      const triggers = this.load(gameId, mapId);
+      if (triggers) overrides[mapId] = triggers;
+    }
+    return overrides;
+  }
+
   /** Remove saved triggers for a map (revert to game.json defaults). */
   static remove(gameId: string, mapId: string): void {
     localStorage.removeItem(this._key(gameId, mapId));

@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { PoiDef } from '../types';
 
 interface TreasureListOptions {
@@ -14,6 +15,7 @@ export class TreasureList {
   private _el: HTMLElement;
   private _options: TreasureListOptions;
   private _pois: PoiDef[] = [];
+  private _tileSize = 16;
   private _visible = true;
 
   constructor(options: TreasureListOptions) {
@@ -25,8 +27,9 @@ export class TreasureList {
   }
 
   /** Update the list (treasure + gold chests only). */
-  setPois(pois: PoiDef[]): void {
+  setPois(pois: PoiDef[], tileSize = 16): void {
     this._pois = (pois ?? []).filter(p => p.kind === 'treasure' || p.kind === 'gold');
+    this._tileSize = tileSize;
     this._render();
   }
 
@@ -50,11 +53,11 @@ export class TreasureList {
   private _render(): void {
     const rows = this._pois
       .map((p, i) => {
-        const tx = Math.round(p.pos[0] / 16);
-        const ty = Math.round(p.pos[1] / 16);
-        return `<div class="treasure-item" data-id="${p.id}">
+        const tx = Math.round(p.pos[0] / this._tileSize);
+        const ty = Math.round(p.pos[1] / this._tileSize);
+        return `<div class="treasure-item" data-id="${escapeHtml(p.id)}">
           <span class="treasure-idx">${i + 1}</span>
-          <span class="treasure-name">${this._itemName(p)}</span>
+          <span class="treasure-name">${escapeHtml(this._itemName(p))}</span>
           <span class="treasure-pos">${tx},${ty}</span>
         </div>`;
       })

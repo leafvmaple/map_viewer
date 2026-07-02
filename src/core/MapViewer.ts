@@ -9,6 +9,8 @@ interface MapViewerOptions {
   onTriggerHover?: (trigger: TriggerDef) => void;
   onTriggerHoverOut?: () => void;
   onMapLoaded?: (mapId: string, mapConfig: MapConfig) => void;
+  /** Called when a map/event image fails to load (bad path, missing file). */
+  onImageError?: (url: string) => void;
 }
 
 interface ImageDimensions {
@@ -26,6 +28,7 @@ export class MapViewer {
   private _poiLayer: PoiLayer;
   private _onTriggerClick: (trigger: TriggerDef) => void;
   private _onMapLoaded: (mapId: string, mapConfig: MapConfig) => void;
+  private _onImageError: (url: string) => void;
 
   private _currentMapId: string | null = null;
   private _currentMapConfig: MapConfig | null = null;
@@ -35,13 +38,15 @@ export class MapViewer {
 
   private _imageOverlay: L.ImageOverlay | null = null;
   private _eventOverlays = new Map<string, L.ImageOverlay>();
-  private _gridLayer: L.LayerGroup | null = null;
+  private _gridLayer: L.Polyline | null = null;
   private _showGrid = false;
   private _coordControl: L.Control;
+  private _coordValueEl: HTMLElement | null = null;
 
   constructor(containerId: string, options: MapViewerOptions = {}) {
     this._onTriggerClick = options.onTriggerClick ?? (() => {});
     this._onMapLoaded = options.onMapLoaded ?? (() => {});
+    this._onImageError = options.onImageError ?? (() => {});
 
     // Initialize Leaflet
     this._map = L.map(containerId, {
@@ -70,18 +75,16 @@ export class MapViewer {
     this._coordControl.onAdd = () => {
       const div = L.DomUtil.create('div', 'coord-display');
       div.innerHTML = `<span class="coord-label">${i18n.t('map.pixelCoords')}:</span> <span class="coord-value">0, 0</span>`;
+      this._coordValueEl = div.querySelector('.coord-value');
       return div;
     };
     this._coordControl.addTo(this._map);
 
     this._map.on('mousemove', (e: L.LeafletMouseEvent) => {
+      if (!this._coordValueEl) return;
       const x = Math.round(e.latlng.lng);
       const y = Math.round(-e.latlng.lat);
-      const el = this._coordControl.getContainer();
-      if (el) {
-        const span = el.querySelector('.coord-value');
-        if (span) span.textContent = `${x}, ${y}`;
-      }
+      this._coordValueEl.textContent = `${x}, ${y}`;
     });
   }
 
@@ -90,21 +93,18 @@ export class MapViewer {
     this._gameConfig = gameConfig;
     this._resolveImagePath = resolveImagePath;
 
-    // Provide a map-name resolver so trigger tooltips can show the target map name
-    this._triggerLayer.setMapNameResolver((mapId: string) => {
-      const mc = gameConfig.maps[mapId];
-      return mc ? i18n.localize(mc.name) : mapId;
-    });
-
-    // Provide a target-image resolver so hovering a trigger can preview its destination.
-    this._triggerLayer.setMapImageResolver((mapId: string) => {
+    // Resolve a trigger's target map to everything the hover UI needs
+    // (localized name, preview image, chest list, tile size).
+    this._triggerLayer.setTargetMapResolver((mapId: string) => {
       const mc = gameConfig.maps[mapId];
       if (!mc) return null;
-      return resolveImagePath(mc.thumbnail ?? mc.image);
+      return {
+        name: i18n.localize(mc.name) || mapId,
+        image: mc.image ? resolveImagePath(mc.thumbnail ?? mc.image) : null,
+        pois: mc.pois ?? [],
+        tileSize: mc.tileSize ?? 16,
+      };
     });
-
-    // Provide a target-POIs resolver so the preview can list the destination's chests.
-    this._triggerLayer.setMapPoisResolver((mapId: string) => gameConfig.maps[mapId]?.pois ?? []);
   }
 
   /** Load and display a map by ID. Optionally restore a previous view state. */
@@ -156,6 +156,7 @@ export class MapViewer {
     this._imageOverlay = L.imageOverlay(initialUrl, bounds, {
       className: 'map-image pixelated',
     }).addTo(this._map);
+    this._imageOverlay.on('error', () => this._onImageError(initialUrl));
 
     // Position the view FIRST (no animation), then size maxBounds around it.
     if (viewState) {
@@ -187,6 +188,7 @@ export class MapViewer {
       full.onload = () => {
         if (this._imageOverlay === overlayRef) overlayRef.setUrl(fullUrl);
       };
+      full.onerror = () => this._onImageError(fullUrl);
       full.src = fullUrl;
     }
 
@@ -215,6 +217,10 @@ export class MapViewer {
 
   /** Clear current map layers. */
   private _clearCurrentMap(): void {
+    // Drop the outgoing map's maxBounds BEFORE the next map positions its view:
+    // setView clamps against the active maxBounds, so a small scene map's stale
+    // bounds would drag a restored world-map view into its own corner.
+    this._map.setMaxBounds(null as unknown as L.LatLngBoundsExpression);
     if (this._imageOverlay) {
       this._map.removeLayer(this._imageOverlay);
       this._imageOverlay = null;
@@ -240,16 +246,14 @@ export class MapViewer {
       lines.push([[-y, 0], [-y, width]]);
     }
 
-    this._gridLayer = L.layerGroup(
-      lines.map(coords =>
-        L.polyline(coords, {
-          color: '#ffffff',
-          weight: 0.5,
-          opacity: 0.3,
-          interactive: false,
-        })
-      )
-    ).addTo(this._map);
+    // One multi-polyline = one SVG path element for the whole grid. Separate
+    // polylines would be hundreds of DOM nodes, all re-projected on every zoom.
+    this._gridLayer = L.polyline(lines, {
+      color: '#ffffff',
+      weight: 0.5,
+      opacity: 0.3,
+      interactive: false,
+    }).addTo(this._map);
   }
 
   private _removeGrid(): void {
@@ -292,10 +296,12 @@ export class MapViewer {
     if (active) {
       if (existing || !this._resolveImagePath) return;
       const [[x1, y1], [x2, y2]] = event.bounds;
-      const overlay = L.imageOverlay(this._resolveImagePath(event.overlay), [[-y1, x1], [-y2, x2]], {
+      const overlayUrl = this._resolveImagePath(event.overlay);
+      const overlay = L.imageOverlay(overlayUrl, [[-y1, x1], [-y2, x2]], {
         interactive: false,
         className: 'event-overlay',
       }).addTo(this._map);
+      overlay.on('error', () => this._onImageError(overlayUrl));
       overlay.bringToFront(); // sit above the base map image
       this._eventOverlays.set(event.id, overlay);
     } else if (existing) {

@@ -1,4 +1,5 @@
 import { i18n } from '../i18n/index.js';
+import { escapeHtml } from '../utils.js';
 import type { GameConfig, NavEntry } from '../types';
 
 interface BreadcrumbOptions {
@@ -34,9 +35,7 @@ export class Breadcrumb {
 
     const items = path.map((entry, index) => {
       const mapConfig = this._gameConfig!.maps[entry.mapId];
-      const name = mapConfig
-        ? i18n.localize(mapConfig.name)
-        : entry.mapId;
+      const name = escapeHtml(mapConfig ? i18n.localize(mapConfig.name) : entry.mapId);
 
       const isLast = index === path.length - 1;
 

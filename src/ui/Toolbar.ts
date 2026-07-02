@@ -156,6 +156,12 @@ export class Toolbar {
     this._backBtn.disabled = !enabled;
   }
 
+  /** Sync the edit-mode button when edit mode is toggled programmatically (Esc). */
+  setEditMode(active: boolean): void {
+    this._editMode = active;
+    this._applyState();
+  }
+
   /** Refresh labels after language change — update text in place (no re-render). */
   refreshLabels(): void {
     this._backBtn.title = i18n.t('nav.back');
