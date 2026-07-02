@@ -648,11 +648,16 @@ html, body {
   line-height: 1;
 }
 
-/* Sprite-image POI marker (e.g. a trainer's NPC sprite). */
+/* Sprite-image POI marker (e.g. a trainer's NPC sprite).
+   Unlike glyph pins (fixed screen size), sprites are WORLD objects: they scale
+   with the map via --poi-sprite-scale (set by MapViewer on zoom, floored so
+   they stay findable when zoomed far out). Origin ≈ the feet anchor point. */
 .poi-sprite {
   display: block;
   image-rendering: pixelated;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.6));
+  transform: scale(var(--poi-sprite-scale, 1));
+  transform-origin: 50% calc(100% - 8px);
 }
 
 .poi-sprite.poi-flash {

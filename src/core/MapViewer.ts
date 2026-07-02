@@ -89,6 +89,16 @@ export class MapViewer {
       const y = Math.round(-e.latlng.lat);
       this._coordValueEl.textContent = `${x}, ${y}`;
     });
+
+    // Sprite POIs are world objects: match their visual size to the map scale
+    // (2^zoom), floored so they remain findable when zoomed far out. One CSS
+    // variable drives every sprite — no per-marker work on zoom.
+    this._map.on('zoomend', () => this._updateSpriteScale());
+  }
+
+  private _updateSpriteScale(): void {
+    const scale = Math.max(Math.pow(2, this._map.getZoom()), 0.35);
+    this._map.getContainer().style.setProperty('--poi-sprite-scale', scale.toFixed(3));
   }
 
   /** Set the active game configuration. Call before loadMap(). */
@@ -184,6 +194,7 @@ export class MapViewer {
     } else {
       this._map.fitBounds(bounds, { animate: false });
     }
+    this._updateSpriteScale(); // in case the zoom did not change (no zoomend)
 
     // maxBounds must stay larger than the viewport — otherwise Leaflet's
     // panInsideBounds keeps yanking the view back and forth (visible jitter,
