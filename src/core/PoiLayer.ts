@@ -39,6 +39,7 @@ export class PoiLayer {
   private _markers = new Map<string, L.Layer[]>();
   private _marked = new Set<string>();
   private _hiddenKinds = new Set<string>();
+  private _hideMarked = false;
   private _onPoiClick: (poi: PoiDef) => void;
   private _resolveIcon: ((relativePath: string) => string) | null = null;
 
@@ -99,6 +100,13 @@ export class PoiLayer {
     this._render();
   }
 
+  /** Hide collected POIs entirely (declutter while completing a map). */
+  setHideMarked(hide: boolean): void {
+    if (hide === this._hideMarked) return;
+    this._hideMarked = hide;
+    this._render();
+  }
+
   private _render(): void {
     this._layerGroup.clearLayers();
     this._markers.clear();
@@ -109,9 +117,10 @@ export class PoiLayer {
     }
   }
 
-  /** Create and add the layer(s) for one POI (respects the kind filter). */
+  /** Create and add the layer(s) for one POI (respects the active filters). */
   private _addPoi(poi: PoiDef): void {
     if (this._hiddenKinds.has(poi.kind)) return;
+    if (this._hideMarked && this._marked.has(poi.id)) return;
     const t = this._tileSize;
     const half = t / 2;
     const [x, y] = poi.pos;

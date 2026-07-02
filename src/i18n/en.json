@@ -65,5 +65,11 @@
   "poi.kind.trainer": "Trainer",
   "poi.kind.sign": "Sign",
   "poi.kind.heal": "Heal spot",
-  "poi.kind.cut": "Cut tree"
+  "poi.kind.cut": "Cut tree",
+  "toolbar.checklist": "Checklist",
+  "checklist.title": "Collection Checklist",
+  "checklist.searchPlaceholder": "Search items...",
+  "checklist.hideCollected": "Hide collected",
+  "checklist.empty": "No matching items",
+  "sidebar.itemResults": "Items"
 }

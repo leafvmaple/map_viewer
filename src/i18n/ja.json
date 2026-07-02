@@ -65,5 +65,11 @@
   "poi.kind.trainer": "トレーナー",
   "poi.kind.sign": "看板",
   "poi.kind.heal": "回復スポット",
-  "poi.kind.cut": "いあいぎりの木"
+  "poi.kind.cut": "いあいぎりの木",
+  "toolbar.checklist": "リスト",
+  "checklist.title": "全回収チェックリスト",
+  "checklist.searchPlaceholder": "アイテム検索...",
+  "checklist.hideCollected": "回収済みを隠す",
+  "checklist.empty": "該当するアイテムなし",
+  "sidebar.itemResults": "アイテム"
 }

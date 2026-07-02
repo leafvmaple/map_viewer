@@ -14,8 +14,10 @@ import { Prefs } from './core/Prefs.js';
 import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
+import { buildPoiIndex, searchPois, poiItemName, MARKABLE_KINDS, type PoiIndexEntry } from './core/PoiIndex.js';
 import { UserMenu } from './ui/UserMenu.js';
 import { PoiFilter } from './ui/PoiFilter.js';
+import { Checklist } from './ui/Checklist.js';
 import { i18n } from './i18n/index.js';
 import type { GameConfig, LangCode, LocalizedString, MapConfig, PoiDef, TriggerDef, ViewState } from './types';
 
@@ -41,15 +43,34 @@ let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
 let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
 let userMenu: UserMenu;           // profile switcher (toolbar)
-let poiFilter: PoiFilter;         // POI category legend (bottom-right)
+let poiFilter: PoiFilter;         // POI category legend (bottom-left)
+let checklist: Checklist;         // game-wide collectible drawer (right)
 
 /** Current game's marked ("collected") POI ids for the CURRENT user. */
 let markedPois = new Set<string>();
 /** POI kinds the CURRENT user hides on the current game's maps. */
 let hiddenKinds = new Set<string>();
+/** Whether the CURRENT user hides collected POIs on the map. */
+let hideMarked = false;
+/** Game-wide POI index (search + checklist), rebuilt per game load. */
+let poiIndex: PoiIndexEntry[] = [];
+/** POI the current view is anchored to (kept in the URL hash until we leave its map). */
+let currentPoiAnchor: { mapId: string; poiId: string } | null = null;
 
-function loadHiddenKinds(gameId: string): Set<string> {
-  return new Set(userStore.getItem<string[]>(`poi_filters_${gameId}`) ?? []);
+interface PoiFilterState {
+  kinds: string[];
+  hideMarked: boolean;
+}
+
+/** Read the user's filter state; tolerates the older plain-array format. */
+function loadFilterState(gameId: string): { kinds: Set<string>; hideMarked: boolean } {
+  const raw = userStore.getItem<string[] | PoiFilterState>(`poi_filters_${gameId}`);
+  if (Array.isArray(raw)) return { kinds: new Set(raw), hideMarked: false };
+  return { kinds: new Set(raw?.kinds ?? []), hideMarked: raw?.hideMarked ?? false };
+}
+
+function saveFilterState(gameId: string): void {
+  userStore.setItem(`poi_filters_${gameId}`, { kinds: [...hiddenKinds], hideMarked });
 }
 
 // ─── Bootstrap ──────────────────────────────────────────────
@@ -62,7 +83,17 @@ async function init(): Promise<void> {
     onToggle: handleSidebarToggle,
     onMapRename: handleMapRename,
     onMapAdd: handleMapAdd,
+    onPoiSelect: (mapId, poiId) => { void navigateToPoi(mapId, poiId); },
   });
+  sidebar.setPoiSearcher((query) =>
+    searchPois(poiIndex, query, 20).map(entry => ({
+      mapId: entry.mapId,
+      poiId: entry.poi.id,
+      kind: entry.poi.kind,
+      name: poiItemName(entry.poi),
+      mapName: resolveMapName(entry.mapId),
+    })),
+  );
 
   breadcrumb = new Breadcrumb(document.getElementById('breadcrumb')!, {
     onNavigate: handleBreadcrumbNavigate,
@@ -83,8 +114,17 @@ async function init(): Promise<void> {
     onExitRequest: () => toolbar.setEditMode(handleEditModeToggle()),
   });
 
+  checklist = new Checklist({
+    onNavigate: (mapId, poiId) => { void navigateToPoi(mapId, poiId); },
+    onToggleMark: handlePoiToggle,
+    isMarked: (poiId) => markedPois.has(poiId),
+    resolveMapName,
+    onClose: () => toolbar.setChecklistOpen(false),
+  });
+
   toolbar = new Toolbar(document.getElementById('toolbar')!, {
     onLanguageChange: handleLanguageChange,
+    onChecklistToggle: () => checklist.toggle(),
     onTriggersToggle: () => mapViewer.triggerLayer.toggle(),
     onLabelsToggle: () =>
       mapViewer.triggerLayer.setLabelsPermanent(!mapViewer.triggerLayer.labelsPermanent),
@@ -113,10 +153,13 @@ async function init(): Promise<void> {
   poiFilter = new PoiFilter({
     onChange: (hidden) => {
       hiddenKinds = hidden;
-      if (currentGameConfig) {
-        userStore.setItem(`poi_filters_${currentGameConfig.id}`, [...hidden]);
-      }
+      if (currentGameConfig) saveFilterState(currentGameConfig.id);
       mapViewer.poiLayer.setKindFilter(hidden);
+    },
+    onHideMarkedChange: (hide) => {
+      hideMarked = hide;
+      if (currentGameConfig) saveFilterState(currentGameConfig.id);
+      mapViewer.poiLayer.setHideMarked(hide);
     },
   });
 
@@ -157,6 +200,12 @@ async function init(): Promise<void> {
     if (initialGame) {
       // replace (not push): the initial URL is already the current history entry.
       await handleGameSelect(initialGame.gameId, initialGame.mapId, initialGame.view, false);
+      // POI deep link on first load: pan to and flash the marker.
+      if (target?.poi && mapViewer.currentMapId === target.mapId) {
+        currentPoiAnchor = { mapId: target.mapId, poiId: target.poi };
+        mapViewer.poiLayer.focusPoi(target.poi);
+        updateHash();
+      }
     }
 
     // Prefetch the remaining games' configs in the background: the dropdown can
@@ -215,8 +264,15 @@ async function handleGameSelect(
     // This game's marks/filters must be in place BEFORE the first loadMap —
     // its initial render reads them (poi ids may collide across games).
     markedPois = MarkStorage.markedIds(gameId);
-    hiddenKinds = loadHiddenKinds(gameId);
+    const filters = loadFilterState(gameId);
+    hiddenKinds = filters.kinds;
+    hideMarked = filters.hideMarked;
     mapViewer.poiLayer.setKindFilter(hiddenKinds);
+    mapViewer.poiLayer.setHideMarked(hideMarked);
+
+    // Game-wide POI index: sidebar item search + the collectible checklist.
+    poiIndex = buildPoiIndex(currentGameConfig);
+    checklist.setEntries(poiIndex);
 
     // Update UI
     const mapList = gameLoader.getMapList(currentGameConfig);
@@ -244,6 +300,12 @@ async function handleGameSelect(
     console.error('Failed to load game:', err);
     showError(String(err));
   }
+}
+
+/** Localized display name of a map in the current game (falls back to the id). */
+function resolveMapName(mapId: string): string {
+  const mapConfig = currentGameConfig?.maps[mapId];
+  return mapConfig ? i18n.localize(mapConfig.name) || mapId : mapId;
 }
 
 /** Sync the sidebar's game dropdown: localized names + the active selection. */
@@ -295,7 +357,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
-      poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds);
+      poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked);
       reloadMarks();
     }
   }
@@ -311,12 +373,13 @@ function reloadMarks(): void {
   markedPois = currentGameConfig ? MarkStorage.markedIds(currentGameConfig.id) : new Set();
   mapViewer.poiLayer.setMarks(markedPois);
   treasureList.setMarks(markedPois);
+  checklist.refresh();
 }
 
-/** Toggle a chest's collected mark (map click or list checkbox). */
+/** Toggle a POI's mark: chests collected, trainers defeated (map click or checkbox). */
 function handlePoiToggle(poi: PoiDef): void {
   if (!currentGameConfig || triggerEditor.active) return;
-  if (poi.kind !== 'treasure' && poi.kind !== 'gold') return;
+  if (!MARKABLE_KINDS.has(poi.kind)) return;
   MarkStorage.toggle(currentGameConfig.id, poi.id);
   reloadMarks();
 }
@@ -324,10 +387,24 @@ function handlePoiToggle(poi: PoiDef): void {
 /** Re-apply the current user's category filter (user switch / import). */
 function reloadFilters(): void {
   if (!currentGameConfig) return;
-  hiddenKinds = loadHiddenKinds(currentGameConfig.id);
+  const filters = loadFilterState(currentGameConfig.id);
+  hiddenKinds = filters.kinds;
+  hideMarked = filters.hideMarked;
   mapViewer.poiLayer.setKindFilter(hiddenKinds);
+  mapViewer.poiLayer.setHideMarked(hideMarked);
   const mapConfig = mapViewer.currentMapId ? currentGameConfig.maps[mapViewer.currentMapId] : null;
-  poiFilter.setPois(mapConfig?.pois ?? [], hiddenKinds);
+  poiFilter.setPois(mapConfig?.pois ?? [], hiddenKinds, hideMarked);
+}
+
+/** Navigate to a POI's map (if needed), then pan to it, flash it, and anchor the hash. */
+async function navigateToPoi(mapId: string, poiId: string): Promise<void> {
+  if (!currentGameConfig?.maps[mapId]) return;
+  if (mapViewer.currentMapId !== mapId) {
+    await navigateToMap(currentGameConfig.id, mapId);
+  }
+  currentPoiAnchor = { mapId, poiId };
+  mapViewer.poiLayer.focusPoi(poiId);
+  updateHash(); // append &poi=… (replaces the entry just pushed)
 }
 
 /** Sync the live layers to the persisted toggle prefs (see Prefs / Toolbar). */
@@ -489,6 +566,7 @@ async function navigateToMap(
   pushHistory = true,
 ): Promise<void> {
   saveCurrentView(); // remember where we were on the map we're leaving
+  currentPoiAnchor = null; // plain navigation drops any POI anchor
 
   // World map is always the root — reset stack when navigating back to it
   if (currentGameConfig && mapId === currentGameConfig.defaultMap) {
@@ -516,7 +594,10 @@ let pendingPush = false;
 /** Write the current game/map/view into the URL hash (shareable, refresh-safe). */
 function updateHash(): void {
   if (!currentGameConfig || !mapViewer?.currentMapId) return;
-  const hash = formatHash(currentGameConfig.id, mapViewer.currentMapId, mapViewer.getViewState());
+  const poi = currentPoiAnchor?.mapId === mapViewer.currentMapId
+    ? currentPoiAnchor.poiId
+    : undefined;
+  const hash = formatHash(currentGameConfig.id, mapViewer.currentMapId, mapViewer.getViewState(), poi);
   const push = pendingPush;
   pendingPush = false;
   if (hash === lastHash) return;
@@ -545,6 +626,12 @@ async function applyHashTarget(): Promise<void> {
     // Same map, different view (e.g. back over a pan boundary).
     mapViewer.restoreViewState(target.view);
   }
+
+  // POI deep link: anchor + flash once the right map is on screen.
+  if (target.poi && mapViewer.currentMapId === target.mapId) {
+    currentPoiAnchor = { mapId: target.mapId, poiId: target.poi };
+    mapViewer.poiLayer.focusPoi(target.poi);
+  }
 }
 
 // ─── Language Refresh ───────────────────────────────────────
@@ -559,6 +646,7 @@ function refreshAllLabels(): void {
   treasureList.refreshLabels();
   eventPanel.refreshLabels();
   poiFilter.refreshLabels();
+  checklist.refreshLabels();
   mapViewer.refreshCoordLabel();
 
   // Refresh game names

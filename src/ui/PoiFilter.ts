@@ -6,6 +6,8 @@ import type { PoiDef } from '../types';
 interface PoiFilterOptions {
   /** A category checkbox changed: `hidden` = kinds currently unchecked. */
   onChange: (hidden: Set<string>) => void;
+  /** The "hide collected" toggle changed. */
+  onHideMarkedChange?: (hide: boolean) => void;
 }
 
 /** Legend glyph per known POI kind (fallback: generic pin). */
@@ -30,6 +32,7 @@ export class PoiFilter {
   private _options: PoiFilterOptions;
   private _kinds: Array<{ kind: string; count: number }> = [];
   private _hidden = new Set<string>();
+  private _hideMarked = false;
   private _visible = true;
 
   constructor(options: PoiFilterOptions) {
@@ -44,6 +47,11 @@ export class PoiFilter {
 
     this._el.addEventListener('change', (e) => {
       const input = e.target as HTMLInputElement;
+      if (input.dataset.hideMarked != null) {
+        this._hideMarked = input.checked;
+        this._options.onHideMarkedChange?.(input.checked);
+        return;
+      }
       const kind = input.dataset.kind;
       if (!kind) return;
       if (input.checked) this._hidden.delete(kind);
@@ -53,7 +61,7 @@ export class PoiFilter {
   }
 
   /** Show the categories present on the current map (with the user's hidden set). */
-  setPois(pois: PoiDef[], hidden: Set<string>): void {
+  setPois(pois: PoiDef[], hidden: Set<string>, hideMarked = false): void {
     const counts = new Map<string, number>();
     for (const poi of pois ?? []) {
       counts.set(poi.kind, (counts.get(poi.kind) ?? 0) + 1);
@@ -62,6 +70,7 @@ export class PoiFilter {
       .map(([kind, count]) => ({ kind, count }))
       .sort((a, b) => b.count - a.count);
     this._hidden = new Set(hidden);
+    this._hideMarked = hideMarked;
     this._render();
   }
 
@@ -98,6 +107,11 @@ export class PoiFilter {
     this._el.innerHTML = `
       <div class="poi-filter-header">🗺 ${i18n.t('poiFilter.title')}</div>
       <div class="poi-filter-body">${rows}</div>
+      <label class="poi-filter-item poi-filter-footer">
+        <input type="checkbox" data-hide-marked ${this._hideMarked ? 'checked' : ''} />
+        <span class="poi-filter-glyph">🙈</span>
+        <span class="poi-filter-name">${i18n.t('checklist.hideCollected')}</span>
+      </label>
     `;
     this._updateDisplay();
   }

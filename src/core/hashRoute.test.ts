@@ -34,6 +34,31 @@ describe('parseHash', () => {
   });
 });
 
+describe('poi deep links', () => {
+  it('parses &poi= with a view', () => {
+    expect(parseHash('#g/m@-1.0,2.0,3.00&poi=world_map_c05')).toEqual({
+      gameId: 'g',
+      mapId: 'm',
+      view: { center: [-1, 2], zoom: 3 },
+      poi: 'world_map_c05',
+    });
+  });
+
+  it('parses &poi= without a view', () => {
+    expect(parseHash('#g/m&poi=x%2F1')).toMatchObject({ mapId: 'm', poi: 'x/1' });
+  });
+
+  it('formats and round-trips a poi anchor', () => {
+    const hash = formatHash('g', 'm', { center: [-1, 2], zoom: 3 }, 'c 1');
+    expect(hash).toBe('#g/m@-1.0,2.0,3.00&poi=c%201');
+    expect(parseHash(hash)).toMatchObject({ poi: 'c 1' });
+  });
+
+  it('omits the poi part when not given', () => {
+    expect(formatHash('g', 'm', { center: [0, 0], zoom: 0 })).not.toContain('&poi=');
+  });
+});
+
 describe('formatHash', () => {
   it('formats and round-trips through parseHash', () => {
     const hash = formatHash('metal_max', 'world_map', { center: [-2048.51, 2048.04], zoom: 1.257 });

@@ -8,6 +8,17 @@ interface SidebarOptions {
   onToggle: (collapsed: boolean) => void;
   onMapRename: (mapId: string, name: LocalizedString) => void;
   onMapAdd: (mapId: string, name: LocalizedString, imagePath: string) => void;
+  /** A POI search result was clicked: jump to it on its map. */
+  onPoiSelect?: (mapId: string, poiId: string) => void;
+}
+
+/** One row in the sidebar's item-search results. */
+export interface PoiSearchRow {
+  mapId: string;
+  poiId: string;
+  kind: string;
+  name: string;
+  mapName: string;
 }
 
 /**
@@ -28,6 +39,9 @@ export class Sidebar {
   private _currentMapId: string | null = null;
   /** Set of map IDs that already exist (for duplicate check in add dialog). */
   private _existingMapIds = new Set<string>();
+  /** Game-wide item search (provided by main once the game is loaded). */
+  private _poiSearcher: ((query: string) => PoiSearchRow[]) | null = null;
+  private _poiResultsEl!: HTMLElement;
 
   constructor(container: HTMLElement, options: SidebarOptions) {
     this._el = container;
@@ -52,6 +66,7 @@ export class Sidebar {
           <button class="sidebar-add-map-btn" title="${i18n.t('sidebar.addMap')}">＋</button>
         </div>
         <div class="sidebar-add-map-dialog" style="display:none;"></div>
+        <div class="sidebar-poi-results" style="display:none;"></div>
         <div class="sidebar-map-list"></div>
       </div>
     `;
@@ -62,6 +77,14 @@ export class Sidebar {
     this._mapListEl = this._el.querySelector('.sidebar-map-list')!;
     this._addMapBtn = this._el.querySelector('.sidebar-add-map-btn')!;
     this._addMapDialog = this._el.querySelector('.sidebar-add-map-dialog')!;
+    this._poiResultsEl = this._el.querySelector('.sidebar-poi-results')!;
+
+    this._poiResultsEl.addEventListener('click', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.poi-result');
+      if (row?.dataset.mapId && row.dataset.poiId) {
+        this._options.onPoiSelect?.(row.dataset.mapId, row.dataset.poiId);
+      }
+    });
 
     this._toggleBtn.addEventListener('click', () => this.toggle());
     this._gameSelectEl.addEventListener('change', () => {
@@ -263,6 +286,7 @@ export class Sidebar {
     const query = this._searchEl.value.toLowerCase().trim();
     if (!query) {
       this._renderMapList(this._mapItems);
+      this._renderPoiResults([]);
       return;
     }
     const filtered = this._mapItems.filter(m => {
@@ -270,6 +294,29 @@ export class Sidebar {
       return name.includes(query) || m.id.toLowerCase().includes(query);
     });
     this._renderMapList(filtered);
+    this._renderPoiResults(this._poiSearcher ? this._poiSearcher(query) : []);
+  }
+
+  /** Provide the game-wide item searcher (query → matching POIs on any map). */
+  setPoiSearcher(searcher: (query: string) => PoiSearchRow[]): void {
+    this._poiSearcher = searcher;
+  }
+
+  private _renderPoiResults(rows: PoiSearchRow[]): void {
+    if (rows.length === 0) {
+      this._poiResultsEl.style.display = 'none';
+      this._poiResultsEl.innerHTML = '';
+      return;
+    }
+    this._poiResultsEl.innerHTML = `
+      <div class="sidebar-label">${i18n.t('sidebar.itemResults')} (${rows.length})</div>
+      ${rows.map(r => `<div class="poi-result" data-map-id="${escapeHtml(r.mapId)}" data-poi-id="${escapeHtml(r.poiId)}">
+        <span class="poi-result-glyph">${r.kind === 'gold' ? '💰' : r.kind === 'treasure' ? '⭐' : '📍'}</span>
+        <span class="poi-result-name">${escapeHtml(r.name)}</span>
+        <span class="poi-result-map">${escapeHtml(r.mapName)}</span>
+      </div>`).join('')}
+    `;
+    this._poiResultsEl.style.display = 'block';
   }
 
   /** Toggle sidebar collapsed state. */
@@ -293,6 +340,6 @@ export class Sidebar {
 
     this._searchEl.placeholder = i18n.t('sidebar.searchPlaceholder');
     this._addMapBtn.title = i18n.t('sidebar.addMap');
-    this._renderMapList(this._mapItems);
+    this._filterMaps(); // re-render map list AND item results in the new language
   }
 }
