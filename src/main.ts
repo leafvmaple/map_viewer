@@ -15,6 +15,8 @@ import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
 import { buildPoiIndex, searchPois, poiItemName, isMarkable, type PoiIndexEntry } from './core/PoiIndex.js';
+import { floorSiblings } from './core/Floors.js';
+import { FloorSwitcher } from './ui/FloorSwitcher.js';
 import { UserMenu } from './ui/UserMenu.js';
 import { PoiFilter } from './ui/PoiFilter.js';
 import { Checklist } from './ui/Checklist.js';
@@ -45,6 +47,7 @@ let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
 let userMenu: UserMenu;           // profile switcher (toolbar)
 let poiFilter: PoiFilter;         // POI category legend (bottom-left)
 let checklist: Checklist;         // game-wide collectible drawer (right)
+let floorSwitcher: FloorSwitcher; // building floor pills (top-left)
 
 /** Current game's marked ("collected") POI ids for the CURRENT user. */
 let markedPois = new Set<string>();
@@ -149,6 +152,14 @@ async function init(): Promise<void> {
   });
 
   userMenu = new UserMenu(document.getElementById('toolbar')!);
+
+  floorSwitcher = new FloorSwitcher({
+    onSelect: (mapId) => {
+      if (!currentGameConfig) return;
+      // Floors of one building share the layout — keep the camera in place.
+      void navigateToMap(currentGameConfig.id, mapId, mapViewer.getViewState());
+    },
+  });
 
   poiFilter = new PoiFilter({
     onChange: (hidden) => {
@@ -358,6 +369,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
       poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked, markedPois);
+      floorSwitcher.setFloors(floorSiblings(currentGameConfig, mapId), mapId);
       reloadMarks();
     }
   }

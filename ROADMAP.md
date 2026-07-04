@@ -43,7 +43,7 @@ URL 深链、3D 演示页。数据端由 `nes_decoder` 从 ROM 全自动导出�
 | # | 事项 | 对标 | 落地 | 规模 | 价值 |
 | --- | --- | --- | --- | --- | --- |
 | B1 | ✅ **搜索覆盖队伍成员名**（2026-07-04）：搜「火爆猴」→ 列出所有带它的训练家（侧栏搜索 + 清单搜索） | 宝可梦 wiki 的"谁有这只" | [PoiIndex.searchPois](src/core/PoiIndex.ts) | S | ★★★ |
-| B2 | **楼层/内景分组**：道馆 1F/2F、洞窟层级在地图内切换而非退回侧栏 | MapGenie floors | 导出端已有 mapsec + floor 信息；按 (mapsec, floor) 分组生成切换控件 | M-L | ★★★ |
+| B2 | ✅ **楼层分组切换**（2026-07-04）：契约 `maps[*].floorGroup/floor`，地图左上楼层 pills，切层保持视野。FRLG：warp 连通分量分组——floorNum 权威组（西尔佛 11F/百货 5F/火箭基地 B1-B4）+ 两层建筑启发式（民居/岗亭）；传送阵道馆与多口洞窟刻意不分组防误标 | MapGenie floors | [Floors.ts](src/core/Floors.ts) + [FloorSwitcher.ts](src/ui/FloorSwitcher.ts) | M-L | ★★★ |
 | B3 | **区域名标签叠加**：世界地图低缩放时显示地名（トキワシティ…），放大后淡出 | IGN 地图 | 契约加可选 `labels[]`（导出端已知每张图的 sec 归属与拼接偏移）；viewer 按 zoom 显隐 | M | ★★ |
 | B4 | 拼音/罗马字模糊搜索 | — | 搜索层加转换表 | M | ★ |
 | B5 | 小地图 (minimap inset) | 通用 | Leaflet-MiniMap 或自绘缩略图 + 视口框 | S-M | ★ |

@@ -77,6 +77,15 @@
           "exclusiveMinimum": 0,
           "description": "Tile size in pixels; drives the grid overlay and the editor's snap-to-grid. Typically 16."
         },
+        "floorGroup": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional building/dungeon key: maps sharing it are floors of one place and get an in-map floor switcher. Must be STABLE across re-exports (derive from map table facts, not enumeration order)."
+        },
+        "floor": {
+          "type": "integer",
+          "description": "Floor number within `floorGroup` (1 = ground, negative = basement: -1 renders B1F). Drives switcher order and labels."
+        },
         "maxZoom": { "type": "number" },
         "tilesPath": { "type": "string", "description": "Tile URL template for type=tiles, relative to the game res dir (e.g. world_tiles/{z}/{x}_{y}.png); latlng space stays full-res pixels." },
         "minNativeZoom": { "type": "number", "description": "Lowest pre-rendered pyramid level for type=tiles (default -5)." },

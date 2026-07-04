@@ -84,6 +84,11 @@ export interface MapConfig {
   minNativeZoom?: number;
   /** Tile size in pixels (used for grid overlay) */
   tileSize?: number;
+  /** Building/dungeon key: maps sharing it are floors of one place and get
+   *  an in-map floor switcher. Stable across re-exports. */
+  floorGroup?: string;
+  /** Floor number within `floorGroup` (1 = ground, -1 = B1F). */
+  floor?: number;
   /** Max zoom for tile maps */
   maxZoom?: number;
   /**
