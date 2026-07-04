@@ -171,6 +171,11 @@
           "maxItems": 2,
           "items": { "type": "integer", "minimum": 1 }
         },
+        "itemIcon": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional item mini-icon path (relative to the game's res dir), typically the ROM's bag icon. Shown in the tooltip, treasure panel and checklist — not as a map marker."
+        },
         "hidden": {
           "type": "boolean",
           "description": "True when the collectible has NO visible sprite in the rendered map image (buried / Itemfinder-style items). Only these get an attention glyph in the viewer; visible chests rely on their baked-in sprite + a hover zone."

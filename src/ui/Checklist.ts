@@ -25,6 +25,7 @@ export class Checklist {
   private _el: HTMLElement;
   private _options: ChecklistOptions;
   private _entries: PoiIndexEntry[] = []; // markable POIs (chests, trainers, generals…)
+  private _resolveIcon: ((relativePath: string) => string) | null = null;
   private _query = '';
   private _hideCollected = false;
   private _open = false;
@@ -76,6 +77,11 @@ export class Checklist {
         this._options.onClose?.();
       }
     });
+  }
+
+  /** Resolve a POI's relative `itemIcon` path into a URL (per game). */
+  setIconResolver(resolve: (relativePath: string) => string): void {
+    this._resolveIcon = resolve;
   }
 
   /** Feed the game-wide POI index (only markable POIs are listed). */
@@ -188,11 +194,14 @@ export class Checklist {
   private _rowHtml(entry: PoiIndexEntry): string {
     const { mapId, poi } = entry;
     const marked = this._options.isMarked(poi.id);
-    const glyph = KIND_GLYPHS[poi.kind] ?? '📍';
+    // Item mini-icon when available; kind glyph otherwise.
+    const glyph = poi.itemIcon && this._resolveIcon
+      ? `<img class="checklist-item-icon" src="${escapeHtml(this._resolveIcon(poi.itemIcon))}" alt="">`
+      : `<span class="checklist-glyph">${KIND_GLYPHS[poi.kind] ?? '📍'}</span>`;
     return `<div class="checklist-row${marked ? ' marked' : ''}"
                  data-map-id="${escapeHtml(mapId)}" data-poi-id="${escapeHtml(poi.id)}">
       <input type="checkbox" class="checklist-mark" ${marked ? 'checked' : ''} />
-      <span class="checklist-glyph">${glyph}</span>
+      ${glyph}
       <span class="checklist-name">${escapeHtml(poiItemName(poi))}</span>
     </div>`;
   }

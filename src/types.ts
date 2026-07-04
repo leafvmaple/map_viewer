@@ -52,6 +52,9 @@ export interface PoiDef {
    *  When set, the POI renders as this sprite instead of a glyph — on every
    *  map, not just the overworld (e.g. trainer NPC sprites). */
   icon?: string;
+  /** Optional item mini-icon (bag icon) shown in the tooltip, treasure panel
+   *  and checklist — NOT on the map (chests keep their baked-in sprite). */
+  itemIcon?: string;
   /** Native pixel size [w, h] of `icon` (defaults to [16, 32]). */
   iconSize?: [number, number];
   /**

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { hasPartyCard, renderPartyCard } from './PoiTooltip.js';
+import { hasPartyCard, renderPartyCard, renderPlainTooltip } from './PoiTooltip.js';
 import { i18n } from '../i18n/index.js';
 import type { PoiDef } from '../types';
 
@@ -22,6 +22,25 @@ describe('hasPartyCard', () => {
     expect(hasPartyCard(withParty())).toBe(false);
     expect(hasPartyCard(withParty([]))).toBe(false);
     expect(hasPartyCard(withParty([{ name: { zh: '豪力' }, value: 39 }]))).toBe(true);
+  });
+});
+
+describe('renderPlainTooltip', () => {
+  const chest = (itemIcon?: string): PoiDef =>
+    ({ id: 'c0', kind: 'treasure', pos: [0, 0], label: { zh: '精灵球 · 伤药' }, itemIcon });
+
+  it('prepends the item mini-icon when present and resolvable', () => {
+    const html = renderPlainTooltip(chest('sprites/item/013.png'), '精灵球 · 伤药', false, resolve);
+    expect(html).toContain('src="/res/g/sprites/item/013.png"');
+    expect(html).toContain('精灵球 · 伤药');
+    expect(renderPlainTooltip(chest(), '精灵球 · 伤药', false, resolve)).not.toContain('<img');
+    expect(renderPlainTooltip(chest('x.png'), '精灵球 · 伤药', false, null)).not.toContain('<img');
+  });
+
+  it('keeps the collected suffix and escapes the title', () => {
+    const html = renderPlainTooltip(chest('x.png'), '<b>', true, resolve);
+    expect(html).toContain('✓');
+    expect(html).not.toContain('<b>');
   });
 });
 

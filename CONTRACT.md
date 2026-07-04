@@ -124,6 +124,7 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. |
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
+| `pois[*].itemIcon` | Optional item mini-icon (the ROM's bag icon, typically 24×24), relative to `res/{gameId}/`. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
 | `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
 | `pois[*].party` | Optional structured battle party — **game-agnostic**: a trainer's Pokémon, an enemy general's army, a boss group. When present the viewer renders the tooltip as an icon·name·badge card instead of plain text (so keep `label` a **short title**, don't concatenate the party into it), and the POI becomes user-markable (defeated ✓) regardless of its `kind`. |
 | `pois[*].reward` | Optional localized, pre-formatted defeat reward (prize money, spoils — e.g. `{ "en": "¥624" }`). Shown dimmed in the party-card header. |

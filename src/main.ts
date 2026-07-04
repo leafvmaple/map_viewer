@@ -296,6 +296,9 @@ async function handleGameSelect(
       (path) => gameLoader.resolveImagePath(currentGameConfig!, path),
       (poiId) => markedPois.has(poiId),
     );
+    // Item mini-icons in the treasure panel / checklist share the same resolver.
+    treasureList.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
+    checklist.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
 
     // Configure editor and breadcrumb
     triggerEditor.setGameConfig(currentGameConfig);

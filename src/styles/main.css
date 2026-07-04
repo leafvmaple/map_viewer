@@ -745,6 +745,15 @@ html, body {
   image-rendering: pixelated;
 }
 
+/* Item bag icon inline in a plain chest tooltip. */
+.poi-tt-item {
+  width: 18px;
+  height: 18px;
+  image-rendering: pixelated;
+  vertical-align: -4px;
+  margin-right: 5px;
+}
+
 /* Missing mini-icon → poké-ball placeholder; row layout is unaffected. */
 .poi-tt-ball {
   background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAuElEQVR42qVTMQ7CMAy8RHkCQ5UHRKhDpw6d+hTUt3ZADJ0QQlUeEHXoH8pEcQx2ENyUyHeXixMbMBz8cYOCNc2G7h0Xj6HS9OiBjZpYLvZdA981osEYqiyl5WIASJermoKaWF4siTnMN/cW+xGX9wSc0MelnEAqxvsEAAh1KxrYkpivOZxECHWbJZA45vmMEkE7YE2zcVqDpOjn6fZqIv2J2l2pcDgN+0xYOiRatz+JswS/TuPfeACNAVsSuRA9RwAAAABJRU5ErkJggg==') center / 16px 16px no-repeat;
@@ -900,6 +909,14 @@ html, body {
   color: #667788;
   min-width: 16px;
   text-align: right;
+}
+
+.treasure-item-icon,
+.checklist-item-icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  image-rendering: pixelated;
 }
 
 .treasure-name {

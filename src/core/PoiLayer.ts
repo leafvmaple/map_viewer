@@ -1,8 +1,7 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
-import { escapeHtml } from '../utils.js';
 import { CHEST_KINDS } from './PoiIndex.js';
-import { hasPartyCard, renderPartyCard } from './PoiTooltip.js';
+import { hasPartyCard, renderPartyCard, renderPlainTooltip } from './PoiTooltip.js';
 import type { PoiDef } from '../types';
 
 interface PoiLayerOptions {
@@ -254,8 +253,7 @@ export class PoiLayer {
     if (hasPartyCard(poi)) {
       return renderPartyCard(poi, this._label(poi), isMarked, this._resolveIcon);
     }
-    const base = escapeHtml(this._label(poi));
-    return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
+    return renderPlainTooltip(poi, this._label(poi), isMarked, this._resolveIcon);
   }
 
   private _label(poi: PoiDef): string {

@@ -19,6 +19,24 @@ export function hasPartyCard(poi: PoiDef): boolean {
 }
 
 /**
+ * Render a plain (non-card) tooltip: optional item mini-icon + localized
+ * label, with the collected suffix when marked. Falls back to pure text when
+ * the POI has no `itemIcon` or no resolver is set.
+ */
+export function renderPlainTooltip(
+  poi: PoiDef,
+  title: string,
+  isMarked: boolean,
+  resolveIcon: ((relativePath: string) => string) | null,
+): string {
+  const icon = poi.itemIcon && resolveIcon
+    ? `<img class="poi-tt-item" src="${escapeHtml(resolveIcon(poi.itemIcon))}" alt="">`
+    : '';
+  const base = `${icon}${escapeHtml(title)}`;
+  return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
+}
+
+/**
  * Render the party card's inner HTML. `title` is the already-localized POI
  * label; `resolveIcon` turns a member's relative icon path into a URL
  * (missing icon / resolver → poké-ball placeholder, the row layout is

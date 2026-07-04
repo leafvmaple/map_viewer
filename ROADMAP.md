@@ -52,7 +52,7 @@ URL 深链、3D 演示页。数据端由 `nes_decoder` 从 ROM 全自动导出�
 
 | # | 事项 | 对标 | 落地 | 规模 | 价值 |
 | --- | --- | --- | --- | --- | --- |
-| C1 | **宝箱 tooltip 带物品图标**：复用队伍卡片的行模板 | ZeldaMaps 物品即图标 | FRLG `gItemIconTable`（24×24）提取方式同 mon_icons.py；契约无需新字段（POI 级 `icon` 语义复用或加 `itemIcon`） | M | ★★ |
+| C1 | ✅ **物品图标**（2026-07-04）：契约 `pois[*].itemIcon`；宝箱 tooltip、宝箱面板、全收集清单三处显示 ROM 袋子图标（FRLG `gItemIconTable` 24×24 LZ77，特征扫描定位，119 个图标 339/351 宝箱覆盖，金币无图标） | ZeldaMaps 物品即图标 | item_icons.py + [PoiTooltip.ts](src/core/PoiTooltip.ts) | M | ★★ |
 | C2 | **野生遭遇表**：每条道路的草丛/水面/钓鱼出现率，宝可梦攻略站标配 | 宝可梦 wiki | ROM 有 encounter tables；契约加 map 级可选 `encounters[]`，UI 复用卡片列表（图标·名称·Lv 区间·几率） | M-L | ★★★（宝可梦系） |
 | C3 | ✅ **训练家赏金**（2026-07-04）：卡片头部显示 ¥（4×职业基数×末位等级，双打×2；基数表转录自 pret/pokefirered）；契约新增通用 `pois[*].reward` | 宝可梦 wiki | 导出端 + [PoiTooltip.ts](src/core/PoiTooltip.ts) | S | ★ |
 | C4 | **wiki 互链**：POI 可选 `link` 字段 → tooltip 点击跳 wiki 条目（与 d:/Code/wiki 生态打通） | IGN 嵌入攻略正文 | 契约加 `pois[*].link`；viewer 端 S；数据端按 wiki URL 规则生成 | S+ | ★★★（生态） |

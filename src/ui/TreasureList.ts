@@ -22,6 +22,7 @@ export class TreasureList {
   private _tileSize = 16;
   private _marked = new Set<string>();
   private _visible = true;
+  private _resolveIcon: ((relativePath: string) => string) | null = null;
 
   constructor(options: TreasureListOptions) {
     this._options = options;
@@ -47,6 +48,11 @@ export class TreasureList {
       const poi = row?.dataset.id ? this._pois.find(p => p.id === row.dataset.id) : undefined;
       if (poi) this._options.onToggleMark?.(poi);
     });
+  }
+
+  /** Resolve a POI's relative `itemIcon` path into a URL (per game). */
+  setIconResolver(resolve: (relativePath: string) => string): void {
+    this._resolveIcon = resolve;
   }
 
   /** Update the list (treasure + gold chests only). */
@@ -99,10 +105,13 @@ export class TreasureList {
         const tx = Math.round(p.pos[0] / this._tileSize);
         const ty = Math.round(p.pos[1] / this._tileSize);
         const marked = this._marked.has(p.id);
+        const icon = p.itemIcon && this._resolveIcon
+          ? `<img class="treasure-item-icon" src="${escapeHtml(this._resolveIcon(p.itemIcon))}" alt="">`
+          : '';
         return `<div class="treasure-item${marked ? ' marked' : ''}" data-id="${escapeHtml(p.id)}">
           <input type="checkbox" class="treasure-mark" title="${escapeHtml(i18n.t('treasure.collected'))}" ${marked ? 'checked' : ''} />
           <span class="treasure-idx">${i + 1}</span>
-          <span class="treasure-name">${escapeHtml(this._itemName(p))}</span>
+          ${icon}<span class="treasure-name">${escapeHtml(this._itemName(p))}</span>
           <span class="treasure-pos">${tx},${ty}</span>
         </div>`;
       })
