@@ -120,6 +120,43 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
 | `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
+| `pois[*].party` | Optional structured battle party — **game-agnostic**: a trainer's Pokémon, an enemy general's army, a boss group. When present the viewer renders the tooltip as an icon·name·badge card instead of plain text (so keep `label` a **short title**, don't concatenate the party into it), and the POI becomes user-markable (defeated ✓) regardless of its `kind`. |
+
+### Battle party (`pois[*].party`)
+
+One row per member: mini-icon, localized name, and a right-aligned numeric
+badge whose dimmed prefix comes from `unit` (default `Lv`). The same card
+serves every game:
+
+```jsonc
+// pokemon_frlg — a trainer  (renders 「火爆猴 ⋯⋯ Lv39」)
+"party": [
+  {
+    "name":  { "zh": "火爆猴", "ja": "オコリザル" },  // localized name (required)
+    "value": 39,                                      // numeric badge (optional)
+    "id":    57,                                      // game-internal id, for debugging (optional)
+    "icon":  "sprites/mon/057.png"                    // mini-icon, relative to res/{gameId}/ (optional)
+  }
+]
+
+// tenchi2 — an enemy general  (renders 「张飞 ⋯⋯ 兵12000」)
+"party": [
+  {
+    "name":  { "zh": "张飞" },
+    "value": 12000,
+    "unit":  { "zh": "兵", "en": "Troops" }           // badge prefix; omit for the default "Lv"
+  }
+]
+```
+
+- Emit the **full roster in battle order** — the viewer never truncates, so the
+  producer shouldn't either ("等N只" summaries are exactly what this replaces).
+- `value` is optional: a member without one renders as a name-only row.
+- `icon` is optional per entry: a missing icon renders as a ball placeholder
+  without breaking the row layout. Mini-icons are typically 32×32 pixel art;
+  the viewer displays them at 24×24 with `image-rendering: pixelated`.
+- `name`/`unit` follow the usual localized-string rules; the viewer falls back
+  current-language → `en` → any value, so `{ "ja": ... }` alone is valid.
 
 ### Optional map events (terrain changes)
 

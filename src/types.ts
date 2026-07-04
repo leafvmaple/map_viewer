@@ -21,6 +21,22 @@ export interface TriggerDef {
   label: LocalizedString;
 }
 
+/** One member of a POI's battle party — a trainer's Pokémon, an enemy
+ *  general's army, a boss group… Rendered as an icon · name · badge row. */
+export interface PartyMemberDef {
+  /** Localized member name (e.g. { zh: "火爆猴" } or { zh: "张飞" }). */
+  name: LocalizedString;
+  /** Numeric badge, right-aligned (a level, a troop count…). Omit for none. */
+  value?: number;
+  /** Localized badge prefix shown dimmed before `value`. Default "Lv" —
+   *  e.g. { zh: "兵" } renders 「兵12000」. */
+  unit?: LocalizedString;
+  /** Optional game-internal id of this member (species / general id). */
+  id?: number;
+  /** Optional mini-icon path (relative to the game's res dir). */
+  icon?: string;
+}
+
 /** A point of interest on a map (e.g. a treasure chest) */
 export interface PoiDef {
   id: string;
@@ -44,6 +60,10 @@ export interface PoiDef {
    * visible chests are covered by their baked-in sprite + a hover zone.
    */
   hidden?: boolean;
+  /** Structured battle party (a trainer's mons, an enemy general's army…);
+   *  full roster in battle order. When present the tooltip renders an
+   *  icon/name/badge card instead of plain text, and the POI is markable. */
+  party?: PartyMemberDef[];
 }
 
 /** Map rendering type */

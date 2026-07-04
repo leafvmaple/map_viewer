@@ -643,6 +643,111 @@ html, body {
   font-size: 12px !important;
 }
 
+/* ── Trainer party card (structured `poi.party`) ──────────────
+   Header (title + count / defeated badge) over one icon·name·level
+   row per mon. HTML built in PoiTooltip.ts. */
+.poi-tooltip-card {
+  padding: 0 !important;
+  border-radius: 6px !important;
+  min-width: 148px;
+}
+
+.poi-tt-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 9px 4px;
+  border-bottom: 1px solid rgba(255, 179, 0, 0.28);
+}
+
+.poi-tt-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffe082;
+  line-height: 1.4;
+}
+
+.poi-tt-count {
+  margin-left: auto;
+  font: 600 10px/1.4 'Consolas', 'Courier New', monospace;
+  color: #93a3bd;
+}
+
+.poi-tt-chip {
+  margin-left: auto;
+  font-size: 10px;
+  line-height: 1.4;
+  font-weight: 600;
+  color: #86e29b;
+}
+
+.poi-tt-party {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 5px;
+}
+
+.poi-tt-party li {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 2px 9px;
+  min-height: 24px;
+}
+
+.poi-tt-icon {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  image-rendering: pixelated;
+}
+
+/* Missing mini-icon → poké-ball placeholder; row layout is unaffected. */
+.poi-tt-ball {
+  background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAuElEQVR42qVTMQ7CMAy8RHkCQ5UHRKhDpw6d+hTUt3ZADJ0QQlUeEHXoH8pEcQx2ENyUyHeXixMbMBz8cYOCNc2G7h0Xj6HS9OiBjZpYLvZdA981osEYqiyl5WIASJermoKaWF4siTnMN/cW+xGX9wSc0MelnEAqxvsEAAh1KxrYkpivOZxECHWbJZA45vmMEkE7YE2zcVqDpOjn6fZqIv2J2l2pcDgN+0xYOiRatz+JswS/TuPfeACNAVsSuRA9RwAAAABJRU5ErkJggg==') center / 16px 16px no-repeat;
+  opacity: 0.75;
+}
+
+.poi-tt-mon {
+  font-size: 12px;
+  color: #e8ecf4;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+/* Dotted leader between name and level — classic RPG-menu typography. */
+.poi-tt-leader {
+  flex: 1;
+  min-width: 14px;
+  margin: 0 2px;
+  border-bottom: 1px dotted rgba(255, 224, 130, 0.3);
+  transform: translateY(3px);
+}
+
+.poi-tt-lv {
+  font: 600 12px/1 'Consolas', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  color: #ffcf4d;
+  white-space: nowrap;
+}
+
+.poi-tt-lv small {
+  font-size: 9px;
+  font-weight: 600;
+  color: #bd913a;
+  margin-right: 1px;
+}
+
+/* Defeated: desaturate the party, keep the header legible. */
+.poi-tt-done .poi-tt-party {
+  filter: grayscale(1) brightness(0.82);
+  opacity: 0.6;
+}
+
+.poi-tt-done .poi-tt-name {
+  color: #b9c4d6;
+}
+
 .poi-glyph {
   display: inline-block;
   line-height: 1;

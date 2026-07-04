@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { CHEST_KINDS } from './PoiIndex.js';
+import { hasPartyCard, renderPartyCard } from './PoiTooltip.js';
 import type { PoiDef } from '../types';
 
 interface PoiLayerOptions {
@@ -180,9 +181,10 @@ export class PoiLayer {
       });
     }
 
+    const isCard = hasPartyCard(poi);
     layer.bindTooltip(this._tooltip(poi, isMarked), {
       direction: 'top',
-      className: 'poi-tooltip',
+      className: `poi-tooltip${isCard ? ' poi-tooltip-card' : ''}${isCard && isMarked ? ' poi-tt-done' : ''}`,
       offset: [0, -6],
     });
     layer.on('click', (e: L.LeafletMouseEvent) => {
@@ -248,6 +250,10 @@ export class PoiLayer {
   }
 
   private _tooltip(poi: PoiDef, isMarked: boolean): string {
+    // Structured trainer party → icon/name/level card instead of plain text.
+    if (hasPartyCard(poi)) {
+      return renderPartyCard(poi, this._label(poi), isMarked, this._resolveIcon);
+    }
     const base = escapeHtml(this._label(poi));
     return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
   }

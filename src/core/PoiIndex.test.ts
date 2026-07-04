@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPoiIndex, searchPois, CHEST_KINDS, MARKABLE_KINDS } from './PoiIndex.js';
+import { buildPoiIndex, searchPois, isMarkable, CHEST_KINDS, MARKABLE_KINDS } from './PoiIndex.js';
 import type { GameConfig, PoiDef } from '../types';
 
 const poi = (id: string, label?: Record<string, string>, item?: string, kind = 'treasure'): PoiDef => ({
@@ -65,5 +65,12 @@ describe('kind sets', () => {
     for (const kind of CHEST_KINDS) expect(MARKABLE_KINDS.has(kind)).toBe(true);
     expect(MARKABLE_KINDS.has('trainer')).toBe(true);
     expect(MARKABLE_KINDS.has('sign')).toBe(false);
+  });
+
+  it('any POI with a battle party is markable, regardless of kind', () => {
+    const general = { ...poi('g00', { zh: '敌将' }, undefined, 'general'), party: [{ name: { zh: '张飞' }, value: 12000 }] };
+    expect(isMarkable(general)).toBe(true);
+    expect(isMarkable(poi('s00', undefined, undefined, 'sign'))).toBe(false);
+    expect(isMarkable(poi('t00', undefined, undefined, 'trainer'))).toBe(true);
   });
 });

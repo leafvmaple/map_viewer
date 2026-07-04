@@ -14,7 +14,7 @@ import { Prefs } from './core/Prefs.js';
 import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
-import { buildPoiIndex, searchPois, poiItemName, MARKABLE_KINDS, type PoiIndexEntry } from './core/PoiIndex.js';
+import { buildPoiIndex, searchPois, poiItemName, isMarkable, type PoiIndexEntry } from './core/PoiIndex.js';
 import { UserMenu } from './ui/UserMenu.js';
 import { PoiFilter } from './ui/PoiFilter.js';
 import { Checklist } from './ui/Checklist.js';
@@ -376,10 +376,10 @@ function reloadMarks(): void {
   checklist.refresh();
 }
 
-/** Toggle a POI's mark: chests collected, trainers defeated (map click or checkbox). */
+/** Toggle a POI's mark: chests collected, trainers/generals defeated (map click or checkbox). */
 function handlePoiToggle(poi: PoiDef): void {
   if (!currentGameConfig || triggerEditor.active) return;
-  if (!MARKABLE_KINDS.has(poi.kind)) return;
+  if (!isMarkable(poi)) return;
   MarkStorage.toggle(currentGameConfig.id, poi.id);
   reloadMarks();
 }

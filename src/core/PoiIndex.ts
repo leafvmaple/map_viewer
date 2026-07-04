@@ -21,6 +21,13 @@ export const CHEST_KINDS = new Set(['treasure', 'gold']);
 /** POI kinds the user can mark (chests collected, trainers defeated…). */
 export const MARKABLE_KINDS = new Set(['treasure', 'gold', 'trainer']);
 
+/** Whether the user can mark this POI. Beyond the well-known kinds, any POI
+ *  carrying a battle party is markable (enemy generals, bosses — kinds the
+ *  well-known set can't anticipate). */
+export function isMarkable(poi: PoiDef): boolean {
+  return MARKABLE_KINDS.has(poi.kind) || (poi.party?.length ?? 0) > 0;
+}
+
 /** Flatten a game config into one entry per POI, in maps/pois order. */
 export function buildPoiIndex(config: GameConfig): PoiIndexEntry[] {
   const index: PoiIndexEntry[] = [];

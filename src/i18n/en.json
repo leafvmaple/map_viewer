@@ -63,6 +63,7 @@
   "poi.kind.treasure": "Treasure",
   "poi.kind.gold": "Gold",
   "poi.kind.trainer": "Trainer",
+  "poi.defeated": "Defeated",
   "poi.kind.sign": "Sign",
   "poi.kind.heal": "Heal spot",
   "poi.kind.cut": "Cut tree",
