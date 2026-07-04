@@ -67,6 +67,8 @@
   "poi.kind.sign": "Sign",
   "poi.kind.heal": "Heal spot",
   "poi.kind.cut": "Cut tree",
+  "poi.kind.rock": "Rock Smash",
+  "poi.kind.boulder": "Strength boulder",
   "toolbar.checklist": "Checklist",
   "checklist.title": "Collection Checklist",
   "checklist.searchPlaceholder": "Search items...",

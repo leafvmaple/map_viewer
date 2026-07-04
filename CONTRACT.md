@@ -51,6 +51,7 @@ map_viewer/
 ```jsonc
 {
   "id": "metal_max",
+  "version": 1,                        // optional contract version (currently 1)
   "name": { "zh": "重装机兵", "en": "Metal Max", "ja": "メタルマックス" },
   "defaultMap": "world_map",           // key in `maps`; the navigation root
   "maps": {
@@ -78,6 +79,7 @@ map_viewer/
 | Field | Rule |
 | --- | --- |
 | `id` | `^[a-z0-9_]+$`; equals the folder name and the registry `id`. |
+| `version` | Optional integer (currently `1`): the contract version the file was produced against, so a future breaking change can be detected instead of silently misread. |
 | `name`, `label` | **Localized string**: object keyed by language code (`en`/`zh`/`ja`/…), ≥1 entry. `en` is the fallback. |
 | `defaultMap` | Must be a key in `maps`. It is the nav root — returning to it clears the back-stack. |
 | `maps[*].type` | `"image"` (single PNG) or `"tiles"` (pre-generated tile pyramid; requires `tilesPath` + `width`/`height`, else falls back to image mode). |
@@ -122,6 +124,7 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
 | `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
 | `pois[*].party` | Optional structured battle party — **game-agnostic**: a trainer's Pokémon, an enemy general's army, a boss group. When present the viewer renders the tooltip as an icon·name·badge card instead of plain text (so keep `label` a **short title**, don't concatenate the party into it), and the POI becomes user-markable (defeated ✓) regardless of its `kind`. |
+| `pois[*].reward` | Optional localized, pre-formatted defeat reward (prize money, spoils — e.g. `{ "en": "¥624" }`). Shown dimmed in the party-card header. |
 
 ### Battle party (`pois[*].party`)
 

@@ -40,8 +40,9 @@ export function buildPoiIndex(config: GameConfig): PoiIndexEntry[] {
 }
 
 /**
- * Case-insensitive substring search over every label language + the raw item
- * id, across ALL maps of the game.
+ * Case-insensitive substring search over every label language, the raw item
+ * id, and party member names (find every trainer that carries a 火爆猴),
+ * across ALL maps of the game.
  */
 export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): PoiIndexEntry[] {
   const q = query.trim().toLowerCase();
@@ -56,6 +57,11 @@ export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): P
       }
     }
     if (poi.item) haystack.push(poi.item);
+    for (const member of poi.party ?? []) {
+      for (const value of Object.values(member.name)) {
+        if (value) haystack.push(value);
+      }
+    }
     if (haystack.some(text => text.toLowerCase().includes(q))) {
       results.push(entry);
       if (results.length >= limit) break;

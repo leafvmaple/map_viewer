@@ -37,7 +37,11 @@ export function renderPartyCard(
     : party.length > 1
       ? `<span class="poi-tt-count">×${party.length}</span>`
       : '';
-  const head = `<div class="poi-tt-head"><span class="poi-tt-name">${escapeHtml(title)}</span>${badge}</div>`;
+  // Defeat reward (prize money, spoils…), dimmed between title and count.
+  const reward = poi.reward
+    ? `<span class="poi-tt-reward">${escapeHtml(i18n.localize(poi.reward))}</span>`
+    : '';
+  const head = `<div class="poi-tt-head"><span class="poi-tt-name">${escapeHtml(title)}</span>${reward}${badge}</div>`;
 
   const rows = party.map(member => {
     const icon = member.icon && resolveIcon

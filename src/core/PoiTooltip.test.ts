@@ -55,6 +55,14 @@ describe('renderPartyCard', () => {
     expect(html).not.toContain('poi-tt-leader');
   });
 
+  it('renders the defeat reward dimmed in the header', () => {
+    const withReward = { ...withParty(party), reward: { en: '¥624' } };
+    const html = renderPartyCard(withReward, '训练师', false, resolve);
+    expect(html).toContain('poi-tt-reward');
+    expect(html).toContain('¥624');
+    expect(renderPartyCard(withParty(party), '训练师', false, resolve)).not.toContain('poi-tt-reward');
+  });
+
   it('falls back to the ja name when zh is missing', () => {
     const html = renderPartyCard(withParty([{ name: { ja: 'カポエラー' }, value: 48 }]), '训练师', false, resolve);
     expect(html).toContain('カポエラー');

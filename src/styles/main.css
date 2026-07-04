@@ -665,16 +665,21 @@ html, body {
   font-weight: 600;
   color: #ffe082;
   line-height: 1.4;
+  margin-right: auto;
+}
+
+.poi-tt-reward {
+  font: 600 10px/1.4 'Consolas', 'Courier New', monospace;
+  font-variant-numeric: tabular-nums;
+  color: #bd913a;
 }
 
 .poi-tt-count {
-  margin-left: auto;
   font: 600 10px/1.4 'Consolas', 'Courier New', monospace;
   color: #93a3bd;
 }
 
 .poi-tt-chip {
-  margin-left: auto;
   font-size: 10px;
   line-height: 1.4;
   font-weight: 600;
@@ -746,6 +751,11 @@ html, body {
 
 .poi-tt-done .poi-tt-name {
   color: #b9c4d6;
+}
+
+/* Legend: a fully collected/defeated category's tally turns green. */
+.poi-filter-done {
+  color: #86e29b;
 }
 
 .poi-glyph {

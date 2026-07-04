@@ -67,6 +67,8 @@
   "poi.kind.sign": "告示牌",
   "poi.kind.heal": "回复点",
   "poi.kind.cut": "居合斩",
+  "poi.kind.rock": "碎岩石",
+  "poi.kind.boulder": "怪力石",
   "toolbar.checklist": "清单",
   "checklist.title": "全收集清单",
   "checklist.searchPlaceholder": "搜索物品...",

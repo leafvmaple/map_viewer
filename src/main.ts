@@ -357,7 +357,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
-      poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked);
+      poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked, markedPois);
       reloadMarks();
     }
   }
@@ -373,6 +373,7 @@ function reloadMarks(): void {
   markedPois = currentGameConfig ? MarkStorage.markedIds(currentGameConfig.id) : new Set();
   mapViewer.poiLayer.setMarks(markedPois);
   treasureList.setMarks(markedPois);
+  poiFilter.setMarks(markedPois);
   checklist.refresh();
 }
 
@@ -393,7 +394,7 @@ function reloadFilters(): void {
   mapViewer.poiLayer.setKindFilter(hiddenKinds);
   mapViewer.poiLayer.setHideMarked(hideMarked);
   const mapConfig = mapViewer.currentMapId ? currentGameConfig.maps[mapViewer.currentMapId] : null;
-  poiFilter.setPois(mapConfig?.pois ?? [], hiddenKinds, hideMarked);
+  poiFilter.setPois(mapConfig?.pois ?? [], hiddenKinds, hideMarked, markedPois);
 }
 
 /** Navigate to a POI's map (if needed), then pan to it, flash it, and anchor the hash. */

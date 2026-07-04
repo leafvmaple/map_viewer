@@ -13,6 +13,11 @@
       "pattern": "^[a-z0-9_]+$",
       "description": "Stable game identifier. Must match the registry entry and the res/{id}/ folder name."
     },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Optional contract version this file was produced against (currently 1). Lets a future breaking change be detected instead of silently misread."
+    },
     "name": { "$ref": "#/$defs/localizedString" },
     "defaultMap": {
       "type": "string",
@@ -165,6 +170,10 @@
           "type": "array",
           "description": "Optional structured battle party (a trainer's Pokémon, an enemy general's army…); the viewer renders it as an icon/name/badge card in the tooltip and makes the POI markable. Full roster, in battle order — do not truncate.",
           "items": { "$ref": "#/$defs/partyMember" }
+        },
+        "reward": {
+          "$ref": "#/$defs/localizedString",
+          "description": "Optional defeat reward (prize money, spoils…), pre-formatted (e.g. \"¥624\"). Shown dimmed in the party-card header."
         }
       }
     },

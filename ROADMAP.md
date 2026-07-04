@@ -34,15 +34,15 @@ URL 深链、3D 演示页。数据端由 `nes_decoder` 从 ROM 全自动导出�
 | # | 事项 | 对标 | 落地 | 规模 | 价值 |
 | --- | --- | --- | --- | --- | --- |
 | A1 | **自定义标记 + 笔记**：用户在任意位置放置个人 pin、写备注，随用户档案导出 | MapGenie 招牌（付费功能） | 新 `UserPinStorage` + PoiLayer 渲染管线复用；交互仿 TriggerEditor 的拖放模式 | M | ★★★ |
-| A2 | **图例显示进度**：分类行从 `⚔️ 训练师 432` 变成 `⚔️ 训练师 12/432` | MapGenie 分类进度 | [PoiFilter.ts](src/ui/PoiFilter.ts) 已有 counts，把 marked 集合传进去 | S | ★★ |
-| A3 | 训练家纳入全收集清单（现在只有宝箱） | — | [Checklist.ts](src/ui/Checklist.ts) 的 kind 过滤放宽到 isMarkable | S | ★★ |
+| A2 | ✅ **图例显示进度**（2026-07-04）：可标记分类显示 `n/total`，集齐变绿 | MapGenie 分类进度 | [PoiFilter.ts](src/ui/PoiFilter.ts) | S | ★★ |
+| A3 | ✅ 训练家纳入全收集清单（2026-07-04） | — | [Checklist.ts](src/ui/Checklist.ts) 过滤放宽到 isMarkable | S | ★★ |
 | A4 | 剧透控制：`hidden` 隐藏物品类默认折叠 | wiki 惯例 | 图例默认态 + Prefs | S | ★ |
 
 ### B. 检索与导航
 
 | # | 事项 | 对标 | 落地 | 规模 | 价值 |
 | --- | --- | --- | --- | --- | --- |
-| B1 | **搜索覆盖队伍成员名**：搜「火爆猴」→ 列出所有带它的训练家；搜「张飞」同理 | 宝可梦 wiki 的"谁有这只" | [PoiIndex.searchPois](src/core/PoiIndex.ts) 的 haystack 加 `party[*].name`，今天的数据直接受益 | S | ★★★ |
+| B1 | ✅ **搜索覆盖队伍成员名**（2026-07-04）：搜「火爆猴」→ 列出所有带它的训练家（侧栏搜索 + 清单搜索） | 宝可梦 wiki 的"谁有这只" | [PoiIndex.searchPois](src/core/PoiIndex.ts) | S | ★★★ |
 | B2 | **楼层/内景分组**：道馆 1F/2F、洞窟层级在地图内切换而非退回侧栏 | MapGenie floors | 导出端已有 mapsec + floor 信息；按 (mapsec, floor) 分组生成切换控件 | M-L | ★★★ |
 | B3 | **区域名标签叠加**：世界地图低缩放时显示地名（トキワシティ…），放大后淡出 | IGN 地图 | 契约加可选 `labels[]`（导出端已知每张图的 sec 归属与拼接偏移）；viewer 按 zoom 显隐 | M | ★★ |
 | B4 | 拼音/罗马字模糊搜索 | — | 搜索层加转换表 | M | ★ |
@@ -54,7 +54,7 @@ URL 深链、3D 演示页。数据端由 `nes_decoder` 从 ROM 全自动导出�
 | --- | --- | --- | --- | --- | --- |
 | C1 | **宝箱 tooltip 带物品图标**：复用队伍卡片的行模板 | ZeldaMaps 物品即图标 | FRLG `gItemIconTable`（24×24）提取方式同 mon_icons.py；契约无需新字段（POI 级 `icon` 语义复用或加 `itemIcon`） | M | ★★ |
 | C2 | **野生遭遇表**：每条道路的草丛/水面/钓鱼出现率，宝可梦攻略站标配 | 宝可梦 wiki | ROM 有 encounter tables；契约加 map 级可选 `encounters[]`，UI 复用卡片列表（图标·名称·Lv 区间·几率） | M-L | ★★★（宝可梦系） |
-| C3 | **训练家赏金/携带道具**：卡片头部加 ¥ | 宝可梦 wiki | gTrainers 的 items 字段就在已定位的结构里，导出端 S | S | ★ |
+| C3 | ✅ **训练家赏金**（2026-07-04）：卡片头部显示 ¥（4×职业基数×末位等级，双打×2；基数表转录自 pret/pokefirered）；契约新增通用 `pois[*].reward` | 宝可梦 wiki | 导出端 + [PoiTooltip.ts](src/core/PoiTooltip.ts) | S | ★ |
 | C4 | **wiki 互链**：POI 可选 `link` 字段 → tooltip 点击跳 wiki 条目（与 d:/Code/wiki 生态打通） | IGN 嵌入攻略正文 | 契约加 `pois[*].link`；viewer 端 S；数据端按 wiki URL 规则生成 | S+ | ★★★（生态） |
 
 ### D. 移动端与分发
@@ -70,13 +70,13 @@ URL 深链、3D 演示页。数据端由 `nes_decoder` 从 ROM 全自动导出�
 | # | 事项 | 落地 | 规模 |
 | --- | --- | --- | --- |
 | E1 | ~~README/CONTRACT 的「tiles 未实现」说明过时~~（2026-07-04 已修正） | — | 已完成 |
-| E2 | 契约加顶层 `version` 字段，为将来破坏性演进留口子 | schema + GameLoader 容错 | S |
+| E2 | ✅ 契约顶层 `version` 字段（2026-07-04，当前 1） | schema + types，FRLG 已输出 | 已完成 |
 | E3 | 队伍模型推广到既有游戏：吞食天地敌将（value=兵力, unit=兵）、重装机兵赏金首 | 各游戏导出器，viewer 零改动 | 每游戏 M |
 | E4 | e2e 覆盖移动视口 | playwright projects 加 viewport | S |
 
 ## 3. 优先级建议
 
-- **Quick wins（顺手就做）**：B1 搜索队伍成员 → A2 图例进度 → A3 清单纳入训练家 → C3 赏金 → E2 version 字段
+- **Quick wins**：~~B1 搜索队伍成员、A2 图例进度、A3 清单纳入训练家、C3 赏金、E2 version 字段~~ ✅ 全部完成（2026-07-04）
 - **下一个里程碑（中期）**：A1 自定义标记、B3 区域标签、C4 wiki 互链、C1 物品图标、B2 楼层分组
 - **看到需求再动（远期）**：C2 遭遇表、D1+D2 移动端与 PWA、B4/B5/D3
 - **每加一个游戏都做**：E3（party 模型已通用，成本只在数据端）

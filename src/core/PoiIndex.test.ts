@@ -54,6 +54,26 @@ describe('searchPois', () => {
     expect(searchPois(index, '0x1c').map(e => e.poi.id)).toEqual(['w_c01']);
   });
 
+  it('matches party member names (find the trainer that carries a mon)', () => {
+    const cfg: GameConfig = {
+      ...config,
+      maps: {
+        world: {
+          ...config.maps.world,
+          pois: [
+            { ...poi('w_t00', { zh: '训练师 カズ' }, undefined, 'trainer'),
+              party: [{ name: { zh: '火爆猴', ja: 'オコリザル' }, value: 39 }] },
+            poi('w_c00', { zh: '宝箱 · 长枪' }),
+          ],
+        },
+      },
+    };
+    const idx = buildPoiIndex(cfg);
+    expect(searchPois(idx, '火爆猴').map(e => e.poi.id)).toEqual(['w_t00']);
+    expect(searchPois(idx, 'オコリザル').map(e => e.poi.id)).toEqual(['w_t00']);
+    expect(searchPois(idx, '皮卡丘')).toEqual([]);
+  });
+
   it('returns nothing for an empty query and respects the limit', () => {
     expect(searchPois(index, '  ')).toEqual([]);
     expect(searchPois(index, '宝箱', 1)).toHaveLength(1);

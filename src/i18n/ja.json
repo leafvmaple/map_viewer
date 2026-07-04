@@ -67,6 +67,8 @@
   "poi.kind.sign": "看板",
   "poi.kind.heal": "回復スポット",
   "poi.kind.cut": "いあいぎりの木",
+  "poi.kind.rock": "いわくだきの岩",
+  "poi.kind.boulder": "かいりきの岩",
   "toolbar.checklist": "リスト",
   "checklist.title": "全回収チェックリスト",
   "checklist.searchPlaceholder": "アイテム検索...",

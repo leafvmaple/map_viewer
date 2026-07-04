@@ -64,6 +64,9 @@ export interface PoiDef {
    *  full roster in battle order. When present the tooltip renders an
    *  icon/name/badge card instead of plain text, and the POI is markable. */
   party?: PartyMemberDef[];
+  /** Defeat reward (prize money, spoils…), pre-formatted (e.g. "¥624").
+   *  Shown dimmed in the party-card header. */
+  reward?: LocalizedString;
 }
 
 /** Map rendering type */
@@ -120,6 +123,8 @@ export interface EventDef {
 /** Full game configuration (game.json) */
 export interface GameConfig {
   id: string;
+  /** Contract version the file was produced against (currently 1). */
+  version?: number;
   name: LocalizedString;
   defaultMap: string;
   maps: Record<string, MapConfig>;

@@ -1,6 +1,7 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
-import { poiItemName, CHEST_KINDS, type PoiIndexEntry } from '../core/PoiIndex.js';
+import { poiItemName, isMarkable, type PoiIndexEntry } from '../core/PoiIndex.js';
+import { KIND_GLYPHS } from './PoiFilter.js';
 import type { PoiDef } from '../types';
 
 interface ChecklistOptions {
@@ -23,7 +24,7 @@ interface ChecklistOptions {
 export class Checklist {
   private _el: HTMLElement;
   private _options: ChecklistOptions;
-  private _entries: PoiIndexEntry[] = []; // chests only
+  private _entries: PoiIndexEntry[] = []; // markable POIs (chests, trainers, generals…)
   private _query = '';
   private _hideCollected = false;
   private _open = false;
@@ -77,9 +78,9 @@ export class Checklist {
     });
   }
 
-  /** Feed the game-wide POI index (chests are filtered out here). */
+  /** Feed the game-wide POI index (only markable POIs are listed). */
   setEntries(index: PoiIndexEntry[]): void {
-    this._entries = index.filter(en => CHEST_KINDS.has(en.poi.kind));
+    this._entries = index.filter(en => isMarkable(en.poi));
     this._query = '';
     if (this._open) this._render();
   }
@@ -151,6 +152,7 @@ export class Checklist {
       const texts = [
         ...(en.poi.label ? Object.values(en.poi.label).filter((v): v is string => !!v) : []),
         en.poi.item ?? '',
+        ...(en.poi.party ?? []).flatMap(m => Object.values(m.name).filter((v): v is string => !!v)),
       ];
       return texts.some(t => t.toLowerCase().includes(q));
     });
@@ -186,7 +188,7 @@ export class Checklist {
   private _rowHtml(entry: PoiIndexEntry): string {
     const { mapId, poi } = entry;
     const marked = this._options.isMarked(poi.id);
-    const glyph = poi.kind === 'gold' ? '💰' : '⭐';
+    const glyph = KIND_GLYPHS[poi.kind] ?? '📍';
     return `<div class="checklist-row${marked ? ' marked' : ''}"
                  data-map-id="${escapeHtml(mapId)}" data-poi-id="${escapeHtml(poi.id)}">
       <input type="checkbox" class="checklist-mark" ${marked ? 'checked' : ''} />
