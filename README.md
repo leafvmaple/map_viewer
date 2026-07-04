@@ -134,9 +134,13 @@ preserves hand-authored names) to make them permanent.
 
 ## Notes & limitations
 
-- `type: "tiles"` is declared in the schema but not yet implemented — it falls back to single-image mode.
-- Large world maps load as one image; supply `width`/`height`/`thumbnail` in `game.json`
+- `type: "tiles"` renders a pre-generated tile pyramid (`tilesPath` + `width`/`height`
+  required, see CONTRACT.md); without those fields it falls back to single-image mode.
+- Large single-image maps: supply `width`/`height`/`thumbnail` in `game.json`
   (see CONTRACT.md) to enable the progressive low-res-first load path.
+
+Product-level evaluation & feature roadmap (vs. MapGenie / IGN maps etc.):
+see **[ROADMAP.md](ROADMAP.md)**.
 
 ## Performance roadmap (marker scaling)
 

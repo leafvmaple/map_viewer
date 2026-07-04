@@ -56,7 +56,7 @@ map_viewer/
   "maps": {
     "world_map": {
       "name":     { "zh": "世界地图", "en": "World Map" },
-      "type":     "image",             // "image" | "tiles" (only "image" is implemented)
+      "type":     "image",             // "image" | "tiles" (tile pyramid, needs tilesPath + width/height)
       "image":    "world_map/world_map_full.png",
       "tileSize": 16,                  // px; grid overlay + editor snap. Usually 16.
       "triggers": [
@@ -80,8 +80,9 @@ map_viewer/
 | `id` | `^[a-z0-9_]+$`; equals the folder name and the registry `id`. |
 | `name`, `label` | **Localized string**: object keyed by language code (`en`/`zh`/`ja`/…), ≥1 entry. `en` is the fallback. |
 | `defaultMap` | Must be a key in `maps`. It is the nav root — returning to it clears the back-stack. |
-| `maps[*].type` | `"image"` in practice. `"tiles"` is reserved and currently falls back to image mode. |
+| `maps[*].type` | `"image"` (single PNG) or `"tiles"` (pre-generated tile pyramid; requires `tilesPath` + `width`/`height`, else falls back to image mode). |
 | `maps[*].image` | Non-empty, relative to `res/{gameId}/`. The file must exist. |
+| `maps[*].tilesPath` | Tile URL template for `type: "tiles"`, relative to `res/{gameId}/` (e.g. `world_tiles/{z}/{x}_{y}.png`); coordinates stay full-res pixels. Optional `minNativeZoom` sets the lowest pre-rendered level (default -5). |
 | `maps[*].tileSize` | Positive integer, usually `16`. Both games use 16px tiles. |
 | `triggers[*].id` | Unique **within its map**. Convention `{mapId}_t{NN}`. |
 | `triggers[*].bounds` | `[[x1,y1],[x2,y2]]` in **full-resolution image pixels**, origin top-left. 1 tile = `tileSize` px. |
