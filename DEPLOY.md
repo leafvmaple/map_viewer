@@ -1,19 +1,21 @@
-# Deploying map_viewer on the intranet (Docker)
+# Deploying map_viewer (Docker)
 
 Same model as `vn-resource-vault`: **the image contains only the built frontend;
-the game data lives on the NAS and is mounted read-only at runtime.** CI builds
-and pushes the image to the Gitea container registry; the NAS just pulls.
+the game data lives on the NAS and is mounted read-only at runtime.** The image
+is public on Docker Hub (`leafvmaple/map-viewer`), built and pushed by GitHub
+Actions on every push to main; the NAS just pulls. (The self-hosted Gitea
+Actions → Gitea registry pipeline still exists as an intranet fallback.)
 
 ```
-┌────────────┐  push   ┌──────────────┐  build+push  ┌──────────────────┐
-│  git main  │────────▶│ Gitea Actions│─────────────▶│ Gitea registry   │
-└────────────┘         └──────────────┘              │ 10.0.0.20:42197  │
-                                                      └────────┬─────────┘
-                                              compose pull      │
-                                          ┌───────────────────▼─────────┐
-   browser ──http://<NAS>:42199──▶ nginx │  NAS: docker compose up -d   │
-                                          │  /data (ro) ◀── res/ + games/│
-                                          └──────────────────────────────┘
+┌────────────┐  push   ┌────────────────┐  build+push  ┌───────────────────────┐
+│  git main  │────────▶│ GitHub Actions │─────────────▶│ Docker Hub            │
+└────────────┘         └────────────────┘              │ leafvmaple/map-viewer │
+                                                        └──────────┬────────────┘
+                                                compose pull        │
+                                            ┌─────────────────────▼────────┐
+   browser ──http://<NAS>:42199──▶ nginx   │  NAS: docker compose up -d   │
+                                            │  /data (ro) ◀── res/ + games/│
+                                            └──────────────────────────────┘
 ```
 
 ## Why nginx (not uvicorn like vn-resource-vault)
