@@ -1,7 +1,7 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { poiItemName, isMarkable, type PoiIndexEntry } from '../core/PoiIndex.js';
-import { KIND_GLYPHS } from './PoiFilter.js';
+import { kindGlyph, type PoiKindMeta } from '../core/PoiKinds.js';
 import type { PoiDef } from '../types';
 
 interface ChecklistOptions {
@@ -26,6 +26,7 @@ export class Checklist {
   private _options: ChecklistOptions;
   private _entries: PoiIndexEntry[] = []; // markable POIs (chests, trainers, generals…)
   private _resolveIcon: ((relativePath: string) => string) | null = null;
+  private _kindMeta: PoiKindMeta;
   private _query = '';
   private _hideCollected = false;
   private _open = false;
@@ -82,6 +83,11 @@ export class Checklist {
   /** Resolve a POI's relative `itemIcon` path into a URL (per game). */
   setIconResolver(resolve: (relativePath: string) => string): void {
     this._resolveIcon = resolve;
+  }
+
+  /** The current game's POI-kind display metadata (game.json `poiKinds`). */
+  setKindMeta(meta: PoiKindMeta): void {
+    this._kindMeta = meta;
   }
 
   /** Feed the game-wide POI index (only markable POIs are listed). */
@@ -197,7 +203,7 @@ export class Checklist {
     // Item mini-icon when available; kind glyph otherwise.
     const glyph = poi.itemIcon && this._resolveIcon
       ? `<img class="checklist-item-icon" src="${escapeHtml(this._resolveIcon(poi.itemIcon))}" alt="">`
-      : `<span class="checklist-glyph">${KIND_GLYPHS[poi.kind] ?? '📍'}</span>`;
+      : `<span class="checklist-glyph">${kindGlyph(this._kindMeta, poi.kind)}</span>`;
     return `<div class="checklist-row${marked ? ' marked' : ''}"
                  data-map-id="${escapeHtml(mapId)}" data-poi-id="${escapeHtml(poi.id)}">
       <input type="checkbox" class="checklist-mark" ${marked ? 'checked' : ''} />

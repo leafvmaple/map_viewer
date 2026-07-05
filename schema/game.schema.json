@@ -29,6 +29,20 @@
       "minProperties": 1,
       "propertyNames": { "pattern": "^[A-Za-z0-9_]+$" },
       "additionalProperties": { "$ref": "#/$defs/map" }
+    },
+    "poiKinds": {
+      "type": "object",
+      "description": "Optional display metadata for this game's POI kinds — legend name + glyph ship with the data, so new kinds need no viewer update. Kinds absent here fall back to the viewer's built-ins.",
+      "propertyNames": { "pattern": "^[a-z0-9_]+$" },
+      "additionalProperties": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "$ref": "#/$defs/localizedString" },
+          "glyph": { "type": "string", "minLength": 1, "description": "Legend/list glyph (an emoji)." }
+        }
+      }
     }
   },
   "$defs": {

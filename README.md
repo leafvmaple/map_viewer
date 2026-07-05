@@ -13,7 +13,9 @@ interface between the two projects is documented in **[CONTRACT.md](CONTRACT.md)
 Game data is **not tracked in git** — `res/` and `public/games/registry.json` are
 generated locally by `nes_decoder` (and mounted from the NAS in production, see
 [DEPLOY.md](DEPLOY.md)). Games so far: **Metal Max** (重装机兵), **Tenchi wo Kurau II**
-(吞食天地II 诸葛孔明传), **Pokémon FireRed/LeafGreen** (宝可梦 火红/叶绿).
+(吞食天地II 诸葛孔明传), **Pokémon FireRed/LeafGreen** (宝可梦 火红/叶绿),
+**Golden Sun** (黄金太阳), **Metal Max 2: Reloaded** (重装机兵2重制版),
+**Pokémon HeartGold/SoulSilver** (心金/魂银), **Pokémon Platinum** (白金).
 
 ## Features
 
@@ -33,8 +35,18 @@ generated locally by `nes_decoder` (and mounted from the NAS in production, see
 - ✅ **Collected marks**: click a chest (on the map or in the list) to mark it
   collected for the current user — the marker dims, the list shows `n/total`
   progress, and hover cards grey out collected chests.
-- 🗺 **Category legend** (bottom-right): per-kind checkboxes with counts —
-  hide trainers / signs / chests independently, persisted per user + game.
+- 🗺 **Category legend** (bottom-left): per-kind checkboxes with counts and
+  collected/defeated progress — hide trainers / signs / chests independently,
+  persisted per user + game.
+- 🧩 **Tile pyramids** (`type: "tiles"`) for huge stitched worlds (HGSS, MM2R);
+  latlng space stays full-res pixels.
+- ⚔️ **Battle-party tooltip cards** (`pois[*].party`): icon · name · badge rows
+  (火爆猴 Lv39 / 张飞 兵12000) + prize money, game-agnostic; POIs with a party
+  are markable as defeated.
+- 🏢 **Floor switcher**: maps sharing a `floorGroup` get in-map floor pills
+  (11F…B4F), switching keeps the camera.
+- 🎒 **Item bag icons** (`pois[*].itemIcon`) in chest tooltips, the treasure
+  panel and the game-wide collection checklist.
 
 ## Tech stack
 
@@ -78,22 +90,36 @@ export pointed at this directory — it writes `res/{gameId}/` and
 src/
   core/
     GameLoader.ts        Fetch/cache registry.json & game.json; resolve image paths; validate the contract
-    MapViewer.ts         Leaflet wrapper: image overlay, zoom, grid, coord readout, progressive load
+    MapViewer.ts         Leaflet wrapper: image overlay / tile pyramid, zoom, grid, coord readout, progressive load
     TriggerLayer.ts      Read-only trigger rectangles + tooltips + click-to-navigate
+    PoiLayer.ts          POI markers: sprites / glyphs / hover zones, marks, tooltips
+    PoiTooltip.ts        Tooltip HTML builders (party card, item tooltip) — Leaflet-free
+    PoiIndex.ts          Game-wide POI index: search, markable rules, item names
+    Floors.ts            Floor-group helpers for the in-map floor switcher
     NavigationStack.ts   Visited-map history with per-level saved view state
+    hashRoute.ts         URL-hash deep-link format (#game/map@view&poi=id)
+    MarkStorage.ts       localStorage persistence for per-user collected/defeated marks
+    UserStore.ts         Local user profiles (per-user prefs/marks, JSON export/import)
+    Prefs.ts             Per-user layer toggles & view prefs
     TriggerStorage.ts    localStorage persistence for trigger edits
     MapConfigStorage.ts  localStorage persistence for added maps & renames
   editor/
     TriggerEditor.ts     Edit mode: draw/select/edit/delete triggers; export JSON
   ui/
     Sidebar.ts           Game picker, searchable map list, rename, add-map dialog
-    Toolbar.ts           Language, trigger/grid toggles, edit mode, back
+    Toolbar.ts           Language, trigger/grid toggles, checklist, edit mode, back
     Breadcrumb.ts        Clickable path navigation
+    TreasureList.ts      Current map's chest panel with item icons + marks
+    Checklist.ts         Game-wide collectible drawer (chests + trainers), grouped by map
+    PoiFilter.ts         Category legend with counts + progress; kind glyphs
+    FloorSwitcher.ts     Floor pills for multi-floor buildings
+    EventPanel.ts        Terrain-event overlay toggles
+    UserMenu.ts          Profile switcher
   i18n/                  Tiny i18n (en/zh/ja JSON) + localized-object resolver
   main.ts                Wires all components together (mediator)
-  types.ts               Shared types (GameConfig, MapConfig, TriggerDef, …)
+  types.ts               Shared types (GameConfig, MapConfig, TriggerDef, PoiDef, …)
 schema/                  JSON Schemas for the data contract (see CONTRACT.md)
-res/{gameId}/            Per-game data: game.json + world_map/ + scene_maps/  (generated, git-ignored)
+res/{gameId}/            Per-game data: game.json + world_map/ + scene_maps/ (+ world_tiles/, sprites/)  (generated, git-ignored)
 public/games/registry.json   Index of available games (generated, git-ignored)
 ```
 

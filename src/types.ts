@@ -128,6 +128,13 @@ export interface EventDef {
   tiles?: number;
 }
 
+/** Display metadata for a game-specific POI kind (legend name + glyph). */
+export interface PoiKindDef {
+  name: LocalizedString;
+  /** Legend/list glyph (an emoji). Falls back to the viewer's built-ins. */
+  glyph?: string;
+}
+
 /** Full game configuration (game.json) */
 export interface GameConfig {
   id: string;
@@ -136,6 +143,9 @@ export interface GameConfig {
   name: LocalizedString;
   defaultMap: string;
   maps: Record<string, MapConfig>;
+  /** Display metadata for this game's POI kinds — new kinds ship with their
+   *  data instead of requiring viewer i18n/glyph updates. */
+  poiKinds?: Record<string, PoiKindDef>;
   /** Computed at runtime: base URL path for resolving relative image paths */
   _basePath?: string;
 }
@@ -144,6 +154,9 @@ export interface GameConfig {
 export interface RegistryEntry {
   id: string;
   configPath: string;
+  /** Localized game name — lets the dropdown label games without fetching
+   *  every game.json up front. */
+  name?: LocalizedString;
 }
 
 /** Games registry file structure */

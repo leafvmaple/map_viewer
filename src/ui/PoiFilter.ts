@@ -2,6 +2,7 @@ import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { isMarkable } from '../core/PoiIndex.js';
+import { kindDisplayName, kindGlyph, type PoiKindMeta } from '../core/PoiKinds.js';
 import type { PoiDef } from '../types';
 
 interface PoiFilterOptions {
@@ -10,18 +11,6 @@ interface PoiFilterOptions {
   /** The "hide collected" toggle changed. */
   onHideMarkedChange?: (hide: boolean) => void;
 }
-
-/** Legend glyph per known POI kind (fallback: generic pin). */
-export const KIND_GLYPHS: Record<string, string> = {
-  treasure: '⭐',
-  gold: '💰',
-  trainer: '⚔️',
-  sign: '🪧',
-  heal: '💊',
-  cut: '🌲',
-  rock: '🪨',
-  boulder: '🗿',
-};
 
 /**
  * PoiFilter - Bottom-left legend (above the coordinate readout) listing the
@@ -39,6 +28,7 @@ export class PoiFilter {
   private _marked = new Set<string>();
   private _hideMarked = false;
   private _visible = true;
+  private _kindMeta: PoiKindMeta;
 
   constructor(options: PoiFilterOptions) {
     this._options = options;
@@ -63,6 +53,11 @@ export class PoiFilter {
       else this._hidden.add(kind);
       this._options.onChange(new Set(this._hidden));
     });
+  }
+
+  /** The current game's POI-kind display metadata (game.json `poiKinds`). */
+  setKindMeta(meta: PoiKindMeta): void {
+    this._kindMeta = meta;
   }
 
   /** Show the categories present on the current map (with the user's hidden set). */
@@ -111,24 +106,17 @@ export class PoiFilter {
     this._el.style.display = this._visible && this._kinds.length > 0 ? 'flex' : 'none';
   }
 
-  /** Localized kind name; unknown kinds show their raw id. */
-  private _kindName(kind: string): string {
-    const key = `poi.kind.${kind}`;
-    const name = i18n.t(key);
-    return name === key ? kind : name;
-  }
-
   private _render(): void {
     const rows = this._kinds
       .map(({ kind, count, markable, done }) => {
         const checked = this._hidden.has(kind) ? '' : 'checked';
-        const glyph = KIND_GLYPHS[kind] ?? '📍';
+        const glyph = kindGlyph(this._kindMeta, kind);
         // Markable categories show collected/defeated progress, others a plain count.
         const tally = markable ? `${done}/${count}` : `${count}`;
         return `<label class="poi-filter-item">
           <input type="checkbox" data-kind="${escapeHtml(kind)}" ${checked} />
           <span class="poi-filter-glyph">${glyph}</span>
-          <span class="poi-filter-name">${escapeHtml(this._kindName(kind))}</span>
+          <span class="poi-filter-name">${escapeHtml(kindDisplayName(this._kindMeta, kind))}</span>
           <span class="poi-filter-count${markable && done === count && count > 0 ? ' poi-filter-done' : ''}">${tally}</span>
         </label>`;
       })

@@ -219,12 +219,16 @@ async function init(): Promise<void> {
       }
     }
 
-    // Prefetch the remaining games' configs in the background: the dropdown can
-    // only show a game's localized name once its game.json is loaded (until then
-    // it falls back to the raw id), and later switches become instant.
-    void Promise.allSettled(games.map(g => gameLoader.loadGame(g.id))).then(() => {
-      if (currentGameConfig) refreshGameNames(currentGameConfig.id);
-    });
+    // The dropdown shows names straight from the registry. Only configs of
+    // games whose registry entry predates the `name` field still need a
+    // background fetch — a full-config prefetch would cost megabytes of JSON
+    // as the game list grows.
+    const unnamed = games.filter(g => !g.name);
+    if (unnamed.length > 0) {
+      void Promise.allSettled(unnamed.map(g => gameLoader.loadGame(g.id))).then(() => {
+        if (currentGameConfig) refreshGameNames(currentGameConfig.id);
+      });
+    }
 
     // Keep the URL hash in sync with pan/zoom so links are shareable & survive refresh.
     mapViewer.leafletMap.on('moveend', () => updateHash());
@@ -299,6 +303,9 @@ async function handleGameSelect(
     // Item mini-icons in the treasure panel / checklist share the same resolver.
     treasureList.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
     checklist.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
+    // Game-provided POI-kind names/glyphs (legend + checklist).
+    poiFilter.setKindMeta(currentGameConfig.poiKinds);
+    checklist.setKindMeta(currentGameConfig.poiKinds);
 
     // Configure editor and breadcrumb
     triggerEditor.setGameConfig(currentGameConfig);
@@ -322,13 +329,14 @@ function resolveMapName(mapId: string): string {
   return mapConfig ? i18n.localize(mapConfig.name) || mapId : mapId;
 }
 
-/** Sync the sidebar's game dropdown: localized names + the active selection. */
+/** Sync the sidebar's game dropdown: localized names + the active selection.
+ *  Prefers the registry's own `name`; falls back to a loaded config, then id. */
 function refreshGameNames(currentGameId: string): void {
   const gameNames = gameLoader.registry.map(g => {
-    const config = gameLoader.getCached(g.id);
+    const name = g.name ?? gameLoader.getCached(g.id)?.name;
     return {
       id: g.id,
-      name: config ? i18n.localize(config.name) : g.id,
+      name: name ? i18n.localize(name) : g.id,
     };
   });
   sidebar.setGameNames(gameNames, currentGameId);

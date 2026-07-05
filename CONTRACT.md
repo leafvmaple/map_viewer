@@ -22,11 +22,17 @@ map_viewer/
 ├─ public/games/registry.json          # index of all games
 └─ res/
    └─ {gameId}/                         # e.g. metal_max, tenchi2
-      ├─ game.json                      # this game's maps + triggers
+      ├─ game.json                      # this game's maps + triggers + POIs
       ├─ world_map/
       │  └─ world_map_full.png          # (+ optional world_map_1024.png thumbnail)
-      └─ scene_maps/
-         └─ *.png                       # one image per scene map
+      ├─ scene_maps/
+      │  └─ *.png                       # one image per scene map
+      ├─ world_tiles/                   # OPTIONAL: tile pyramid for type=tiles maps
+      │  └─ {z}/{x}_{y}.png             #   z = 0 (native) … minNativeZoom (downscaled)
+      └─ sprites/                       # OPTIONAL: POI images referenced by game.json
+         ├─ *.png                       #   pois[*].icon (NPC overworld sprites…)
+         ├─ mon/*.png                   #   party[*].icon (mini icons)
+         └─ item/*.png                  #   pois[*].itemIcon (bag icons)
 ```
 
 - `{gameId}` must match `id` in `game.json` **and** the registry entry.
@@ -37,14 +43,20 @@ map_viewer/
 ```json
 {
   "games": [
-    { "id": "metal_max", "configPath": "/res/metal_max/game.json" },
-    { "id": "tenchi2",   "configPath": "/res/tenchi2/game.json" }
+    { "id": "metal_max", "configPath": "/res/metal_max/game.json",
+      "name": { "zh": "重装机兵", "en": "Metal Max" } },
+    { "id": "tenchi2",   "configPath": "/res/tenchi2/game.json",
+      "name": { "zh": "吞食天地II 诸葛孔明传", "en": "Tenchi wo Kurau II" } }
   ]
 }
 ```
 
 - `id` — `^[a-z0-9_]+$`, matches the game.json `id`.
 - `configPath` — absolute server path ending in `game.json`.
+- `name` — optional localized game name (same shape as game.json `name`).
+  **Emit it**: it lets the game picker label every game without downloading
+  each game.json up front (megabytes as the list grows). Entries without it
+  still work — the viewer falls back to fetching the config.
 
 ## 3. `game.json`
 
@@ -121,7 +133,7 @@ hover zones with a chest list, and users can mark them as collected:
 | Field | Rule |
 | --- | --- |
 | `pois[*].id` | Unique within its map — and **STABLE across re-exports**: per-user "collected" marks are keyed by this id, so a re-export that renames ids silently wipes every user's progress. Derive it from stable facts (map + tile position or ROM table index), never from enumeration order of a mutable list. |
-| `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. |
+| `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. Game-specific kinds should ship display metadata via top-level `poiKinds` (below). |
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
 | `pois[*].itemIcon` | Optional item mini-icon (the ROM's bag icon, typically 24×24), relative to `res/{gameId}/`. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
@@ -164,6 +176,24 @@ serves every game:
   the viewer displays them at 24×24 with `image-rendering: pixelated`.
 - `name`/`unit` follow the usual localized-string rules; the viewer falls back
   current-language → `en` → any value, so `{ "ja": ... }` alone is valid.
+
+### POI kind metadata (`poiKinds`, top level)
+
+New games bring new POI categories (docks, berries, generals…). Instead of
+requiring a viewer i18n/glyph update per kind, a game **should** describe its
+own kinds next to `maps`:
+
+```jsonc
+"poiKinds": {
+  "dock":  { "name": { "zh": "码头", "en": "Dock" }, "glyph": "⚓" },
+  "route": { "name": { "zh": "路点", "en": "Waypoint" } }   // glyph optional
+}
+```
+
+The viewer resolves legend names/glyphs as: game `poiKinds` → built-in
+i18n/glyph for well-known kinds → raw id / generic pin. Kinds already built
+into the viewer (treasure, gold, trainer, sign, heal, cut, rock, boulder,
+pokemon, berry, dock, place, route) need no entry.
 
 ### Optional map events (terrain changes)
 
