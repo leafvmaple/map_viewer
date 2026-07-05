@@ -1,0 +1,52 @@
+# Builds the sanitized frontend image and pushes it to Docker Hub
+# (leafvmaple/map-viewer). Unit tests run inside the docker build and gate it.
+#
+# Needs one repo secret: DOCKERHUB_TOKEN (Docker Hub personal access token,
+# read/write on the repository). Without it every step is skipped, so this
+# workflow never fails a push on an unconfigured clone/fork.
+#
+# The intranet pipeline (.gitea/workflows/ci.yml → Gitea registry → NAS) is
+# independent and unaffected.
+name: Docker Hub
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  push-dockerhub:
+    runs-on: ubuntu-latest
+    env:
+      HAS_TOKEN: ${{ secrets.DOCKERHUB_TOKEN != '' }}
+      IMAGE: leafvmaple/map-viewer
+    steps:
+      - name: Note when unconfigured
+        if: env.HAS_TOKEN != 'true'
+        run: echo "DOCKERHUB_TOKEN secret not set — skipping Docker Hub push."
+
+      - uses: actions/checkout@v4
+        if: env.HAS_TOKEN == 'true'
+
+      - uses: docker/login-action@v3
+        if: env.HAS_TOKEN == 'true'
+        with:
+          username: leafvmaple
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build + push (latest + versioned)
+        if: env.HAS_TOKEN == 'true'
+        run: |
+          docker build -t "$IMAGE:latest" -t "$IMAGE:v${{ github.run_number }}" .
+          docker push "$IMAGE:latest"
+          docker push "$IMAGE:v${{ github.run_number }}"
+
+      - name: Sync Docker Hub description from DOCKERHUB.md
+        if: env.HAS_TOKEN == 'true'
+        continue-on-error: true   # description API is pickier about tokens; image push is what matters
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: leafvmaple
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: leafvmaple/map-viewer
+          readme-filepath: ./DOCKERHUB.md

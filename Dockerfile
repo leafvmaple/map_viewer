@@ -10,6 +10,9 @@ RUN npm ci
 COPY . .
 RUN npm run test                  # unit tests gate the image build
 RUN npm run build                 # → dist/ (app code only; res/ is git/docker-ignored)
+# Vite copies public/ verbatim into dist/ — make sure the local games registry
+# never reaches a (public) image layer; it is served from the /data mount.
+RUN rm -rf dist/games
 
 # ── serve stage: nginx over the static bundle ──────────────────
 FROM nginx:alpine

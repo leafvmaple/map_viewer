@@ -1,10 +1,21 @@
 .git
 .gitignore
+.gitea
 node_modules
 dist
 # game data (ROM-ripped) is mounted from the NAS at runtime, never baked in
 res
-# dev / meta / local
+public/games
+# deploy-local config (intranet registry/NAS paths) — not the image's business
+.env
+.env.example
+docker-compose.yml
+# e2e / dev / meta / local
+tests
+test-results
+playwright.config.ts
+schema
+scripts
 *.log
 .vscode
 .claude
@@ -12,3 +23,4 @@ scratchpad
 DEPLOY.md
 README.md
 CONTRACT.md
+ROADMAP.md
