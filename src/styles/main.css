@@ -622,6 +622,21 @@ html, body {
   background: rgba(244, 67, 54, 0.15);
 }
 
+/* ─── Build identifier (bottom-right; Leaflet attribution is off) ── */
+
+.app-version {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  z-index: 1000;
+  font: 11px/1.6 'Consolas', 'Courier New', monospace;
+  color: #55647e;
+  background: rgba(13, 21, 38, 0.55);
+  padding: 1px 7px;
+  border-radius: 4px;
+  user-select: text;
+}
+
 /* ─── Floor switcher (buildings/dungeons with 2+ floors) ─────── */
 
 .floor-switcher {

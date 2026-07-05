@@ -161,6 +161,14 @@ async function init(): Promise<void> {
     },
   });
 
+  // Build identifier (bottom-right): version + build date, full timestamp on
+  // hover — tells at a glance which image a deployment is running.
+  const versionEl = document.createElement('div');
+  versionEl.className = 'app-version';
+  versionEl.textContent = `v${__APP_VERSION__} · ${__BUILD_DATE__.slice(0, 10)}`;
+  versionEl.title = `build ${__BUILD_DATE__}`;
+  document.getElementById('map')?.appendChild(versionEl);
+
   poiFilter = new PoiFilter({
     onChange: (hidden) => {
       hiddenKinds = hidden;
