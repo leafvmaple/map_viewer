@@ -638,6 +638,9 @@ html, body {
   background: rgba(13, 21, 38, 0.55);
   padding: 1px 7px;
   border-radius: 4px;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
   user-select: text;
 }
 
@@ -1242,6 +1245,9 @@ html, body {
   gap: 8px;
   padding: 5px 12px;
   font-size: 12px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
