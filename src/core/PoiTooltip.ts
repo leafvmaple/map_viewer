@@ -1,7 +1,8 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { resolveBattleRewardText, resolvePoiBattle, resolvePoiRewards } from './GameDataResolver.js';
 import { renderItemIcon } from './ItemIcon.js';
-import type { PoiDef } from '../types';
+import type { CatalogItemDef, GameDataCatalogs, PoiDef } from '../types';
 
 /**
  * PoiTooltip - Builds the HTML for a POI's party tooltip card: a header row
@@ -15,8 +16,8 @@ import type { PoiDef } from '../types';
  */
 
 /** True when the POI carries a structured party worth rendering as a card. */
-export function hasPartyCard(poi: PoiDef): boolean {
-  return Array.isArray(poi.party) && poi.party.length > 0;
+export function hasPartyCard(poi: PoiDef, catalogs?: GameDataCatalogs): boolean {
+  return resolvePoiBattle(poi, catalogs).members.length > 0;
 }
 
 /**
@@ -29,17 +30,19 @@ export function renderPlainTooltip(
   title: string,
   isMarked: boolean,
   resolveIcon: ((relativePath: string) => string) | null,
+  source?: Record<string, CatalogItemDef> | GameDataCatalogs,
 ): string {
-  if ((poi.items?.length ?? 0) > 1) {
-    const rows = poi.items!.map(item => {
-      const icon = renderItemIcon(item.itemIcon, 'poi-tt-item', resolveIcon);
-      return `<li>${icon}<span>${escapeHtml(i18n.localize(item.name))}</span></li>`;
+  const resolved = resolvePoiRewards(poi, source);
+  if (resolved.length > 1) {
+    const rows = resolved.map(reward => {
+      const icon = renderItemIcon(reward.icon, 'poi-tt-item', resolveIcon);
+      return `<li>${icon}<span>${escapeHtml(reward.text)}</span></li>`;
     }).join('');
     const base = `<ul class="poi-tt-items">${rows}</ul>`;
     return isMarked ? `${base}<div class="poi-tt-done-text">✓ ${escapeHtml(i18n.t('treasure.collected'))}</div>` : base;
   }
-  const icon = renderItemIcon(poi.itemIcon, 'poi-tt-item', resolveIcon);
-  const base = `${icon}${escapeHtml(title)}`;
+  const icon = renderItemIcon(resolved[0]?.icon ?? poi.itemIcon, 'poi-tt-item', resolveIcon);
+  const base = `${icon}${escapeHtml(resolved[0]?.text ?? title)}`;
   return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
 }
 
@@ -54,8 +57,10 @@ export function renderPartyCard(
   title: string,
   isMarked: boolean,
   resolveIcon: ((relativePath: string) => string) | null,
+  catalogs?: GameDataCatalogs,
 ): string {
-  const party = poi.party ?? [];
+  const battle = resolvePoiBattle(poi, catalogs);
+  const party = battle.members;
 
   const badge = isMarked
     ? `<span class="poi-tt-chip">✓ ${escapeHtml(i18n.t('poi.defeated'))}</span>`
@@ -63,8 +68,9 @@ export function renderPartyCard(
       ? `<span class="poi-tt-count">×${party.length}</span>`
       : '';
   // Defeat reward (prize money, spoils…), dimmed between title and count.
-  const reward = poi.reward
-    ? `<span class="poi-tt-reward">${escapeHtml(i18n.localize(poi.reward))}</span>`
+  const rewardText = resolveBattleRewardText(poi, catalogs);
+  const reward = rewardText
+    ? `<span class="poi-tt-reward">${escapeHtml(rewardText)}</span>`
     : '';
   const head = `<div class="poi-tt-head"><span class="poi-tt-name">${escapeHtml(title)}</span>${reward}${badge}</div>`;
 

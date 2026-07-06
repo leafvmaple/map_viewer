@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/species.schema.json",
+  "title": "Game Map Viewer - species catalog",
+  "type": "object",
+  "required": ["species"],
+  "additionalProperties": true,
+  "properties": {
+    "species": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/species" }
+    },
+    "summary": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "species": {
+      "type": "object",
+      "required": ["id", "name"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "icon": { "type": "string", "minLength": 1 },
+        "iconSize": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

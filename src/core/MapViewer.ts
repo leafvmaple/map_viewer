@@ -2,7 +2,7 @@ import L from 'leaflet';
 import { TriggerLayer } from './TriggerLayer.js';
 import { PoiLayer } from './PoiLayer.js';
 import { i18n } from '../i18n/index.js';
-import type { GameConfig, MapConfig, PoiDef, TriggerDef, ViewState, EventDef } from '../types';
+import type { CatalogItemDef, GameConfig, GameDataCatalogs, MapConfig, PoiDef, TriggerDef, ViewState, EventDef } from '../types';
 
 interface MapViewerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -38,6 +38,8 @@ export class MapViewer {
   private _gameConfig: GameConfig | null = null;
   private _resolveImagePath: ((relativePath: string) => string) | null = null;
   private _isPoiMarked: ((poiId: string) => boolean) | null = null;
+  private _items: Record<string, CatalogItemDef> = {};
+  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
 
   private _imageOverlay: L.ImageOverlay | null = null;
   private _tileLayer: L.TileLayer | null = null;
@@ -130,11 +132,24 @@ export class MapViewer {
         image: mc.image ? resolveImagePath(mc.thumbnail ?? mc.image) : null,
         pois,
         tileSize: mc.tileSize ?? 16,
+        items: this._items,
+        catalogs: this._catalogs,
         marked: isPoiMarked
           ? new Set(pois.filter(p => isPoiMarked(p.id)).map(p => p.id))
           : undefined,
       };
     });
+  }
+
+  setItemCatalog(items: Record<string, CatalogItemDef>): void {
+    this._items = items;
+    this._poiLayer.setItemCatalog(items);
+  }
+
+  setCatalogs(catalogs: GameDataCatalogs): void {
+    this._catalogs = catalogs;
+    this._items = catalogs.items;
+    this._poiLayer.setCatalogs(catalogs);
   }
 
   /** Load and display a map by ID. Optionally restore a previous view state. */
@@ -157,8 +172,9 @@ export class MapViewer {
     }
 
     this._triggerLayer.setTriggers(mapConfig.triggers ?? []);
-    // Star/gold glyphs only on the (huge) overworld; scene maps show the baked-in
-    // chest sprite and just get invisible hover zones for the info tooltip.
+    // Star/gold glyphs are only needed for hidden collectibles. Visible scene
+    // chests are baked into the image and get invisible hover zones; non-chest
+    // POIs still render their own markers in PoiLayer.
     const showGlyphs = mapId === this._gameConfig?.defaultMap;
     const pois = mapConfig.pois ?? [];
     // Include the user's collected marks in the FIRST render — a later

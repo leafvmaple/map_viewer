@@ -30,6 +30,19 @@
       "propertyNames": { "pattern": "^[A-Za-z0-9_]+$" },
       "additionalProperties": { "$ref": "#/$defs/map" }
     },
+    "data": {
+      "type": "object",
+      "description": "Optional external catalogs relative to this game.json folder.",
+      "additionalProperties": false,
+      "properties": {
+        "items": { "type": "string", "minLength": 1, "description": "Item catalog JSON path, e.g. data/items.json." },
+        "services": { "type": "string", "minLength": 1, "description": "Shop/service catalog JSON path, e.g. data/services.json." },
+        "species": { "type": "string", "minLength": 1, "description": "Species catalog JSON path, e.g. data/species.json." },
+        "parties": { "type": "string", "minLength": 1, "description": "Battle party catalog JSON path, e.g. data/parties.json." },
+        "trainers": { "type": "string", "minLength": 1, "description": "Trainer catalog JSON path, e.g. data/trainers.json." },
+        "currencies": { "type": "string", "minLength": 1, "description": "Currency catalog JSON path, e.g. data/currencies.json." }
+      }
+    },
     "export": {
       "type": "object",
       "description": "Provenance stamp written automatically at export time — identifies which export (and which decoder iteration) produced this data. Shown in the viewer's build-identifier chip.",
@@ -268,6 +281,21 @@
           "description": "Explicit contents for a POI that yields multiple items. Each item can carry its own name, raw id, and mini-icon.",
           "items": { "$ref": "#/$defs/poiItem" }
         },
+        "itemRefs": {
+          "type": "array",
+          "description": "Canonical item references for this POI. The viewer resolves names/prices/icons from data/items.json.",
+          "items": { "$ref": "#/$defs/poiItemRef" }
+        },
+        "currencyRefs": {
+          "type": "array",
+          "description": "Canonical currency/money references for this POI. The viewer resolves names/icons/formatting from data/currencies.json.",
+          "items": { "$ref": "#/$defs/currencyRef" }
+        },
+        "speciesId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable species/entity id in data/species.json for standalone encounters."
+        },
         "hidden": {
           "type": "boolean",
           "description": "True when the collectible has NO visible sprite in the rendered map image (buried / Itemfinder-style items). Only these get an attention glyph in the viewer; visible chests rely on their baked-in sprite + a hover zone."
@@ -280,6 +308,21 @@
         "reward": {
           "$ref": "#/$defs/localizedString",
           "description": "Optional defeat reward (prize money, spoils…), pre-formatted (e.g. \"¥624\"). Shown dimmed in the party-card header."
+        },
+        "trainerId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable trainer id in data/trainers.json."
+        },
+        "partyId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable battle party id in data/parties.json."
+        },
+        "serviceIds": {
+          "type": "array",
+          "description": "Optional references to game-wide services/shops attached to this map POI.",
+          "items": { "type": "string", "minLength": 1 }
         }
       }
     },
@@ -294,6 +337,31 @@
           "type": "string",
           "minLength": 1,
           "description": "Optional item mini-icon for this contained item: image path or emoji:<glyph>."
+        }
+      }
+    },
+    "poiItemRef": {
+      "type": "object",
+      "required": ["itemId"],
+      "additionalProperties": true,
+      "properties": {
+        "itemId": { "type": "string", "minLength": 1, "description": "Stable id in data/items.json." },
+        "quantity": { "type": "integer", "minimum": 1, "description": "Optional stack/count for this pickup." }
+      }
+    },
+    "currencyRef": {
+      "type": "object",
+      "required": ["currencyId"],
+      "additionalProperties": true,
+      "properties": {
+        "currencyId": { "type": "string", "minLength": 1, "description": "Stable id in data/currencies.json." },
+        "amount": { "type": "number", "description": "Fixed amount, when deterministic." },
+        "amountRange": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" },
+          "description": "Inclusive min/max range, when the game rolls a random amount."
         }
       }
     },
@@ -314,8 +382,10 @@
           "description": "Localized badge prefix shown dimmed before `value`. Default \"Lv\" — e.g. {\"zh\": \"兵\"} renders 兵12000."
         },
         "id": {
-          "type": "integer",
-          "minimum": 0,
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "string", "minLength": 1 }
+          ],
           "description": "Optional game-internal id of this member (species / general id), for debugging/stability."
         },
         "icon": {

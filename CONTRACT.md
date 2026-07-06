@@ -12,6 +12,12 @@ fix-ups. The machine-readable form lives in [`schema/`](schema/):
 | --- | --- |
 | [`schema/registry.schema.json`](schema/registry.schema.json) | `public/games/registry.json` |
 | [`schema/game.schema.json`](schema/game.schema.json) | `res/{gameId}/game.json` |
+| [`schema/items.schema.json`](schema/items.schema.json) | `res/{gameId}/data/items.json` |
+| [`schema/services.schema.json`](schema/services.schema.json) | `res/{gameId}/data/services.json` |
+| [`schema/species.schema.json`](schema/species.schema.json) | `res/{gameId}/data/species.json` |
+| [`schema/parties.schema.json`](schema/parties.schema.json) | `res/{gameId}/data/parties.json` |
+| [`schema/trainers.schema.json`](schema/trainers.schema.json) | `res/{gameId}/data/trainers.json` |
+| [`schema/currencies.schema.json`](schema/currencies.schema.json) | `res/{gameId}/data/currencies.json` |
 
 ---
 
@@ -29,6 +35,13 @@ map_viewer/
       │  └─ *.png                       # one image per scene map
       ├─ world_tiles/                   # OPTIONAL: tile pyramid for type=tiles maps
       │  └─ {z}/{x}_{y}.png             #   z = 0 (native) … minNativeZoom (downscaled)
+      ├─ data/                          # OPTIONAL: global catalogs referenced by game.json data
+      │  ├─ items.json                   #   item catalog
+      │  ├─ services.json                #   shops / services catalog
+       │  ├─ species.json                 #   species/entity catalog
+       │  ├─ parties.json                 #   battle party catalog
+       │  ├─ trainers.json                #   trainer/boss catalog
+       │  └─ currencies.json              #   money/token catalog
       └─ sprites/                       # OPTIONAL: POI images referenced by game.json
          ├─ *.png                       #   pois[*].icon (NPC overworld sprites…)
          ├─ mon/*.png                   #   party[*].icon (mini icons)
@@ -124,8 +137,11 @@ hover zones with a chest list, and users can mark them as collected:
     "id":    "map_01_chest_00",          // see stability rule below
     "kind":  "treasure",                 // "treasure" | "gold" | anything else = generic pin
     "pos":   [192, 120],                 // px of the tile's TOP-LEFT corner, top-left origin
-    "label": { "zh": "宝箱 · 长枪", "en": "Chest · Spear" },
-    "item":  "0x1C",                     // optional raw item id, fallback display
+    "itemRefs": [{ "itemId": "1C" }],    // resolved through data/items.json
+    "currencyRefs": [{ "currencyId": "G", "amount": 1000 }],
+                                            // resolved through data/currencies.json
+    "speciesId": "57",                   // resolved through data/species.json
+    "trainerId": "42",                  // resolved through data/trainers.json
     "icon":  "sprites/trainer_05.png",   // optional sprite marker (e.g. an NPC)
     "iconSize": [16, 32],                // native px size of `icon`; default [16, 32]
     "hidden": false                      // true ONLY if invisible in the map image
@@ -139,13 +155,143 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. Game-specific kinds should ship display metadata via top-level `poiKinds` (below). |
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
-| `pois[*].itemIcon` | Optional item mini-icon. Use a relative image path for ROM bag icons (typically 24×24), or `emoji:<glyph>` when the game has no item icon graphics. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
-| `pois[*].items` | Optional explicit contents list for one POI that yields multiple items. Each entry has `name` plus optional `item` and `itemIcon`; hover, search, treasure panel and checklist render the contained items instead of hiding duplicates behind overlapping POIs. Keep `label` as a compact joined fallback/title. |
+| `pois[*].itemRefs` | Canonical item references for treasures/rewards. Each entry has `itemId` plus optional `quantity`; the viewer resolves names/prices/icons from `data/items.json`. New exporters should use this instead of duplicating item facts in POIs. |
+| `pois[*].itemIcon` | Deprecated for item POIs; optional fallback mini-icon. Use a relative image path for ROM bag icons (typically 24×24), or `emoji:<glyph>` when the game has no item icon graphics. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
+| `pois[*].items` | Deprecated compatibility field for multi-item POIs. New exporters should use `itemRefs`. |
+| `pois[*].currencyRefs` | Canonical money/token references for gold piles, coins, prize money, and other currency rewards. Each entry has `currencyId` plus optional `amount`, `amountRange`, `rawCode`, or `random`; the viewer resolves names/icons/formatting from `data/currencies.json`. New exporters should use this instead of encoding money as fake items or pre-formatted POI text. |
+| `pois[*].speciesId` | Canonical species/entity reference into `data/species.json` for standalone encounters or static entities that are not trainer/battle-party rows. The viewer resolves display name and optional icon/iconSize from the species catalog. |
 | `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
 | `pois[*].party` | Optional structured battle party — **game-agnostic**: a trainer's Pokémon, an enemy general's army, a boss group. When present the viewer renders the tooltip as an icon·name·badge card instead of plain text (so keep `label` a **short title**, don't concatenate the party into it), and the POI becomes user-markable (defeated ✓) regardless of its `kind`. |
-| `pois[*].reward` | Optional localized, pre-formatted defeat reward (prize money, spoils — e.g. `{ "en": "¥624" }`). Shown dimmed in the party-card header. |
+| `pois[*].reward` | Deprecated compatibility fallback for localized, pre-formatted defeat rewards. New exporters should use `currencyRefs` on the POI or trainer catalog row. |
+| `pois[*].trainerId` | Canonical trainer/boss reference into `data/trainers.json`. New exporters should use this instead of duplicating `party` on every trainer POI. |
+| `pois[*].partyId` | Direct battle party reference into `data/parties.json`, for bosses or encounters that do not have a trainer row. |
+| `pois[*].serviceIds` | Optional references to game-wide shop/service ids from `data/services.json`. Use this for spatial bindings (NPC/counter/vending machine); don't duplicate a full shop inventory on every POI. |
 
-### Battle party (`pois[*].party`)
+### Optional catalogs (`data.items`, `data.services`)
+
+Games may ship global item and service catalogs next to `game.json`:
+
+```jsonc
+{
+  "data": {
+    "items": "data/items.json",
+    "services": "data/services.json",
+    "species": "data/species.json",
+    "parties": "data/parties.json",
+    "trainers": "data/trainers.json",
+    "currencies": "data/currencies.json"
+  }
+}
+```
+
+`items.json` is the authoritative map of stable item ids to item display facts:
+localized name, price/currency, category, and optional `itemIcon` (same format as
+`pois[*].itemIcon`). `currencies.json` is the authoritative map of stable money
+or token ids to localized names, symbols, icons, and formatting. `services.json`
+is a map of stable service ids to shop/service definitions. Services are
+deliberately separate from POIs: a shop inventory is global data; a POI is only
+the map/NPC binding to one or more services.
+
+`species.json`, `parties.json`, and `trainers.json` normalize battle display
+facts the same way: species/entity names and icons live once in `species.json`,
+party rows reference those species by `speciesId`, and trainer/boss records point
+at a party by `partyId`. A map POI should carry only the spatial binding
+(`trainerId`, `partyId`, or standalone `speciesId`) plus optional sprite marker
+fields.
+
+Service entries are intentionally broad enough for RPG shops, vending machines,
+inns, elevators, repair/customize menus, and transports:
+
+```jsonc
+{
+  "services": {
+    "metal_max_player_item_03": {
+      "id": "metal_max_player_item_03",
+      "kind": "shop",
+      "name": { "zh": "人类工具 04", "ja": "人間道具 04" },
+      "entries": [
+        {
+          "type": "item",
+          "itemId": "C1",
+          "quantity": 6,
+          "available": true
+        }
+      ],
+      "award": { "type": "item", "itemId": "D1" },
+      "source": { "system": "metal_max.list", "pointer": "0x9DA8" }
+    }
+  }
+}
+```
+
+For `type: "item"`, the viewer resolves display fields by `itemId` from
+`items.json`; do not duplicate normal item facts in every service entry. Entry
+fields such as `name`, `price`, `currency`, `category`, or `itemIcon` are only
+fallbacks/overrides for non-catalog options or exceptional service-specific
+behavior.
+
+Currency refs point at `data/currencies.json` and carry only reward/value facts:
+
+```jsonc
+// data/currencies.json
+{ "currencies": {
+  "G": { "id": "G", "name": { "en": "Gold" }, "symbol": { "en": "G" },
+         "format": { "position": "suffix", "space": false } }
+} }
+
+// game.json POI
+{ "kind": "gold", "currencyRefs": [{ "currencyId": "G", "amount": 1000 }] }
+
+// random/encoded amount when the exact amount is not decoded yet
+{ "currencyRefs": [{ "currencyId": "G", "rawCode": "0xFB", "random": true }] }
+```
+
+### Battle party catalogs (`data.species`, `data.parties`, `data.trainers`)
+
+New exporters should prefer catalog refs over inline `pois[*].party`:
+
+```jsonc
+// game.json
+"pois": [
+  { "id": "route_03_t00", "kind": "trainer", "pos": [512, 192],
+    "label": { "zh": "短裤小子 カズ", "ja": "たんパンこぞう カズ" },
+    "icon": "sprites/f012.png", "iconSize": [32, 32],
+    "trainerId": "42" }
+]
+
+// data/trainers.json
+{ "trainers": {
+  "42": { "id": "42", "label": { "ja": "たんパンこぞう カズ" },
+          "partyId": "trainer:42",
+          "currencyRefs": [{ "currencyId": "money", "amount": 624 }] }
+} }
+
+// data/parties.json
+{ "parties": {
+  "trainer:42": { "id": "trainer:42", "members": [
+    { "slot": 0, "speciesId": "57", "value": 39 }
+  ] }
+} }
+
+// data/species.json
+{ "species": {
+  "57": { "id": "57", "name": { "zh": "火爆猴", "ja": "オコリザル" },
+          "icon": "sprites/mon/057.png" }
+} }
+
+// data/currencies.json
+{ "currencies": {
+  "money": { "id": "money", "name": { "en": "Money" }, "symbol": { "en": "¥" },
+             "format": { "position": "prefix", "space": false } }
+} }
+```
+
+Resolution order is deliberately fallback-friendly: `poi.label`,
+`poi.currencyRefs`, `poi.reward`, `poi.icon`, and `poi.iconSize` override trainer
+catalog fields; party member `name`, `icon`, and `unit` override species catalog
+fields. If a catalog ref is missing, legacy inline `pois[*].party` still renders.
+
+### Legacy Inline Battle Party (`pois[*].party`)
 
 One row per member: mini-icon, localized name, and a right-aligned numeric
 badge whose dimmed prefix comes from `unit` (default `Lv`). The same card

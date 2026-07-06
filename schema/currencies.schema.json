@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/currencies.schema.json",
+  "title": "Game Map Viewer - currency catalog",
+  "type": "object",
+  "required": ["currencies"],
+  "additionalProperties": true,
+  "properties": {
+    "currencies": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/currency" }
+    },
+    "summary": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "currency": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "symbol": { "$ref": "#/$defs/localizedString" },
+        "icon": { "type": "string", "minLength": 1 },
+        "format": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "position": { "enum": ["prefix", "suffix"] },
+            "space": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

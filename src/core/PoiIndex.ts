@@ -1,5 +1,5 @@
-import { i18n } from '../i18n/index.js';
-import type { GameConfig, PoiDef } from '../types';
+import { poiDisplayName, poiSearchTexts } from './GameDataResolver.js';
+import type { CatalogItemDef, GameConfig, GameDataCatalogs, PoiDef } from '../types';
 
 // ============================================================
 // PoiIndex - a flat, game-wide index of every map's POIs.
@@ -13,6 +13,8 @@ import type { GameConfig, PoiDef } from '../types';
 export interface PoiIndexEntry {
   mapId: string;
   poi: PoiDef;
+  catalogs?: GameDataCatalogs;
+  items?: Record<string, CatalogItemDef>;
 }
 
 /** POI kinds that count as collectible chests (list / checklist / progress). */
@@ -25,15 +27,15 @@ export const MARKABLE_KINDS = new Set(['treasure', 'gold', 'trainer']);
  *  carrying a battle party is markable (enemy generals, bosses — kinds the
  *  well-known set can't anticipate). */
 export function isMarkable(poi: PoiDef): boolean {
-  return MARKABLE_KINDS.has(poi.kind) || (poi.party?.length ?? 0) > 0;
+  return MARKABLE_KINDS.has(poi.kind) || (poi.party?.length ?? 0) > 0 || !!poi.trainerId || !!poi.partyId;
 }
 
 /** Flatten a game config into one entry per POI, in maps/pois order. */
-export function buildPoiIndex(config: GameConfig): PoiIndexEntry[] {
+export function buildPoiIndex(config: GameConfig, catalogs?: GameDataCatalogs): PoiIndexEntry[] {
   const index: PoiIndexEntry[] = [];
   for (const [mapId, map] of Object.entries(config.maps)) {
     for (const poi of map.pois ?? []) {
-      index.push({ mapId, poi });
+      index.push({ mapId, poi, catalogs, items: catalogs?.items });
     }
   }
   return index;
@@ -49,25 +51,7 @@ export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): P
   if (!q) return [];
   const results: PoiIndexEntry[] = [];
   for (const entry of index) {
-    const { poi } = entry;
-    const haystack: string[] = [];
-    if (poi.label) {
-      for (const value of Object.values(poi.label)) {
-        if (value) haystack.push(value);
-      }
-    }
-    if (poi.item) haystack.push(poi.item);
-    for (const item of poi.items ?? []) {
-      if (item.item) haystack.push(item.item);
-      for (const value of Object.values(item.name)) {
-        if (value) haystack.push(value);
-      }
-    }
-    for (const member of poi.party ?? []) {
-      for (const value of Object.values(member.name)) {
-        if (value) haystack.push(value);
-      }
-    }
+    const haystack = poiSearchTexts(entry.poi, entry.catalogs ?? entry.items);
     if (haystack.some(text => text.toLowerCase().includes(q))) {
       results.push(entry);
       if (results.length >= limit) break;
@@ -80,12 +64,6 @@ export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): P
  * Compact display name for a POI: its localized label without the
  * "宝箱 · " kind prefix (falls back to the raw item id).
  */
-export function poiItemName(poi: PoiDef): string {
-  if ((poi.items?.length ?? 0) > 1) {
-    return poi.items!.map(item => i18n.localize(item.name)).join(' / ');
-  }
-  const full = poi.label ? i18n.localize(poi.label) : '';
-  const sep = full.indexOf('·');
-  if (sep >= 0) return full.slice(sep + 1).trim();
-  return full || poi.item || '?';
+export function poiItemName(poi: PoiDef, source?: Record<string, CatalogItemDef> | GameDataCatalogs): string {
+  return poiDisplayName(poi, source);
 }

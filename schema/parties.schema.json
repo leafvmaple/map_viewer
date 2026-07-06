@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/parties.schema.json",
+  "title": "Game Map Viewer - battle party catalog",
+  "type": "object",
+  "required": ["parties"],
+  "additionalProperties": true,
+  "properties": {
+    "parties": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/party" }
+    },
+    "summary": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "party": {
+      "type": "object",
+      "required": ["id", "members"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/member" } }
+      }
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "speciesId": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "value": { "type": "integer", "minimum": 0 },
+        "level": { "type": "integer", "minimum": 0 },
+        "unit": { "$ref": "#/$defs/localizedString" },
+        "id": {
+          "oneOf": [
+            { "type": "integer", "minimum": 0 },
+            { "type": "string", "minLength": 1 }
+          ]
+        },
+        "icon": { "type": "string", "minLength": 1 },
+        "itemId": { "type": "string", "minLength": 1 },
+        "slot": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

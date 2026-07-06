@@ -1,4 +1,4 @@
-import type { GameConfig, GamesRegistry, MapListItem, RegistryEntry } from '../types';
+import type { GameConfig, GameDataCatalogs, GamesRegistry, MapListItem, RegistryEntry } from '../types';
 
 /**
  * GameLoader - Fetches and manages game configurations.
@@ -42,6 +42,22 @@ export class GameLoader {
   /** Resolve an image path relative to the game config's location. */
   resolveImagePath(gameConfig: GameConfig, relativePath: string): string {
     return (gameConfig._basePath ?? '/') + relativePath;
+  }
+
+  /** Load optional external item/service catalogs declared by game.json `data`. */
+  async loadGameData(gameConfig: GameConfig): Promise<GameDataCatalogs> {
+    const out: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
+    const refs = gameConfig.data;
+    if (!refs) return out;
+
+    out.items = await this._loadCatalog(gameConfig, refs.items, 'items', 'item');
+    out.services = await this._loadCatalog(gameConfig, refs.services, 'services', 'service');
+    out.species = await this._loadCatalog(gameConfig, refs.species, 'species', 'species');
+    out.parties = await this._loadCatalog(gameConfig, refs.parties, 'parties', 'party');
+    out.trainers = await this._loadCatalog(gameConfig, refs.trainers, 'trainers', 'trainer');
+    out.currencies = await this._loadCatalog(gameConfig, refs.currencies, 'currencies', 'currency');
+    this._validateGameData(gameConfig, out);
+    return out;
   }
 
   /** Get an already-loaded (cached) game config, or undefined if not loaded yet. */
@@ -140,5 +156,88 @@ export class GameLoader {
       b.length === 2 &&
       b.every(p => Array.isArray(p) && p.length === 2 && p.every(n => typeof n === 'number'))
     );
+  }
+
+  private _validateGameData(config: GameConfig, catalogs: GameDataCatalogs): void {
+    const warnings: string[] = [];
+    const itemIds = new Set(Object.keys(catalogs.items));
+    const serviceIds = new Set(Object.keys(catalogs.services));
+    const speciesIds = new Set(Object.keys(catalogs.species));
+    const partyIds = new Set(Object.keys(catalogs.parties));
+    const trainerIds = new Set(Object.keys(catalogs.trainers));
+    const currencyIds = new Set(Object.keys(catalogs.currencies));
+
+    for (const [mapId, map] of Object.entries(config.maps)) {
+      for (const poi of map.pois ?? []) {
+        for (const ref of poi.itemRefs ?? []) {
+          if (!itemIds.has(ref.itemId)) warnings.push(`maps/${mapId}/pois/${poi.id}: itemRef '${ref.itemId}' missing from item catalog`);
+        }
+        for (const serviceId of poi.serviceIds ?? []) {
+          if (!serviceIds.has(serviceId)) warnings.push(`maps/${mapId}/pois/${poi.id}: serviceId '${serviceId}' missing from service catalog`);
+        }
+        if (poi.trainerId && !trainerIds.has(poi.trainerId)) {
+          warnings.push(`maps/${mapId}/pois/${poi.id}: trainerId '${poi.trainerId}' missing from trainer catalog`);
+        }
+        if (poi.partyId && !partyIds.has(poi.partyId)) {
+          warnings.push(`maps/${mapId}/pois/${poi.id}: partyId '${poi.partyId}' missing from party catalog`);
+        }
+        if (poi.speciesId && !speciesIds.has(poi.speciesId)) {
+          warnings.push(`maps/${mapId}/pois/${poi.id}: speciesId '${poi.speciesId}' missing from species catalog`);
+        }
+        for (const ref of poi.currencyRefs ?? []) {
+          if (!currencyIds.has(ref.currencyId)) warnings.push(`maps/${mapId}/pois/${poi.id}: currencyRef '${ref.currencyId}' missing from currency catalog`);
+        }
+      }
+    }
+
+    for (const [serviceId, service] of Object.entries(catalogs.services)) {
+      for (const entry of [...service.entries, ...(service.award ? [service.award] : [])]) {
+        if (entry.type === 'item' && entry.itemId && !itemIds.has(entry.itemId)) {
+          warnings.push(`services/${serviceId}: itemId '${entry.itemId}' missing from item catalog`);
+        }
+      }
+    }
+
+    for (const [trainerId, trainer] of Object.entries(catalogs.trainers)) {
+      if (trainer.partyId && !partyIds.has(trainer.partyId)) {
+        warnings.push(`trainers/${trainerId}: partyId '${trainer.partyId}' missing from party catalog`);
+      }
+      for (const ref of trainer.currencyRefs ?? []) {
+        if (!currencyIds.has(ref.currencyId)) warnings.push(`trainers/${trainerId}: currencyRef '${ref.currencyId}' missing from currency catalog`);
+      }
+    }
+
+    for (const [partyId, party] of Object.entries(catalogs.parties)) {
+      for (const member of party.members ?? []) {
+        if (member.speciesId && !speciesIds.has(member.speciesId)) {
+          warnings.push(`parties/${partyId}: speciesId '${member.speciesId}' missing from species catalog`);
+        }
+        if (member.itemId && !itemIds.has(member.itemId)) {
+          warnings.push(`parties/${partyId}: itemId '${member.itemId}' missing from item catalog`);
+        }
+      }
+    }
+
+    if (warnings.length > 0) {
+      const shown = warnings.slice(0, 50);
+      console.warn(
+        `[GameLoader] "${config.id}" loaded with ${warnings.length} catalog warning(s):\n  - ` +
+          shown.join('\n  - ') +
+          (warnings.length > shown.length ? `\n  ...and ${warnings.length - shown.length} more` : ''),
+      );
+    }
+  }
+
+  private async _loadCatalog<K extends keyof GameDataCatalogs>(
+    gameConfig: GameConfig,
+    path: string | undefined,
+    key: K,
+    label: string,
+  ): Promise<GameDataCatalogs[K]> {
+    if (!path) return {} as GameDataCatalogs[K];
+    const resp = await fetch(this.resolveImagePath(gameConfig, path));
+    if (!resp.ok) throw new Error(`Failed to load ${label} catalog: ${resp.status}`);
+    const data = await resp.json() as Partial<GameDataCatalogs>;
+    return (data[key] ?? {}) as GameDataCatalogs[K];
   }
 }

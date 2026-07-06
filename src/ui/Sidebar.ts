@@ -11,6 +11,8 @@ interface SidebarOptions {
   onJumpSelect?: (target: string) => void | Promise<void>;
   /** A POI search result was clicked: jump to it on its map. */
   onPoiSelect?: (mapId: string, poiId: string) => void;
+  /** A service/shop search result was clicked: open its detail panel. */
+  onServiceSelect?: (serviceId: string) => void;
 }
 
 /** One row in the sidebar's item-search results. */
@@ -20,6 +22,14 @@ export interface PoiSearchRow {
   kind: string;
   name: string;
   mapName: string;
+}
+
+/** One row in the sidebar's service/shop search results. */
+export interface ServiceSearchRow {
+  serviceId: string;
+  kind: string;
+  name: string;
+  detail?: string;
 }
 
 /**
@@ -43,7 +53,10 @@ export class Sidebar {
   private _existingMapIds = new Set<string>();
   /** Game-wide item search (provided by main once the game is loaded). */
   private _poiSearcher: ((query: string) => PoiSearchRow[]) | null = null;
+  /** Game-wide shop/service search (provided by main once the game is loaded). */
+  private _serviceSearcher: ((query: string) => ServiceSearchRow[]) | null = null;
   private _poiResultsEl!: HTMLElement;
+  private _serviceResultsEl!: HTMLElement;
   private _jumpListEl!: HTMLElement;
 
   constructor(container: HTMLElement, options: SidebarOptions) {
@@ -70,6 +83,7 @@ export class Sidebar {
         </div>
         <div class="sidebar-add-map-dialog" style="display:none;"></div>
         <div class="sidebar-poi-results" style="display:none;"></div>
+        <div class="sidebar-service-results" style="display:none;"></div>
         <div class="sidebar-jump-list" style="display:none;"></div>
         <div class="sidebar-map-list"></div>
       </div>
@@ -82,12 +96,19 @@ export class Sidebar {
     this._addMapBtn = this._el.querySelector('.sidebar-add-map-btn')!;
     this._addMapDialog = this._el.querySelector('.sidebar-add-map-dialog')!;
     this._poiResultsEl = this._el.querySelector('.sidebar-poi-results')!;
+    this._serviceResultsEl = this._el.querySelector('.sidebar-service-results')!;
     this._jumpListEl = this._el.querySelector('.sidebar-jump-list')!;
 
     this._poiResultsEl.addEventListener('click', (e) => {
       const row = (e.target as HTMLElement).closest<HTMLElement>('.poi-result');
       if (row?.dataset.mapId && row.dataset.poiId) {
         this._options.onPoiSelect?.(row.dataset.mapId, row.dataset.poiId);
+      }
+    });
+    this._serviceResultsEl.addEventListener('click', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.service-result');
+      if (row?.dataset.serviceId) {
+        this._options.onServiceSelect?.(row.dataset.serviceId);
       }
     });
     this._jumpListEl.addEventListener('click', (e) => {
@@ -328,6 +349,7 @@ export class Sidebar {
     if (!query) {
       this._renderMapList(this._mapItems);
       this._renderPoiResults([]);
+      this._renderServiceResults([]);
       return;
     }
     const filtered = this._mapItems.filter(m => {
@@ -336,11 +358,17 @@ export class Sidebar {
     });
     this._renderMapList(filtered);
     this._renderPoiResults(this._poiSearcher ? this._poiSearcher(query) : []);
+    this._renderServiceResults(this._serviceSearcher ? this._serviceSearcher(query) : []);
   }
 
   /** Provide the game-wide item searcher (query → matching POIs on any map). */
   setPoiSearcher(searcher: (query: string) => PoiSearchRow[]): void {
     this._poiSearcher = searcher;
+  }
+
+  /** Provide the game-wide service/shop searcher (query → matching services). */
+  setServiceSearcher(searcher: (query: string) => ServiceSearchRow[]): void {
+    this._serviceSearcher = searcher;
   }
 
   private _renderPoiResults(rows: PoiSearchRow[]): void {
@@ -358,6 +386,22 @@ export class Sidebar {
       </div>`).join('')}
     `;
     this._poiResultsEl.style.display = 'block';
+  }
+
+  private _renderServiceResults(rows: ServiceSearchRow[]): void {
+    if (rows.length === 0) {
+      this._serviceResultsEl.style.display = 'none';
+      this._serviceResultsEl.innerHTML = '';
+      return;
+    }
+    this._serviceResultsEl.innerHTML = `
+      <div class="sidebar-label">${i18n.t('sidebar.serviceResults')} (${rows.length})</div>
+      ${rows.map(r => `<div class="service-result" data-service-id="${escapeHtml(r.serviceId)}">
+        <span class="service-result-glyph">${r.kind === 'vending' ? '🥫' : r.kind === 'inn' ? '🛏️' : r.kind === 'transport' ? '↕' : '🏪'}</span>
+        <span class="service-result-main"><span class="service-result-name">${escapeHtml(r.name)}</span>${r.detail ? `<span class="service-result-detail">${escapeHtml(r.detail)}</span>` : ''}</span>
+      </div>`).join('')}
+    `;
+    this._serviceResultsEl.style.display = 'block';
   }
 
   /** Toggle sidebar collapsed state. */

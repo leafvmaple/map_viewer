@@ -59,7 +59,7 @@ export interface PartyMemberDef {
    *  e.g. { zh: "兵" } renders 「兵12000」. */
   unit?: LocalizedString;
   /** Optional game-internal id of this member (species / general id). */
-  id?: number;
+  id?: number | string;
   /** Optional mini-icon path (relative to the game's res dir). */
   icon?: string;
 }
@@ -71,6 +71,141 @@ export interface PoiItemDef {
   item?: string;
   /** Same format as `PoiDef.itemIcon`: image path or `emoji:<glyph>`. */
   itemIcon?: string;
+}
+
+export interface PoiItemRefDef {
+  /** Stable id in data/items.json. */
+  itemId: string;
+  /** Optional stack/count for this pickup. */
+  quantity?: number;
+  [key: string]: unknown;
+}
+
+export interface CurrencyRefDef {
+  /** Stable id in data/currencies.json. */
+  currencyId: string;
+  /** Fixed amount, when the reward is deterministic. */
+  amount?: number;
+  /** Inclusive range, when the game rolls a random amount. */
+  amountRange?: [number, number];
+  [key: string]: unknown;
+}
+
+export interface GameDataRefs {
+  /** Item catalog JSON path, relative to res/{gameId}/game.json. */
+  items?: string;
+  /** Shop/service catalog JSON path, relative to res/{gameId}/game.json. */
+  services?: string;
+  /** Species catalog JSON path, relative to res/{gameId}/game.json. */
+  species?: string;
+  /** Battle party catalog JSON path, relative to res/{gameId}/game.json. */
+  parties?: string;
+  /** Trainer catalog JSON path, relative to res/{gameId}/game.json. */
+  trainers?: string;
+  /** Currency catalog JSON path, relative to res/{gameId}/game.json. */
+  currencies?: string;
+}
+
+export interface CatalogItemDef {
+  id: string;
+  name: LocalizedString;
+  price?: number;
+  currency?: string;
+  category?: LocalizedString;
+  itemIcon?: string;
+  [key: string]: unknown;
+}
+
+export interface ServiceEntryDef {
+  type: string;
+  /** For type="item", display facts resolve through GameDataCatalogs.items[itemId]. */
+  itemId?: string;
+  /** Optional fallback/override for non-catalog service options. */
+  name?: LocalizedString;
+  /** Optional fallback/override; normal item prices come from the item catalog. */
+  price?: number;
+  currency?: string;
+  category?: LocalizedString;
+  slot?: number;
+  quantity?: number;
+  available?: boolean;
+  rawCount?: string;
+  [key: string]: unknown;
+}
+
+export interface ServiceDef {
+  id: string;
+  kind: string;
+  name: LocalizedString;
+  entries: ServiceEntryDef[];
+  award?: ServiceEntryDef;
+  source?: Record<string, unknown>;
+  [key: string]: unknown;
+}
+
+export interface SpeciesDef {
+  id: string;
+  name: LocalizedString;
+  icon?: string;
+  iconSize?: [number, number];
+  [key: string]: unknown;
+}
+
+export interface PartyMemberRefDef {
+  /** Stable id in data/species.json. */
+  speciesId?: string;
+  /** Optional fallback/override for non-species or exceptional rows. */
+  name?: LocalizedString;
+  /** Numeric badge, matching inline party `value` semantics. */
+  value?: number;
+  /** Optional alias used by some producers; resolved as `value` if present. */
+  level?: number;
+  unit?: LocalizedString;
+  id?: number | string;
+  icon?: string;
+  itemId?: string;
+  slot?: number;
+  [key: string]: unknown;
+}
+
+export interface PartyDef {
+  id: string;
+  members: PartyMemberRefDef[];
+  [key: string]: unknown;
+}
+
+export interface TrainerDef {
+  id: string;
+  name?: LocalizedString;
+  label?: LocalizedString;
+  className?: LocalizedString;
+  partyId?: string;
+  reward?: LocalizedString;
+  currencyRefs?: CurrencyRefDef[];
+  icon?: string;
+  iconSize?: [number, number];
+  [key: string]: unknown;
+}
+
+export interface CurrencyDef {
+  id: string;
+  name?: LocalizedString;
+  symbol?: LocalizedString;
+  icon?: string;
+  format?: {
+    position?: 'prefix' | 'suffix';
+    space?: boolean;
+  };
+  [key: string]: unknown;
+}
+
+export interface GameDataCatalogs {
+  items: Record<string, CatalogItemDef>;
+  services: Record<string, ServiceDef>;
+  species: Record<string, SpeciesDef>;
+  parties: Record<string, PartyDef>;
+  trainers: Record<string, TrainerDef>;
+  currencies: Record<string, CurrencyDef>;
 }
 
 /** A point of interest on a map (e.g. a treasure chest) */
@@ -94,6 +229,12 @@ export interface PoiDef {
   itemIcon?: string;
   /** Optional explicit contents list for a POI that yields multiple items. */
   items?: PoiItemDef[];
+  /** Canonical item references; viewer resolves display facts from data/items.json. */
+  itemRefs?: PoiItemRefDef[];
+  /** Canonical currency/money references; viewer resolves formatting from data/currencies.json. */
+  currencyRefs?: CurrencyRefDef[];
+  /** Stable species/entity id in data/species.json for standalone Pokémon/NPC encounters. */
+  speciesId?: string;
   /** Native pixel size [w, h] of `icon` (defaults to [16, 32]). */
   iconSize?: [number, number];
   /**
@@ -109,6 +250,12 @@ export interface PoiDef {
   /** Defeat reward (prize money, spoils…), pre-formatted (e.g. "¥624").
    *  Shown dimmed in the party-card header. */
   reward?: LocalizedString;
+  /** Stable trainer id in data/trainers.json. */
+  trainerId?: string;
+  /** Stable party id in data/parties.json. */
+  partyId?: string;
+  /** One or more game-wide service/shop ids attached to this map POI. */
+  serviceIds?: string[];
 }
 
 /** Map rendering type */
@@ -198,6 +345,8 @@ export interface GameConfig {
   /** Display metadata for this game's POI kinds — new kinds ship with their
    *  data instead of requiring viewer i18n/glyph updates. */
   poiKinds?: Record<string, PoiKindDef>;
+  /** Optional external catalogs (items, services/shops) loaded on demand. */
+  data?: GameDataRefs;
   /** Export provenance (shown in the build-identifier chip). */
   export?: ExportStamp;
   /** Computed at runtime: base URL path for resolving relative image paths */

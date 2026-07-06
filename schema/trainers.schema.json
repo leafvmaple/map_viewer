@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/trainers.schema.json",
+  "title": "Game Map Viewer - trainer catalog",
+  "type": "object",
+  "required": ["trainers"],
+  "additionalProperties": true,
+  "properties": {
+    "trainers": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/trainer" }
+    },
+    "summary": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "trainer": {
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "label": { "$ref": "#/$defs/localizedString" },
+        "className": { "$ref": "#/$defs/localizedString" },
+        "partyId": { "type": "string", "minLength": 1 },
+        "reward": { "$ref": "#/$defs/localizedString" },
+        "currencyRefs": { "type": "array", "items": { "$ref": "#/$defs/currencyRef" } },
+        "icon": { "type": "string", "minLength": 1 },
+        "iconSize": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "currencyRef": {
+      "type": "object",
+      "required": ["currencyId"],
+      "additionalProperties": true,
+      "properties": {
+        "currencyId": { "type": "string", "minLength": 1 },
+        "amount": { "type": "number" },
+        "amountRange": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
+        }
+      }
+    }
+  }
+}

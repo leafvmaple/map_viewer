@@ -949,6 +949,225 @@ html, body {
   background: rgba(255, 179, 0, 0.12);
 }
 
+/* ─── Service/shop detail panel (right) ─────────────────────── */
+
+.service-panel {
+  position: absolute;
+  top: 80px;
+  right: 238px;
+  width: min(360px, calc(100vw - 560px));
+  max-height: calc(100vh - 160px);
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 10px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+  z-index: 1052;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.service-panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  background: #0f3460;
+}
+
+.service-panel-head h3 {
+  font-size: 15px;
+  line-height: 1.25;
+}
+
+.service-kind,
+.service-source {
+  color: #8899aa;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.service-panel-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e0e0e0;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.service-panel-back {
+  background: transparent;
+  border: 0;
+  color: #8be9fd;
+  cursor: pointer;
+  font-size: 11px;
+  margin: 0 0 4px;
+  padding: 0;
+}
+
+.service-panel-back:hover {
+  color: #00e5ff;
+}
+
+.service-source,
+.service-bindings,
+.service-award {
+  padding: 8px 12px 0;
+}
+
+.service-binding {
+  background: #1a1a2e;
+  border: 1px solid #0f3460;
+  border-radius: 999px;
+  color: #8be9fd;
+  cursor: pointer;
+  font-size: 11px;
+  margin: 0 6px 6px 0;
+  padding: 3px 8px;
+}
+
+.service-empty {
+  color: #667788;
+  font-size: 12px;
+}
+
+.service-directory-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.service-directory-empty {
+  padding: 24px 12px;
+  text-align: center;
+}
+
+.service-directory-item {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  color: #e0e0e0;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  text-align: left;
+  width: 100%;
+}
+
+.service-directory-item:hover {
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.service-directory-glyph {
+  flex: 0 0 22px;
+  font-size: 16px;
+  text-align: center;
+}
+
+.service-directory-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.service-directory-name,
+.service-directory-meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-directory-name {
+  font-size: 12px;
+}
+
+.service-directory-meta {
+  color: #667788;
+  font-size: 11px;
+}
+
+.service-award {
+  display: flex;
+  gap: 8px;
+  color: #ffcc66;
+  font-size: 12px;
+}
+
+.service-entry-list {
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.service-entry {
+  display: grid;
+  grid-template-columns: 28px 22px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.service-entry:hover {
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.service-entry-unavailable {
+  opacity: 0.45;
+}
+
+.service-entry-idx,
+.service-entry-id,
+.service-entry-stock {
+  color: #667788;
+  font-size: 11px;
+}
+
+.service-entry-main {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-entry-icon-slot {
+  align-items: center;
+  display: flex;
+  height: 18px;
+  justify-content: center;
+  width: 18px;
+}
+
+.service-entry-icon {
+  height: 18px;
+  image-rendering: pixelated;
+  object-fit: contain;
+  width: 18px;
+}
+
+.service-entry-id {
+  margin-left: 6px;
+  font-family: 'Consolas', 'Courier New', monospace;
+}
+
+.service-entry-stock {
+  grid-column: 3 / 4;
+}
+
+.service-entry-price {
+  color: #ffcc66;
+  font-variant-numeric: tabular-nums;
+}
+
 .treasure-idx {
   color: #667788;
   min-width: 16px;
@@ -1364,7 +1583,8 @@ html, body {
 
 /* ─── Sidebar item-search results ───────────────────────────── */
 
-.sidebar-poi-results {
+.sidebar-poi-results,
+.sidebar-service-results {
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 1px solid #0f3460;
@@ -1400,6 +1620,48 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 45%;
+}
+
+.service-result {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.service-result:hover {
+  background: rgba(0, 229, 255, 0.10);
+}
+
+.service-result-glyph {
+  width: 18px;
+  text-align: center;
+}
+
+.service-result-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.service-result-name,
+.service-result-detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.service-result-name {
+  color: #e0e6ed;
+}
+
+.service-result-detail {
+  color: #667788;
+  font-size: 11px;
 }
 
 /* ─── Sidebar non-spatial jumps ─────────────────────────────── */

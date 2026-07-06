@@ -10,6 +10,7 @@ interface ToolbarOptions {
   onGridToggle: () => boolean;
   onEditModeToggle: () => boolean;
   onChecklistToggle: () => boolean;
+  onServicesToggle: () => boolean;
   onBack: () => void;
 }
 
@@ -26,6 +27,7 @@ export class Toolbar {
   private _gridVisible = false;
   private _editMode = false;
   private _checklistOpen = false;
+  private _servicesOpen = false;
   private _backEnabled = false;
   private _backBtn!: HTMLButtonElement;
 
@@ -69,6 +71,9 @@ export class Toolbar {
         </button>
         <button class="toolbar-btn btn-checklist" title="${i18n.t('toolbar.checklist')}">
           📋 ${i18n.t('toolbar.checklist')}
+        </button>
+        <button class="toolbar-btn btn-services" title="${i18n.t('toolbar.services')}">
+          🏪 ${i18n.t('toolbar.services')}
         </button>
         <button class="toolbar-btn btn-grid" title="${i18n.t('toolbar.grid')}">
           # ${i18n.t('toolbar.grid')}
@@ -120,6 +125,13 @@ export class Toolbar {
       checklistBtn.classList.toggle('active', this._checklistOpen);
     });
 
+    // Shop/service directory toggle
+    const servicesBtn = this._el.querySelector('.btn-services')!;
+    servicesBtn.addEventListener('click', () => {
+      this._servicesOpen = this._options.onServicesToggle();
+      servicesBtn.classList.toggle('active', this._servicesOpen);
+    });
+
     // Grid toggle
     const gridBtn = this._el.querySelector('.btn-grid')!;
     gridBtn.addEventListener('click', () => {
@@ -152,6 +164,7 @@ export class Toolbar {
     this._el.querySelector('.btn-labels')?.classList.toggle('active', this._labelsVisible);
     this._el.querySelector('.btn-treasure')?.classList.toggle('active', this._treasuresVisible);
     this._el.querySelector('.btn-checklist')?.classList.toggle('active', this._checklistOpen);
+    this._el.querySelector('.btn-services')?.classList.toggle('active', this._servicesOpen);
     this._el.querySelector('.btn-grid')?.classList.toggle('active', this._gridVisible);
 
     const editBtn = this._el.querySelector('.btn-edit');
@@ -178,6 +191,12 @@ export class Toolbar {
   /** Sync the checklist button when the drawer closes itself (✕ / Esc). */
   setChecklistOpen(open: boolean): void {
     this._checklistOpen = open;
+    this._applyState();
+  }
+
+  /** Sync the shop/service button when the service panel closes itself. */
+  setServicesOpen(open: boolean): void {
+    this._servicesOpen = open;
     this._applyState();
   }
 
@@ -213,6 +232,9 @@ export class Toolbar {
 
     const checklistBtn = this._el.querySelector('.btn-checklist');
     if (checklistBtn) checklistBtn.textContent = `📋 ${i18n.t('toolbar.checklist')}`;
+
+    const servicesBtn = this._el.querySelector('.btn-services');
+    if (servicesBtn) servicesBtn.textContent = `🏪 ${i18n.t('toolbar.services')}`;
 
     const gridBtn = this._el.querySelector('.btn-grid');
     if (gridBtn) gridBtn.textContent = `# ${i18n.t('toolbar.grid')}`;

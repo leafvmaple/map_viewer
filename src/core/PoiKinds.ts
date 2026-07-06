@@ -24,6 +24,12 @@ export const KIND_GLYPHS: Record<string, string> = {
   pokemon: '🐾',
   berry: '🍒',
   dock: '⚓',
+  shop: '🏪',
+  vending: '🥫',
+  inn: '🛏️',
+  rental: '🚙',
+  service: '🔧',
+  transport: '↕',
   place: '📌',
   route: '🚩',
 };

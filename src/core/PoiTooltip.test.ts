@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { hasPartyCard, renderPartyCard, renderPlainTooltip } from './PoiTooltip.js';
 import { i18n } from '../i18n/index.js';
-import type { PoiDef } from '../types';
+import type { GameDataCatalogs, PoiDef } from '../types';
 
 const withParty = (party?: PoiDef['party'], kind = 'trainer'): PoiDef => ({
   id: 't00',
@@ -22,6 +22,18 @@ describe('hasPartyCard', () => {
     expect(hasPartyCard(withParty())).toBe(false);
     expect(hasPartyCard(withParty([]))).toBe(false);
     expect(hasPartyCard(withParty([{ name: { zh: '豪力' }, value: 39 }]))).toBe(true);
+  });
+
+  it('true for a catalog-backed trainer party', () => {
+    const catalogs: GameDataCatalogs = {
+      items: {},
+      services: {},
+      species: { '67': { id: '67', name: { zh: '豪力' }, icon: 'sprites/mon/067.png' } },
+      parties: { 'trainer:7': { id: 'trainer:7', members: [{ speciesId: '67', value: 40 }] } },
+      trainers: { '7': { id: '7', partyId: 'trainer:7' } },
+      currencies: {},
+    };
+    expect(hasPartyCard({ id: 't07', kind: 'trainer', pos: [0, 0], trainerId: '7' }, catalogs)).toBe(true);
   });
 });
 
@@ -83,6 +95,44 @@ describe('renderPartyCard', () => {
     expect(html).toContain('<small>Lv</small>39');
     expect(html).toContain('<small>Lv</small>40');
     expect(html).toContain('src="/res/g/sprites/mon/057.png"');
+  });
+
+  it('renders catalog-backed party rows and trainer rewards', () => {
+    const catalogs: GameDataCatalogs = {
+      items: {},
+      services: {},
+      species: { '57': { id: '57', name: { zh: '火爆猴' }, icon: 'sprites/mon/057.png' } },
+      parties: { 'trainer:42': { id: 'trainer:42', members: [{ speciesId: '57', value: 39 }] } },
+      trainers: { '42': { id: '42', partyId: 'trainer:42', reward: { en: '¥624' } } },
+      currencies: {},
+    };
+    const html = renderPartyCard({ id: 't42', kind: 'trainer', pos: [0, 0], trainerId: '42' }, '训练师', false, resolve, catalogs);
+    expect(html).toContain('火爆猴');
+    expect(html).toContain('<small>Lv</small>39');
+    expect(html).toContain('src="/res/g/sprites/mon/057.png"');
+    expect(html).toContain('¥624');
+  });
+
+  it('renders structured currency rewards in plain tooltips', () => {
+    const catalogs: GameDataCatalogs = {
+      items: {},
+      services: {},
+      species: {},
+      parties: {},
+      trainers: {},
+      currencies: {
+        money: { id: 'money', symbol: { en: '¥' }, icon: 'emoji:💰', format: { position: 'prefix', space: false } },
+      },
+    };
+    const html = renderPlainTooltip(
+      { id: 'g0', kind: 'gold', pos: [0, 0], currencyRefs: [{ currencyId: 'money', amount: 624 }] },
+      'gold',
+      false,
+      resolve,
+      catalogs,
+    );
+    expect(html).toContain('💰');
+    expect(html).toContain('¥624');
   });
 
   it('a custom unit renders instead of Lv (enemy-general style)', () => {

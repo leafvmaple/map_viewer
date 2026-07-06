@@ -1,8 +1,9 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
-import type { PoiDef } from '../types';
+import type { CatalogItemDef, GameDataCatalogs, PoiDef } from '../types';
 import { renderItemIcon } from '../core/ItemIcon.js';
 import { poiItemName } from '../core/PoiIndex.js';
+import { poiPrimaryItemIcon } from '../core/GameDataResolver.js';
 
 interface TreasureListOptions {
   onSelect: (poi: PoiDef) => void;
@@ -25,6 +26,8 @@ export class TreasureList {
   private _marked = new Set<string>();
   private _visible = true;
   private _resolveIcon: ((relativePath: string) => string) | null = null;
+  private _items: Record<string, CatalogItemDef> = {};
+  private _catalogs: GameDataCatalogs | undefined;
 
   constructor(options: TreasureListOptions) {
     this._options = options;
@@ -55,6 +58,17 @@ export class TreasureList {
   /** Resolve a POI's relative `itemIcon` path into a URL (per game). */
   setIconResolver(resolve: (relativePath: string) => string): void {
     this._resolveIcon = resolve;
+  }
+
+  setItemCatalog(items: Record<string, CatalogItemDef>): void {
+    this._items = items;
+    this._render();
+  }
+
+  setCatalogs(catalogs: GameDataCatalogs): void {
+    this._catalogs = catalogs;
+    this._items = catalogs.items;
+    this._render();
   }
 
   /** Update the list (treasure + gold chests only). */
@@ -99,11 +113,12 @@ export class TreasureList {
         const tx = Math.round(p.pos[0] / this._tileSize);
         const ty = Math.round(p.pos[1] / this._tileSize);
         const marked = this._marked.has(p.id);
-        const icon = renderItemIcon(p.itemIcon, 'treasure-item-icon', this._resolveIcon);
+        const source = this._catalogs ?? this._items;
+        const icon = renderItemIcon(poiPrimaryItemIcon(p, source), 'treasure-item-icon', this._resolveIcon);
         return `<div class="treasure-item${marked ? ' marked' : ''}" data-id="${escapeHtml(p.id)}">
           <input type="checkbox" class="treasure-mark" title="${escapeHtml(i18n.t('treasure.collected'))}" ${marked ? 'checked' : ''} />
           <span class="treasure-idx">${i + 1}</span>
-          ${icon}<span class="treasure-name">${escapeHtml(poiItemName(p))}</span>
+          ${icon}<span class="treasure-name">${escapeHtml(poiItemName(p, source))}</span>
           <span class="treasure-pos">${tx},${ty}</span>
         </div>`;
       })

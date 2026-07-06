@@ -1,6 +1,7 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { renderItemIcon } from '../core/ItemIcon.js';
+import { poiPrimaryItemIcon, poiSearchTexts } from '../core/GameDataResolver.js';
 import { poiItemName, isMarkable, type PoiIndexEntry } from '../core/PoiIndex.js';
 import { kindGlyph, type PoiKindMeta } from '../core/PoiKinds.js';
 import type { PoiDef } from '../types';
@@ -162,11 +163,7 @@ export class Checklist {
     const visible = this._entries.filter(en => {
       if (this._hideCollected && this._options.isMarked(en.poi.id)) return false;
       if (!q) return true;
-      const texts = [
-        ...(en.poi.label ? Object.values(en.poi.label).filter((v): v is string => !!v) : []),
-        en.poi.item ?? '',
-        ...(en.poi.party ?? []).flatMap(m => Object.values(m.name).filter((v): v is string => !!v)),
-      ];
+      const texts = poiSearchTexts(en.poi, en.catalogs ?? en.items);
       return texts.some(t => t.toLowerCase().includes(q));
     });
 
@@ -202,13 +199,13 @@ export class Checklist {
     const { mapId, poi } = entry;
     const marked = this._options.isMarked(poi.id);
     // Item mini-icon when available; kind glyph otherwise.
-    const icon = renderItemIcon(poi.itemIcon, 'checklist-item-icon', this._resolveIcon);
+    const icon = renderItemIcon(poiPrimaryItemIcon(poi, entry.catalogs ?? entry.items), 'checklist-item-icon', this._resolveIcon);
     const glyph = icon || `<span class="checklist-glyph">${kindGlyph(this._kindMeta, poi.kind)}</span>`;
     return `<div class="checklist-row${marked ? ' marked' : ''}"
                  data-map-id="${escapeHtml(mapId)}" data-poi-id="${escapeHtml(poi.id)}">
       <input type="checkbox" class="checklist-mark" ${marked ? 'checked' : ''} />
       ${glyph}
-      <span class="checklist-name">${escapeHtml(poiItemName(poi))}</span>
+      <span class="checklist-name">${escapeHtml(poiItemName(poi, entry.catalogs ?? entry.items))}</span>
     </div>`;
   }
 }

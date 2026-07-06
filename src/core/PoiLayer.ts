@@ -1,8 +1,9 @@
 import L from 'leaflet';
-import { i18n } from '../i18n/index.js';
 import { CHEST_KINDS } from './PoiIndex.js';
+import { poiDisplayName, resolvePoiBattle, resolvePoiSpecies } from './GameDataResolver.js';
+import { kindGlyph } from './PoiKinds.js';
 import { hasPartyCard, renderPartyCard, renderPlainTooltip } from './PoiTooltip.js';
-import type { PoiDef } from '../types';
+import type { CatalogItemDef, GameDataCatalogs, PoiDef } from '../types';
 
 interface PoiLayerOptions {
   /** Click on a POI (used to toggle its per-user "collected" mark). */
@@ -43,6 +44,8 @@ export class PoiLayer {
   private _hideMarked = false;
   private _onPoiClick: (poi: PoiDef) => void;
   private _resolveIcon: ((relativePath: string) => string) | null = null;
+  private _items: Record<string, CatalogItemDef> = {};
+  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
 
   constructor(leafletMap: L.Map, options: PoiLayerOptions = {}) {
     this._map = leafletMap;
@@ -54,6 +57,18 @@ export class PoiLayer {
    *  (same base as map images). Sprite icons render only when this is set. */
   setIconResolver(resolve: (relativePath: string) => string): void {
     this._resolveIcon = resolve;
+  }
+
+  setItemCatalog(items: Record<string, CatalogItemDef>): void {
+    this._items = items;
+    this._catalogs = { ...this._catalogs, items };
+    this._render();
+  }
+
+  setCatalogs(catalogs: GameDataCatalogs): void {
+    this._catalogs = catalogs;
+    this._items = catalogs.items;
+    this._render();
   }
 
   /**
@@ -126,30 +141,32 @@ export class PoiLayer {
     const half = t / 2;
     const [x, y] = poi.pos;
     const isMarked = this._marked.has(poi.id);
+    const battle = resolvePoiBattle(poi, this._catalogs);
+    const species = resolvePoiSpecies(poi, this._catalogs);
     const layers: L.Layer[] = [];
     let layer: L.Layer;
 
-    // Chests (treasure/gold) whose sprite is baked into the map image need no
-    // attention glyph — the image itself shows them; they only get a hover/click
-    // zone. A glyph is drawn ONLY for `hidden` collectibles (nothing visible in
-    // the image) and, on the overworld, for non-chest kinds without a sprite.
-    const needsGlyph = poi.hidden || (this._showGlyphs && !CHEST_KINDS.has(poi.kind));
+    // Visible scene chests are baked into the image, so they only need a hover
+    // zone. Non-chest POIs (shops, inns, NPCs without sprites) need an actual
+    // marker on scene maps too, otherwise there is no visible entry point.
+    const needsGlyph = poi.hidden || !CHEST_KINDS.has(poi.kind);
     let renderedAsZone = false;
 
-    if (poi.icon && this._resolveIcon) {
+    const markerIcon = battle.icon ?? species?.icon;
+    if (markerIcon && this._resolveIcon) {
       // Sprite marker (e.g. a trainer's NPC sprite) — shown on every map,
       // anchored so the sprite's feet stand on its tile.
-      const [w, h] = poi.iconSize ?? [16, 32];
+      const [w, h] = battle.iconSize ?? species?.iconSize ?? [16, 32];
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}${isMarked ? ' poi-marked' : ''}`,
-        html: `<img class="poi-sprite" src="${this._resolveIcon(poi.icon)}" width="${w}" height="${h}" alt="">`,
+        html: `<img class="poi-sprite" src="${this._resolveIcon(markerIcon)}" width="${w}" height="${h}" alt="">`,
         iconSize: [w, h],
         iconAnchor: [w / 2, h - half],
       });
       layer = L.marker([-(y + half), x + half], { icon, interactive: true, keyboard: false });
     } else if (needsGlyph) {
-      // Visible marker (star for a chest, money bag for gold); dimmed when collected.
-      const glyph = poi.kind === 'gold' ? '💰' : poi.kind === 'treasure' ? '⭐' : '📍';
+      // Visible marker (star/money/shop/etc.); dimmed when collected.
+      const glyph = kindGlyph(undefined, poi.kind);
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}${isMarked ? ' poi-marked' : ''}`,
         html: `<span class="poi-glyph">${glyph}</span>`,
@@ -180,7 +197,7 @@ export class PoiLayer {
       });
     }
 
-    const isCard = hasPartyCard(poi);
+    const isCard = hasPartyCard(poi, this._catalogs);
     layer.bindTooltip(this._tooltip(poi, isMarked), {
       direction: 'top',
       className: `poi-tooltip${isCard ? ' poi-tooltip-card' : ''}${isCard && isMarked ? ' poi-tt-done' : ''}`,
@@ -250,16 +267,14 @@ export class PoiLayer {
 
   private _tooltip(poi: PoiDef, isMarked: boolean): string {
     // Structured trainer party → icon/name/level card instead of plain text.
-    if (hasPartyCard(poi)) {
-      return renderPartyCard(poi, this._label(poi), isMarked, this._resolveIcon);
+    if (hasPartyCard(poi, this._catalogs)) {
+      return renderPartyCard(poi, this._label(poi), isMarked, this._resolveIcon, this._catalogs);
     }
-    return renderPlainTooltip(poi, this._label(poi), isMarked, this._resolveIcon);
+    return renderPlainTooltip(poi, this._label(poi), isMarked, this._resolveIcon, this._catalogs);
   }
 
   private _label(poi: PoiDef): string {
-    const base = poi.label ? i18n.localize(poi.label) : '';
-    if (base) return base;
-    return poi.item ? `${poi.kind} ${poi.item}` : poi.kind;
+    return poiDisplayName(poi, this._catalogs);
   }
 
   /** Show or hide POIs. */

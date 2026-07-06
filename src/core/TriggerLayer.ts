@@ -2,7 +2,7 @@ import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { poiItemName } from './PoiIndex.js';
-import type { TriggerDef, PoiDef } from '../types';
+import type { CatalogItemDef, GameDataCatalogs, TriggerDef, PoiDef } from '../types';
 
 interface TriggerLayerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -26,6 +26,10 @@ export interface TargetMapInfo {
   tileSize: number;
   /** POI ids the current user marked as collected (dimmed in the list). */
   marked?: Set<string>;
+  /** Item catalog for resolving POI itemRefs in the hover chest list. */
+  items?: Record<string, CatalogItemDef>;
+  /** Full catalogs for resolving item/currency reward refs in the hover chest list. */
+  catalogs?: GameDataCatalogs;
 }
 
 /**
@@ -242,7 +246,7 @@ export class TriggerLayer {
           const marked = info?.marked?.has(p.id) ?? false;
           return (
             `<div class="trigger-preview-row${marked ? ' marked' : ''}">` +
-            `<span class="trigger-preview-item">${marked ? '✓' : `${i + 1}.`} ${escapeHtml(poiItemName(p))}</span>` +
+            `<span class="trigger-preview-item">${marked ? '✓' : `${i + 1}.`} ${escapeHtml(poiItemName(p, info?.catalogs ?? info?.items))}</span>` +
             `<span class="trigger-preview-coord">${tx},${ty}</span>` +
             `</div>`
           );

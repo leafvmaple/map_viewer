@@ -24,6 +24,7 @@ describe('kindGlyph', () => {
   it('prefers the game-provided glyph, then built-ins, then a generic pin', () => {
     expect(kindGlyph(meta, 'general')).toBe('🚩');
     expect(kindGlyph(meta, 'dock')).toBe('⚓');   // no glyph in meta → built-in
+    expect(kindGlyph(undefined, 'shop')).toBe('🏪');
     expect(kindGlyph(undefined, 'treasure')).toBe('⭐');
     expect(kindGlyph(undefined, 'weird_kind')).toBe('📍');
   });

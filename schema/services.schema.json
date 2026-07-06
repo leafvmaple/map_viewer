@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/services.schema.json",
+  "title": "Game Map Viewer - service catalog",
+  "type": "object",
+  "required": ["services"],
+  "additionalProperties": true,
+  "properties": {
+    "services": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/service" }
+    },
+    "summary": { "type": "object", "additionalProperties": true }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "en": { "type": "string" },
+        "zh": { "type": "string" },
+        "ja": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "service": {
+      "type": "object",
+      "required": ["id", "kind", "name", "entries"],
+      "additionalProperties": true,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "entries": { "type": "array", "items": { "$ref": "#/$defs/serviceEntry" } },
+        "award": { "$ref": "#/$defs/serviceEntry" },
+        "source": { "type": "object", "additionalProperties": true }
+      }
+    },
+    "serviceEntry": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": true,
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "itemId": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "price": { "type": "number" },
+        "currency": { "type": "string", "minLength": 1 },
+        "category": { "$ref": "#/$defs/localizedString" },
+        "itemIcon": { "type": "string", "minLength": 1 },
+        "slot": { "type": "integer", "minimum": 0 },
+        "quantity": { "type": "integer", "minimum": 0 },
+        "available": { "type": "boolean" }
+      }
+    }
+  }
+}

@@ -7,6 +7,7 @@ import { Sidebar } from './ui/Sidebar.js';
 import { Breadcrumb } from './ui/Breadcrumb.js';
 import { Toolbar } from './ui/Toolbar.js';
 import { TreasureList } from './ui/TreasureList.js';
+import { ServicePanel } from './ui/ServicePanel.js';
 import { EventPanel } from './ui/EventPanel.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
@@ -15,6 +16,7 @@ import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
 import { buildPoiIndex, searchPois, poiItemName, isMarkable, type PoiIndexEntry } from './core/PoiIndex.js';
+import { buildServiceIndex, searchServices, serviceDisplayName, serviceEntryName, type ServiceIndexEntry } from './core/ServiceIndex.js';
 import { floorSiblings } from './core/Floors.js';
 import { FloorSwitcher } from './ui/FloorSwitcher.js';
 import { UserMenu } from './ui/UserMenu.js';
@@ -43,6 +45,7 @@ let sidebar: Sidebar;
 let breadcrumb: Breadcrumb;
 let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
+let servicePanel: ServicePanel;   // shop/service details (right)
 let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
 let userMenu: UserMenu;           // profile switcher (toolbar)
 let poiFilter: PoiFilter;         // POI category legend (bottom-left)
@@ -58,6 +61,8 @@ let hiddenKinds = new Set<string>();
 let hideMarked = false;
 /** Game-wide POI index (search + checklist), rebuilt per game load. */
 let poiIndex: PoiIndexEntry[] = [];
+/** Game-wide shop/service index (search + detail panel), rebuilt per game load. */
+let serviceIndex: ServiceIndexEntry[] = [];
 /** POI the current view is anchored to (kept in the URL hash until we leave its map). */
 let currentPoiAnchor: { mapId: string; poiId: string } | null = null;
 
@@ -89,14 +94,30 @@ async function init(): Promise<void> {
     onMapAdd: handleMapAdd,
     onJumpSelect: handleJumpSelect,
     onPoiSelect: (mapId, poiId) => { void navigateToPoi(mapId, poiId); },
+    onServiceSelect: (serviceId) => {
+      servicePanel.show(serviceId);
+      toolbar.setServicesOpen(true);
+    },
   });
   sidebar.setPoiSearcher((query) =>
     searchPois(poiIndex, query, 20).map(entry => ({
       mapId: entry.mapId,
       poiId: entry.poi.id,
       kind: entry.poi.kind,
-      name: poiItemName(entry.poi),
+      name: poiItemName(entry.poi, entry.catalogs ?? entry.items),
       mapName: resolveMapName(entry.mapId),
+    })),
+  );
+  sidebar.setServiceSearcher((query) =>
+    searchServices(serviceIndex, query, 20).map(result => ({
+      serviceId: result.entry.serviceId,
+      kind: result.entry.service.kind,
+      name: serviceDisplayName(result.entry.service),
+      detail: result.matchedEntry
+        ? serviceEntryName(result.matchedEntry, result.entry.items)
+        : result.entry.bindings.length > 0
+          ? result.entry.bindings.map(binding => resolveMapName(binding.mapId)).join(' / ')
+          : i18n.t('service.unbound'),
     })),
   );
 
@@ -110,7 +131,7 @@ async function init(): Promise<void> {
     onTriggerHoverOut: handleTriggerHoverOut,
     onMapLoaded: handleMapLoaded,
     onImageError: (url) => showError(url),
-    onPoiClick: handlePoiToggle,
+    onPoiClick: handlePoiClick,
   });
 
   triggerEditor = new TriggerEditor(mapViewer.leafletMap, {
@@ -130,6 +151,7 @@ async function init(): Promise<void> {
   toolbar = new Toolbar(document.getElementById('toolbar')!, {
     onLanguageChange: handleLanguageChange,
     onChecklistToggle: () => checklist.toggle(),
+    onServicesToggle: () => servicePanel.toggleDirectory(),
     onTriggersToggle: () => mapViewer.triggerLayer.toggle(),
     onLabelsToggle: () =>
       mapViewer.triggerLayer.setLabelsPermanent(!mapViewer.triggerLayer.labelsPermanent),
@@ -147,6 +169,12 @@ async function init(): Promise<void> {
   treasureList = new TreasureList({
     onSelect: (poi) => mapViewer.poiLayer.focusPoi(poi.id),
     onToggleMark: handlePoiToggle,
+  });
+
+  servicePanel = new ServicePanel({
+    onNavigateToPoi: (mapId, poiId) => { void navigateToPoi(mapId, poiId); },
+    onOpen: () => toolbar.setServicesOpen(true),
+    onClose: () => toolbar.setServicesOpen(false),
   });
 
   eventPanel = new EventPanel({
@@ -295,9 +323,18 @@ async function handleGameSelect(
     mapViewer.poiLayer.setKindFilter(hiddenKinds);
     mapViewer.poiLayer.setHideMarked(hideMarked);
 
+    // Optional external catalogs: item definitions, trainer/party/species facts,
+    // and static shop/service lists.
+    const catalogs = await gameLoader.loadGameData(currentGameConfig);
+
     // Game-wide POI index: sidebar item search + the collectible checklist.
-    poiIndex = buildPoiIndex(currentGameConfig);
+    // Build after catalogs load so itemRefs resolve through items.json from the
+    // first render/search, not after a second refresh.
+    poiIndex = buildPoiIndex(currentGameConfig, catalogs);
     checklist.setEntries(poiIndex);
+
+    serviceIndex = buildServiceIndex(currentGameConfig, catalogs);
+    servicePanel.setEntries(serviceIndex);
 
     // Update UI
     const mapList = gameLoader.getMapList(currentGameConfig);
@@ -310,9 +347,12 @@ async function handleGameSelect(
       (path) => gameLoader.resolveImagePath(currentGameConfig!, path),
       (poiId) => markedPois.has(poiId),
     );
+    mapViewer.setCatalogs(catalogs);
     // Item mini-icons in the treasure panel / checklist share the same resolver.
     treasureList.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
+    treasureList.setCatalogs(catalogs);
     checklist.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
+    servicePanel.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
     // Game-provided POI-kind names/glyphs (legend + checklist).
     poiFilter.setKindMeta(currentGameConfig.poiKinds);
     checklist.setKindMeta(currentGameConfig.poiKinds);
@@ -454,7 +494,17 @@ function reloadMarks(): void {
   checklist.refresh();
 }
 
-/** Toggle a POI's mark: chests collected, trainers/generals defeated (map click or checkbox). */
+/** Map click on a POI: service markers open their shop list; markable POIs toggle state. */
+function handlePoiClick(poi: PoiDef): void {
+  if (poi.serviceIds?.length) {
+    servicePanel.show(poi.serviceIds[0]);
+    toolbar.setServicesOpen(true);
+    return;
+  }
+  handlePoiToggle(poi);
+}
+
+/** Toggle a POI's mark: chests collected, trainers/generals defeated (checkbox or non-service map click). */
 function handlePoiToggle(poi: PoiDef): void {
   if (!currentGameConfig || triggerEditor.active) return;
   if (!isMarkable(poi)) return;
@@ -723,6 +773,7 @@ function refreshAllLabels(): void {
   mapViewer.poiLayer.refreshLabels();
   treasureList.refreshLabels();
   eventPanel.refreshLabels();
+  servicePanel.refreshLabels();
   poiFilter.refreshLabels();
   checklist.refreshLabels();
   mapViewer.refreshCoordLabel();
