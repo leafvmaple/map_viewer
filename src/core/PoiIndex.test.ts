@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { buildPoiIndex, searchPois, isMarkable, CHEST_KINDS, MARKABLE_KINDS } from './PoiIndex.js';
+import { describe, it, expect, beforeAll } from 'vitest';
+import { buildPoiIndex, searchPois, isMarkable, poiItemName, CHEST_KINDS, MARKABLE_KINDS } from './PoiIndex.js';
+import { i18n } from '../i18n/index.js';
 import type { GameConfig, PoiDef } from '../types';
 
 const poi = (id: string, label?: Record<string, string>, item?: string, kind = 'treasure'): PoiDef => ({
@@ -33,6 +34,10 @@ const config: GameConfig = {
   },
 };
 
+beforeAll(() => {
+  i18n.lang = 'en';
+});
+
 describe('buildPoiIndex', () => {
   it('flattens all maps in order', () => {
     const index = buildPoiIndex(config);
@@ -52,6 +57,28 @@ describe('searchPois', () => {
 
   it('matches the raw item id as a fallback', () => {
     expect(searchPois(index, '0x1c').map(e => e.poi.id)).toEqual(['w_c01']);
+  });
+
+  it('matches contained items in a multi-item POI', () => {
+    const cfg: GameConfig = {
+      ...config,
+      maps: {
+        world: {
+          ...config.maps.world,
+          pois: [{
+            ...poi('w_c_multi', { en: 'Chest' }),
+            items: [
+              { name: { en: 'Wind Helm', ja: 'かぜのかぶと' }, item: '48', itemIcon: 'emoji:🪖' },
+              { name: { en: 'Thunder Shield', ja: 'らいじんのたて' }, item: '4B', itemIcon: 'emoji:🛡️' },
+            ],
+          }],
+        },
+      },
+    };
+    const idx = buildPoiIndex(cfg);
+    expect(searchPois(idx, 'thunder').map(e => e.poi.id)).toEqual(['w_c_multi']);
+    expect(searchPois(idx, '4b').map(e => e.poi.id)).toEqual(['w_c_multi']);
+    expect(poiItemName(idx[0].poi)).toBe('Wind Helm / Thunder Shield');
   });
 
   it('matches party member names (find the trainer that carries a mon)', () => {

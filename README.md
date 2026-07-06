@@ -45,8 +45,12 @@ generated locally by `nes_decoder` (and mounted from the NAS in production, see
   are markable as defeated.
 - 🏢 **Floor switcher**: maps sharing a `floorGroup` get in-map floor pills
   (11F…B4F), switching keeps the camera.
-- 🎒 **Item bag icons** (`pois[*].itemIcon`) in chest tooltips, the treasure
-  panel and the game-wide collection checklist.
+- 🎒 **Item icons** (`pois[*].itemIcon`) in chest tooltips, the treasure panel
+  and the game-wide collection checklist; supports image paths and `emoji:<glyph>`.
+- 📦 **Multi-item chests** (`pois[*].items`) display every contained reward in
+  hover cards, search results, treasure panels and the collection checklist.
+- ↩️ **Contextual return exits** (`kind: "return"`) handle reused shops/rooms by
+  returning to the map that entered them, instead of exposing false fixed exits.
 
 ## Tech stack
 

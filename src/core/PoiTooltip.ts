@@ -1,5 +1,6 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { renderItemIcon } from './ItemIcon.js';
 import type { PoiDef } from '../types';
 
 /**
@@ -29,9 +30,15 @@ export function renderPlainTooltip(
   isMarked: boolean,
   resolveIcon: ((relativePath: string) => string) | null,
 ): string {
-  const icon = poi.itemIcon && resolveIcon
-    ? `<img class="poi-tt-item" src="${escapeHtml(resolveIcon(poi.itemIcon))}" alt="">`
-    : '';
+  if ((poi.items?.length ?? 0) > 1) {
+    const rows = poi.items!.map(item => {
+      const icon = renderItemIcon(item.itemIcon, 'poi-tt-item', resolveIcon);
+      return `<li>${icon}<span>${escapeHtml(i18n.localize(item.name))}</span></li>`;
+    }).join('');
+    const base = `<ul class="poi-tt-items">${rows}</ul>`;
+    return isMarked ? `${base}<div class="poi-tt-done-text">✓ ${escapeHtml(i18n.t('treasure.collected'))}</div>` : base;
+  }
+  const icon = renderItemIcon(poi.itemIcon, 'poi-tt-item', resolveIcon);
   const base = `${icon}${escapeHtml(title)}`;
   return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
 }

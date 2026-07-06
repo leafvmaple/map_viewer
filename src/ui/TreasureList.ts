@@ -1,6 +1,8 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import type { PoiDef } from '../types';
+import { renderItemIcon } from '../core/ItemIcon.js';
+import { poiItemName } from '../core/PoiIndex.js';
 
 interface TreasureListOptions {
   onSelect: (poi: PoiDef) => void;
@@ -91,27 +93,17 @@ export class TreasureList {
     this._el.style.display = this._visible && this._pois.length > 0 ? 'flex' : 'none';
   }
 
-  /** Item name without the "宝箱 · " prefix, for a compact row. */
-  private _itemName(poi: PoiDef): string {
-    const full = poi.label ? i18n.localize(poi.label) : '';
-    const sep = full.indexOf('·');
-    if (sep >= 0) return full.slice(sep + 1).trim();
-    return full || poi.item || '?';
-  }
-
   private _render(): void {
     const rows = this._pois
       .map((p, i) => {
         const tx = Math.round(p.pos[0] / this._tileSize);
         const ty = Math.round(p.pos[1] / this._tileSize);
         const marked = this._marked.has(p.id);
-        const icon = p.itemIcon && this._resolveIcon
-          ? `<img class="treasure-item-icon" src="${escapeHtml(this._resolveIcon(p.itemIcon))}" alt="">`
-          : '';
+        const icon = renderItemIcon(p.itemIcon, 'treasure-item-icon', this._resolveIcon);
         return `<div class="treasure-item${marked ? ' marked' : ''}" data-id="${escapeHtml(p.id)}">
           <input type="checkbox" class="treasure-mark" title="${escapeHtml(i18n.t('treasure.collected'))}" ${marked ? 'checked' : ''} />
           <span class="treasure-idx">${i + 1}</span>
-          ${icon}<span class="treasure-name">${escapeHtml(this._itemName(p))}</span>
+          ${icon}<span class="treasure-name">${escapeHtml(poiItemName(p))}</span>
           <span class="treasure-pos">${tx},${ty}</span>
         </div>`;
       })

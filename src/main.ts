@@ -358,7 +358,28 @@ async function handleMapSelect(mapId: string): Promise<void> {
 function handleTriggerClick(trigger: TriggerDef): void {
   if (triggerEditor.active) return; // Don't navigate in edit mode
   if (!currentGameConfig || !trigger.target) return;
-  navigateToMap(currentGameConfig.id, trigger.target);
+  if (trigger.kind === 'return' || trigger.target === '__return__') {
+    void handleReturnTrigger(trigger);
+    return;
+  }
+  void navigateToMap(currentGameConfig.id, trigger.target);
+}
+
+async function handleReturnTrigger(trigger: TriggerDef): Promise<void> {
+  if (!currentGameConfig) return;
+  const candidates = trigger.returnTargets ?? [];
+  const path = navStack.path;
+  const previous = path.length >= 2 ? path[path.length - 2] : undefined;
+  if (previous && (candidates.length === 0 || candidates.some(rt => rt.target === previous.mapId))) {
+    await handleBack();
+    return;
+  }
+  if (candidates.length === 1 && currentGameConfig.maps[candidates[0].target]) {
+    await navigateToMap(currentGameConfig.id, candidates[0].target);
+    return;
+  }
+  const names = candidates.map(rt => resolveMapName(rt.target)).join(' / ');
+  showError(names ? `返回目标不确定：${names}` : '返回目标不确定');
 }
 
 /**

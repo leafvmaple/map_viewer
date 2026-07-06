@@ -1,5 +1,6 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { renderItemIcon } from '../core/ItemIcon.js';
 import { poiItemName, isMarkable, type PoiIndexEntry } from '../core/PoiIndex.js';
 import { kindGlyph, type PoiKindMeta } from '../core/PoiKinds.js';
 import type { PoiDef } from '../types';
@@ -201,9 +202,8 @@ export class Checklist {
     const { mapId, poi } = entry;
     const marked = this._options.isMarked(poi.id);
     // Item mini-icon when available; kind glyph otherwise.
-    const glyph = poi.itemIcon && this._resolveIcon
-      ? `<img class="checklist-item-icon" src="${escapeHtml(this._resolveIcon(poi.itemIcon))}" alt="">`
-      : `<span class="checklist-glyph">${kindGlyph(this._kindMeta, poi.kind)}</span>`;
+    const icon = renderItemIcon(poi.itemIcon, 'checklist-item-icon', this._resolveIcon);
+    const glyph = icon || `<span class="checklist-glyph">${kindGlyph(this._kindMeta, poi.kind)}</span>`;
     return `<div class="checklist-row${marked ? ' marked' : ''}"
                  data-map-id="${escapeHtml(mapId)}" data-poi-id="${escapeHtml(poi.id)}">
       <input type="checkbox" class="checklist-mark" ${marked ? 'checked' : ''} />

@@ -37,6 +37,32 @@ describe('renderPlainTooltip', () => {
     expect(renderPlainTooltip(chest('x.png'), '精灵球 · 伤药', false, null)).not.toContain('<img');
   });
 
+  it('renders emoji item icons without resolving them as image paths', () => {
+    const html = renderPlainTooltip(chest('emoji:⚔️'), 'どうのつるぎ', false, resolve);
+    expect(html).toContain('item-icon-emoji');
+    expect(html).toContain('⚔️');
+    expect(html).not.toContain('<img');
+    expect(html).not.toContain('/res/g/emoji');
+  });
+
+  it('renders multi-item chest contents as item rows', () => {
+    const multi: PoiDef = {
+      ...chest(),
+      label: { zh: '宝箱' },
+      items: [
+        { name: { zh: 'かぜのかぶと' }, item: '48', itemIcon: 'emoji:🪖' },
+        { name: { zh: 'とうこうのよろい' }, item: '2B', itemIcon: 'emoji:🥋' },
+      ],
+    };
+    const html = renderPlainTooltip(multi, '宝箱', true, resolve);
+    expect(html).toContain('poi-tt-items');
+    expect(html.match(/<li>/g)).toHaveLength(2);
+    expect(html).toContain('かぜのかぶと');
+    expect(html).toContain('とうこうのよろい');
+    expect(html).toContain('🪖');
+    expect(html).toContain('✓');
+  });
+
   it('keeps the collected suffix and escapes the title', () => {
     const html = renderPlainTooltip(chest('x.png'), '<b>', true, resolve);
     expect(html).toContain('✓');

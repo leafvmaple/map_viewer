@@ -769,6 +769,31 @@ html, body {
   margin-right: 5px;
 }
 
+.poi-tt-items {
+  list-style: none;
+  margin: 0;
+  padding: 2px 0;
+}
+
+.poi-tt-items li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  white-space: nowrap;
+}
+
+.poi-tt-items .poi-tt-item {
+  margin-right: 0;
+}
+
+.poi-tt-done-text {
+  margin-top: 3px;
+  color: #9fb3c8;
+  font-size: 11px;
+  text-align: right;
+}
+
 /* Missing mini-icon → poké-ball placeholder; row layout is unaffected. */
 .poi-tt-ball {
   background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAuElEQVR42qVTMQ7CMAy8RHkCQ5UHRKhDpw6d+hTUt3ZADJ0QQlUeEHXoH8pEcQx2ENyUyHeXixMbMBz8cYOCNc2G7h0Xj6HS9OiBjZpYLvZdA981osEYqiyl5WIASJermoKaWF4siTnMN/cW+xGX9wSc0MelnEAqxvsEAAh1KxrYkpivOZxECHWbJZA45vmMEkE7YE2zcVqDpOjn6fZqIv2J2l2pcDgN+0xYOiRatz+JswS/TuPfeACNAVsSuRA9RwAAAABJRU5ErkJggg==') center / 16px 16px no-repeat;
@@ -932,6 +957,15 @@ html, body {
   height: 18px;
   flex: none;
   image-rendering: pixelated;
+}
+
+.item-icon-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  image-rendering: auto;
+  font-size: 17px;
+  line-height: 18px;
 }
 
 .treasure-name {

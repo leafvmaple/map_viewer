@@ -1,6 +1,7 @@
 import L from 'leaflet';
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { poiItemName } from './PoiIndex.js';
 import type { TriggerDef, PoiDef } from '../types';
 
 interface TriggerLayerOptions {
@@ -85,11 +86,18 @@ export class TriggerLayer {
   setTriggers(triggers: TriggerDef[]): void {
     this.clear();
     this._triggers = triggers ?? [];
+    const overlapCounts = this._overlapCounts(this._triggers);
+    const overlapSeen = new Map<string, number>();
 
     for (const trigger of this._triggers) {
+      const key = this._boundsKey(trigger.bounds);
+      const count = overlapCounts.get(key) ?? 1;
+      const index = overlapSeen.get(key) ?? 0;
+      overlapSeen.set(key, index + 1);
+      const displayBounds = this._splitBounds(trigger.bounds, index, count);
       const bounds: L.LatLngBoundsExpression = [
-        this._pixelToLatLng(trigger.bounds[0]),
-        this._pixelToLatLng(trigger.bounds[1]),
+        this._pixelToLatLng(displayBounds[0]),
+        this._pixelToLatLng(displayBounds[1]),
       ];
 
       const rect: TriggerRectangle = L.rectangle(bounds, { ...this._defaultStyle });
@@ -124,6 +132,34 @@ export class TriggerLayer {
    */
   private _pixelToLatLng([x, y]: [number, number]): L.LatLngTuple {
     return [-y, x];
+  }
+
+  private _boundsKey(bounds: TriggerDef['bounds']): string {
+    return `${bounds[0][0]},${bounds[0][1]},${bounds[1][0]},${bounds[1][1]}`;
+  }
+
+  private _overlapCounts(triggers: TriggerDef[]): Map<string, number> {
+    const counts = new Map<string, number>();
+    for (const trigger of triggers) {
+      const key = this._boundsKey(trigger.bounds);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return counts;
+  }
+
+  private _splitBounds(bounds: TriggerDef['bounds'], index: number, count: number): TriggerDef['bounds'] {
+    if (count <= 1) return bounds;
+    const [[x1, y1], [x2, y2]] = bounds;
+    const w = x2 - x1;
+    const h = y2 - y1;
+    if (w >= h) {
+      const a = x1 + (w * index) / count;
+      const b = x1 + (w * (index + 1)) / count;
+      return [[a, y1], [b, y2]];
+    }
+    const a = y1 + (h * index) / count;
+    const b = y1 + (h * (index + 1)) / count;
+    return [[x1, a], [x2, b]];
   }
 
   /** Update tooltip labels (e.g. after language change). */
@@ -175,21 +211,28 @@ export class TriggerLayer {
   /** Show the hover preview of a trigger's target map: thumbnail + name + chest list. */
   private _showPreview(trigger: TriggerDef): void {
     if (!this._previewEl || !trigger.target) return;
+    const isReturn = trigger.kind === 'return' || trigger.target === '__return__';
     const info = this._targetResolver ? this._targetResolver(trigger.target) : null;
 
     const img = this._previewEl.querySelector('.trigger-preview-img') as HTMLImageElement | null;
     const name = this._previewEl.querySelector('.trigger-preview-name') as HTMLElement | null;
     const listEl = this._previewEl.querySelector('.trigger-preview-list') as HTMLElement | null;
 
-    const url = info?.image ?? null;
+    const url = isReturn ? null : info?.image ?? null;
     if (img) {
       img.src = url ?? '';
       img.style.display = url ? 'block' : 'none';
     }
     if (name) {
-      name.textContent = info?.name ?? trigger.target;
+      name.textContent = isReturn ? this._resolveLabel(trigger) : info?.name ?? trigger.target;
     }
     if (listEl) {
+      if (isReturn) {
+        listEl.innerHTML = '';
+        listEl.style.display = 'none';
+        this._previewEl.style.display = 'block';
+        return;
+      }
       const tileSize = info?.tileSize ?? 16;
       const chests = (info?.pois ?? []).filter((p) => p.kind === 'treasure' || p.kind === 'gold');
       listEl.innerHTML = chests
@@ -199,7 +242,7 @@ export class TriggerLayer {
           const marked = info?.marked?.has(p.id) ?? false;
           return (
             `<div class="trigger-preview-row${marked ? ' marked' : ''}">` +
-            `<span class="trigger-preview-item">${marked ? '✓' : `${i + 1}.`} ${escapeHtml(this._chestName(p))}</span>` +
+            `<span class="trigger-preview-item">${marked ? '✓' : `${i + 1}.`} ${escapeHtml(poiItemName(p))}</span>` +
             `<span class="trigger-preview-coord">${tx},${ty}</span>` +
             `</div>`
           );
@@ -208,14 +251,6 @@ export class TriggerLayer {
       listEl.style.display = chests.length ? 'block' : 'none';
     }
     this._previewEl.style.display = 'block';
-  }
-
-  /** Chest item name without the "宝箱 · " prefix, for a compact row. */
-  private _chestName(poi: PoiDef): string {
-    const full = poi.label ? i18n.localize(poi.label) : '';
-    const sep = full.indexOf('·');
-    if (sep >= 0) return full.slice(sep + 1).trim();
-    return full || poi.item || '?';
   }
 
   private _hidePreview(): void {

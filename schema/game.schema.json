@@ -151,7 +151,31 @@
         "target": {
           "type": "string",
           "minLength": 1,
-          "description": "Key of the destination map within this same game's `maps`. Must reference an existing map (referential integrity is not expressible in JSON Schema — validate separately)."
+          "description": "Key of the destination map within this same game's `maps`, or __return__ for a return-stack exit."
+        },
+        "kind": {
+          "type": "string",
+          "description": "Optional trigger semantics, e.g. door, exit, or return."
+        },
+        "returnTargets": {
+          "type": "array",
+          "description": "Candidate source maps for a return-stack exit when no navigation context exists.",
+          "items": { "$ref": "#/$defs/returnTarget" }
+        },
+        "label": { "$ref": "#/$defs/localizedString" }
+      }
+    },
+    "returnTarget": {
+      "type": "object",
+      "required": ["target"],
+      "additionalProperties": false,
+      "properties": {
+        "target": { "type": "string", "minLength": 1 },
+        "focus": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
         },
         "label": { "$ref": "#/$defs/localizedString" }
       }
@@ -188,7 +212,12 @@
         "itemIcon": {
           "type": "string",
           "minLength": 1,
-          "description": "Optional item mini-icon path (relative to the game's res dir), typically the ROM's bag icon. Shown in the tooltip, treasure panel and checklist — not as a map marker."
+          "description": "Optional item mini-icon: relative image path for ROM bag icons, or emoji:<glyph> when no item icon graphics exist. Shown in the tooltip, treasure panel and checklist — not as a map marker."
+        },
+        "items": {
+          "type": "array",
+          "description": "Explicit contents for a POI that yields multiple items. Each item can carry its own name, raw id, and mini-icon.",
+          "items": { "$ref": "#/$defs/poiItem" }
         },
         "hidden": {
           "type": "boolean",
@@ -202,6 +231,20 @@
         "reward": {
           "$ref": "#/$defs/localizedString",
           "description": "Optional defeat reward (prize money, spoils…), pre-formatted (e.g. \"¥624\"). Shown dimmed in the party-card header."
+        }
+      }
+    },
+    "poiItem": {
+      "type": "object",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "$ref": "#/$defs/localizedString" },
+        "item": { "type": "string", "description": "Optional item id/hex for this contained item." },
+        "itemIcon": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Optional item mini-icon for this contained item: image path or emoji:<glyph>."
         }
       }
     },

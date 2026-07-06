@@ -11,12 +11,25 @@ export interface LocalizedString {
 }
 
 /** A single trigger zone on a map */
+export interface ReturnTargetDef {
+  /** Candidate source map for a return-stack exit. */
+  target: string;
+  /** Optional pixel focus on the candidate source map. */
+  focus?: [number, number];
+  /** Optional display label for chooser/fallback UI. */
+  label?: LocalizedString;
+}
+
 export interface TriggerDef {
   id: string;
   /** Pixel bounds: [[x1, y1], [x2, y2]] */
   bounds: [[number, number], [number, number]];
-  /** Target map ID within the same game */
+  /** Target map ID within the same game, or "__return__" for return-stack exits. */
   target: string;
+  /** Trigger semantics. `return` means go back to the source map that entered here. */
+  kind?: string;
+  /** Candidate source maps for `kind: "return"` fallback when no nav context exists. */
+  returnTargets?: ReturnTargetDef[];
   /** Display label */
   label: LocalizedString;
 }
@@ -37,6 +50,15 @@ export interface PartyMemberDef {
   icon?: string;
 }
 
+/** One item contained in a multi-reward POI, e.g. a chest with several rewards. */
+export interface PoiItemDef {
+  name: LocalizedString;
+  /** Optional item id/hex for this contained item. */
+  item?: string;
+  /** Same format as `PoiDef.itemIcon`: image path or `emoji:<glyph>`. */
+  itemIcon?: string;
+}
+
 /** A point of interest on a map (e.g. a treasure chest) */
 export interface PoiDef {
   id: string;
@@ -52,9 +74,12 @@ export interface PoiDef {
    *  When set, the POI renders as this sprite instead of a glyph — on every
    *  map, not just the overworld (e.g. trainer NPC sprites). */
   icon?: string;
-  /** Optional item mini-icon (bag icon) shown in the tooltip, treasure panel
-   *  and checklist — NOT on the map (chests keep their baked-in sprite). */
+  /** Optional item mini-icon shown in the tooltip, treasure panel and checklist.
+   *  Use a relative image path for ROM bag icons, or `emoji:<glyph>` when a
+   *  game has no item icon graphics. NOT shown as a map marker. */
   itemIcon?: string;
+  /** Optional explicit contents list for a POI that yields multiple items. */
+  items?: PoiItemDef[];
   /** Native pixel size [w, h] of `icon` (defaults to [16, 32]). */
   iconSize?: [number, number];
   /**

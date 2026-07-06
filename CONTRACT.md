@@ -102,7 +102,9 @@ map_viewer/
 | `maps[*].floor` | Floor number within `floorGroup`: `1` = ground, negative = basement (`-1` renders B1F). Drives switcher order (top floor first) and labels. |
 | `triggers[*].id` | Unique **within its map**. Convention `{mapId}_t{NN}`. |
 | `triggers[*].bounds` | `[[x1,y1],[x2,y2]]` in **full-resolution image pixels**, origin top-left. 1 tile = `tileSize` px. |
-| `triggers[*].target` | **Must be an existing key** in this game's `maps`. Dangling targets should be dropped by the producer. |
+| `triggers[*].target` | Usually an existing key in this game's `maps`. For return-stack exits, use `"__return__"` with `kind: "return"`; the viewer then returns to the previous map in the navigation stack. Dangling normal targets should be dropped by the producer. |
+| `triggers[*].kind` | Optional trigger semantics. `"return"` means this is a context-sensitive exit from a reused scene; click returns to the map that entered it instead of a fixed target. |
+| `triggers[*].returnTargets` | Optional candidate source maps for `kind: "return"`, used for validation and fallback when a reused scene is opened directly with no navigation context. Each entry has `target` plus optional `focus`. |
 
 ### Coordinate system (important)
 
@@ -136,7 +138,8 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].kind` | `treasure` and `gold` get chest UI (list, marks); other kinds render as a generic pin. Game-specific kinds should ship display metadata via top-level `poiKinds` (below). |
 | `pois[*].pos` | `[x, y]` in full-res image pixels, top-left corner of the tile. |
 | `pois[*].icon` | Optional image path relative to `res/{gameId}/`. When present the POI renders as that sprite on every map (anchored feet-on-tile) instead of a glyph/hover zone. |
-| `pois[*].itemIcon` | Optional item mini-icon (the ROM's bag icon, typically 24×24), relative to `res/{gameId}/`. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
+| `pois[*].itemIcon` | Optional item mini-icon. Use a relative image path for ROM bag icons (typically 24×24), or `emoji:<glyph>` when the game has no item icon graphics. Shown in the chest tooltip, the treasure panel and the checklist — **not** as a map marker (visible chests keep their baked-in sprite). |
+| `pois[*].items` | Optional explicit contents list for one POI that yields multiple items. Each entry has `name` plus optional `item` and `itemIcon`; hover, search, treasure panel and checklist render the contained items instead of hiding duplicates behind overlapping POIs. Keep `label` as a compact joined fallback/title. |
 | `pois[*].hidden` | Set `true` ONLY when the collectible has **no visible sprite in the rendered map image** (buried items, Itemfinder-style hidden items). The viewer draws an attention glyph (⭐/💰) for hidden chests; visible chests get just an invisible hover/click zone — their baked-in sprite is the marker. Default `false`. |
 | `pois[*].party` | Optional structured battle party — **game-agnostic**: a trainer's Pokémon, an enemy general's army, a boss group. When present the viewer renders the tooltip as an icon·name·badge card instead of plain text (so keep `label` a **short title**, don't concatenate the party into it), and the POI becomes user-markable (defeated ✓) regardless of its `kind`. |
 | `pois[*].reward` | Optional localized, pre-formatted defeat reward (prize money, spoils — e.g. `{ "en": "¥624" }`). Shown dimmed in the party-card header. |

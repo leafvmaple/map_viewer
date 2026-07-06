@@ -57,6 +57,12 @@ export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): P
       }
     }
     if (poi.item) haystack.push(poi.item);
+    for (const item of poi.items ?? []) {
+      if (item.item) haystack.push(item.item);
+      for (const value of Object.values(item.name)) {
+        if (value) haystack.push(value);
+      }
+    }
     for (const member of poi.party ?? []) {
       for (const value of Object.values(member.name)) {
         if (value) haystack.push(value);
@@ -75,6 +81,9 @@ export function searchPois(index: PoiIndexEntry[], query: string, limit = 20): P
  * "宝箱 · " kind prefix (falls back to the raw item id).
  */
 export function poiItemName(poi: PoiDef): string {
+  if ((poi.items?.length ?? 0) > 1) {
+    return poi.items!.map(item => i18n.localize(item.name)).join(' / ');
+  }
   const full = poi.label ? i18n.localize(poi.label) : '';
   const sep = full.indexOf('·');
   if (sep >= 0) return full.slice(sep + 1).trim();
