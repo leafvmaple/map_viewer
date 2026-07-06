@@ -94,8 +94,8 @@ const buildingProto = new Map<number, Promise<THREE.Object3D | null>>();
 function loadBuilding(model: number): Promise<THREE.Object3D | null> {
   let p = buildingProto.get(model);
   if (!p) {
-    const name = `b${String(model).padStart(3, '0')}.glb`;
-    p = loader.loadAsync(BASE + 'build/' + name)
+    const stem = `b${String(model).padStart(3, '0')}`;
+    p = loader.loadAsync(`${BASE}build/${stem}/${stem}.glb`)
       .then((g) => {
         toUnlit(g.scene);
         // Some building models carry NaN vertices (also seen in the 2D
@@ -107,7 +107,7 @@ function loadBuilding(model: number): Promise<THREE.Object3D | null> {
         });
         return g.scene;
       })
-      .catch((e) => { console.warn('[building]', name, e?.message ?? e); return null; });
+      .catch((e) => { console.warn('[building]', stem, e?.message ?? e); return null; });
     buildingProto.set(model, p);
   }
   return p;
@@ -122,11 +122,11 @@ let loadedCount = 0;
 async function loadCell(cell: Cell): Promise<void> {
   if (cell.loading || cell.group) return;
   cell.loading = true;
-  const name = `m${String(cell.land).padStart(3, '0')}.glb`;
+  const stem = `m${String(cell.land).padStart(3, '0')}`;
   const group = new THREE.Group();
   group.position.set(cell.cx * CHUNK + CHUNK / 2, 0, cell.cy * CHUNK + CHUNK / 2);
   try {
-    const g = await loader.loadAsync(BASE + 'land/' + name);
+    const g = await loader.loadAsync(`${BASE}land/${stem}/${stem}.glb`);
     toUnlit(g.scene);
     group.add(g.scene);
     const placements = manifest.buildings[String(cell.land)] ?? [];
@@ -144,7 +144,7 @@ async function loadCell(cell: Cell): Promise<void> {
     cell.group = group;
     loadedCount++;
   } catch (e) {
-    console.warn('[chunk]', name, (e as Error)?.message ?? e);
+    console.warn('[chunk]', stem, (e as Error)?.message ?? e);
   } finally {
     cell.loading = false;
   }
