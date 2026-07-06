@@ -1,6 +1,6 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
-import type { LocalizedString, MapListItem, RegistryEntry } from '../types';
+import type { LocalizedString, MapJumpDef, MapListItem, RegistryEntry } from '../types';
 
 interface SidebarOptions {
   onGameSelect: (gameId: string) => void;
@@ -8,6 +8,7 @@ interface SidebarOptions {
   onToggle: (collapsed: boolean) => void;
   onMapRename: (mapId: string, name: LocalizedString) => void;
   onMapAdd: (mapId: string, name: LocalizedString, imagePath: string) => void;
+  onJumpSelect?: (target: string) => void | Promise<void>;
   /** A POI search result was clicked: jump to it on its map. */
   onPoiSelect?: (mapId: string, poiId: string) => void;
 }
@@ -36,12 +37,14 @@ export class Sidebar {
   private _addMapBtn!: HTMLButtonElement;
   private _addMapDialog!: HTMLElement;
   private _mapItems: MapListItem[] = [];
+  private _jumpItems: MapJumpDef[] = [];
   private _currentMapId: string | null = null;
   /** Set of map IDs that already exist (for duplicate check in add dialog). */
   private _existingMapIds = new Set<string>();
   /** Game-wide item search (provided by main once the game is loaded). */
   private _poiSearcher: ((query: string) => PoiSearchRow[]) | null = null;
   private _poiResultsEl!: HTMLElement;
+  private _jumpListEl!: HTMLElement;
 
   constructor(container: HTMLElement, options: SidebarOptions) {
     this._el = container;
@@ -67,6 +70,7 @@ export class Sidebar {
         </div>
         <div class="sidebar-add-map-dialog" style="display:none;"></div>
         <div class="sidebar-poi-results" style="display:none;"></div>
+        <div class="sidebar-jump-list" style="display:none;"></div>
         <div class="sidebar-map-list"></div>
       </div>
     `;
@@ -78,12 +82,17 @@ export class Sidebar {
     this._addMapBtn = this._el.querySelector('.sidebar-add-map-btn')!;
     this._addMapDialog = this._el.querySelector('.sidebar-add-map-dialog')!;
     this._poiResultsEl = this._el.querySelector('.sidebar-poi-results')!;
+    this._jumpListEl = this._el.querySelector('.sidebar-jump-list')!;
 
     this._poiResultsEl.addEventListener('click', (e) => {
       const row = (e.target as HTMLElement).closest<HTMLElement>('.poi-result');
       if (row?.dataset.mapId && row.dataset.poiId) {
         this._options.onPoiSelect?.(row.dataset.mapId, row.dataset.poiId);
       }
+    });
+    this._jumpListEl.addEventListener('click', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.jump-result');
+      if (row?.dataset.target) void this._options.onJumpSelect?.(row.dataset.target);
     });
 
     this._toggleBtn.addEventListener('click', () => this.toggle());
@@ -264,6 +273,12 @@ export class Sidebar {
     });
   }
 
+  /** Show the active map's non-spatial jump list. */
+  setJumps(jumps: MapJumpDef[]): void {
+    this._jumpItems = jumps;
+    this._renderJumpList();
+  }
+
   private _renderMapList(maps: MapListItem[]): void {
     // Clicks/dblclicks are handled by the delegated listeners bound in _render().
     this._mapListEl.innerHTML = maps
@@ -272,14 +287,40 @@ export class Sidebar {
         const triggerBadge = m.hasTriggers
           ? '<span class="map-badge trigger-badge" title="Has triggers">⚡</span>'
           : '';
+        const jumpBadge = m.hasJumps
+          ? '<span class="map-badge jump-badge" title="Has jumps">↪</span>'
+          : '';
         const active = m.id === this._currentMapId ? 'active' : '';
         return `<div class="map-list-item ${active}" data-map-id="${escapeHtml(m.id)}">
           <span class="map-list-name" title="${i18n.t('sidebar.renameTip')}">${name}</span>
           <span class="map-list-id">${escapeHtml(m.id)}</span>
           ${triggerBadge}
+          ${jumpBadge}
         </div>`;
       })
       .join('');
+  }
+
+  private _renderJumpList(): void {
+    if (this._jumpItems.length === 0) {
+      this._jumpListEl.style.display = 'none';
+      this._jumpListEl.innerHTML = '';
+      return;
+    }
+    this._jumpListEl.innerHTML = `
+      <div class="sidebar-label">${i18n.t('sidebar.jumps')} (${this._jumpItems.length})</div>
+      ${this._jumpItems.map((j, idx) => {
+        const label = escapeHtml(i18n.localize(j.label) || j.target);
+        const kind = j.kind ? `<span class="jump-result-kind">${escapeHtml(j.kind)}</span>` : '';
+        return `<div class="jump-result" data-target="${escapeHtml(j.target)}" title="${escapeHtml(j.target)}">
+          <span class="jump-result-glyph">↪</span>
+          <span class="jump-result-name">${label}</span>
+          ${kind}
+          <span class="jump-result-index">${idx + 1}</span>
+        </div>`;
+      }).join('')}
+    `;
+    this._jumpListEl.style.display = 'block';
   }
 
   private _filterMaps(): void {
@@ -341,5 +382,6 @@ export class Sidebar {
     this._searchEl.placeholder = i18n.t('sidebar.searchPlaceholder');
     this._addMapBtn.title = i18n.t('sidebar.addMap');
     this._filterMaps(); // re-render map list AND item results in the new language
+    this._renderJumpList();
   }
 }

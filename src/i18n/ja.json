@@ -79,5 +79,6 @@
   "checklist.searchPlaceholder": "アイテム検索...",
   "checklist.hideCollected": "回収済みを隠す",
   "checklist.empty": "該当するアイテムなし",
-  "sidebar.itemResults": "アイテム"
+  "sidebar.itemResults": "アイテム",
+  "sidebar.jumps": "移動先"
 }

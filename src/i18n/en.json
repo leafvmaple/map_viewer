@@ -79,5 +79,6 @@
   "checklist.searchPlaceholder": "Search items...",
   "checklist.hideCollected": "Hide collected",
   "checklist.empty": "No matching items",
-  "sidebar.itemResults": "Items"
+  "sidebar.itemResults": "Items",
+  "sidebar.jumps": "Jumps"
 }

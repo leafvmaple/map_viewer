@@ -128,6 +128,11 @@
           "type": "array",
           "items": { "$ref": "#/$defs/trigger" }
         },
+        "jumps": {
+          "type": "array",
+          "description": "Non-spatial map jumps shown in the sidebar when exact trigger coordinates are unknown.",
+          "items": { "$ref": "#/$defs/jump" }
+        },
         "pois": {
           "type": "array",
           "description": "Points of interest (treasure chests, etc.) shown as icons.",
@@ -137,6 +142,29 @@
           "type": "array",
           "description": "Event-driven tile changes (e.g. a wall opening); each is a toggleable overlay.",
           "items": { "$ref": "#/$defs/event" }
+        }
+      }
+    },
+    "jump": {
+      "type": "object",
+      "description": "A map-to-map navigation item without a clickable spatial bounds rectangle.",
+      "required": ["target"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key of the destination map within this same game's `maps`."
+        },
+        "kind": { "type": "string", "description": "Optional jump semantics, e.g. warp, door, shortcut." },
+        "label": { "$ref": "#/$defs/localizedString" },
+        "focus": {
+          "type": "array",
+          "description": "Optional target pixel focus [x, y], full-resolution image space.",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" }
         }
       }
     },

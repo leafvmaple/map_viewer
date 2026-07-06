@@ -34,6 +34,20 @@ export interface TriggerDef {
   label: LocalizedString;
 }
 
+/** A non-spatial map jump shown in the sidebar. */
+export interface MapJumpDef {
+  /** Stable id within the source map when the producer can provide one. */
+  id?: string;
+  /** Target map ID within the same game. */
+  target: string;
+  /** Display label; falls back to the target map id. */
+  label?: LocalizedString;
+  /** Optional jump semantics, e.g. warp, door, shortcut. */
+  kind?: string;
+  /** Optional target pixel focus. */
+  focus?: [number, number];
+}
+
 /** One member of a POI's battle party — a trainer's Pokémon, an enemy
  *  general's army, a boss group… Rendered as an icon · name · badge row. */
 export interface PartyMemberDef {
@@ -134,6 +148,8 @@ export interface MapConfig {
   thumbnail?: string;
   /** Trigger definitions */
   triggers: TriggerDef[];
+  /** Non-spatial map jumps listed in the sidebar. */
+  jumps?: MapJumpDef[];
   /** Points of interest (treasure chests, etc.) */
   pois?: PoiDef[];
   /** Event-driven tile changes (e.g. a wall opening), toggled by the viewer. */
@@ -220,6 +236,7 @@ export interface MapListItem {
   id: string;
   name: LocalizedString;
   hasTriggers: boolean;
+  hasJumps?: boolean;
 }
 
 /** Supported language codes */

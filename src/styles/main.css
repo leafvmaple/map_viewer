@@ -172,6 +172,10 @@ html, body {
   color: #ffeb3b;
 }
 
+.jump-badge {
+  color: #8be9fd;
+}
+
 /* Sidebar Search Row with Add Button */
 
 .sidebar-search-row {
@@ -1396,6 +1400,44 @@ html, body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 45%;
+}
+
+/* ─── Sidebar non-spatial jumps ─────────────────────────────── */
+
+.sidebar-jump-list {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #0f3460;
+}
+
+.jump-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.jump-result:hover {
+  background: rgba(0, 229, 255, 0.10);
+}
+
+.jump-result-glyph,
+.jump-result-kind,
+.jump-result-index {
+  color: #667788;
+  font-size: 11px;
+}
+
+.jump-result-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #e0e6ed;
 }
 
 /* ─── Collection checklist drawer (right) ───────────────────── */

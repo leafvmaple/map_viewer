@@ -79,5 +79,6 @@
   "checklist.searchPlaceholder": "搜索物品...",
   "checklist.hideCollected": "隐藏已收集",
   "checklist.empty": "没有匹配的物品",
-  "sidebar.itemResults": "物品"
+  "sidebar.itemResults": "物品",
+  "sidebar.jumps": "跳转"
 }

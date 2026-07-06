@@ -87,6 +87,7 @@ async function init(): Promise<void> {
     onToggle: handleSidebarToggle,
     onMapRename: handleMapRename,
     onMapAdd: handleMapAdd,
+    onJumpSelect: handleJumpSelect,
     onPoiSelect: (mapId, poiId) => { void navigateToPoi(mapId, poiId); },
   });
   sidebar.setPoiSearcher((query) =>
@@ -373,6 +374,11 @@ async function handleMapSelect(mapId: string): Promise<void> {
   await navigateToMap(currentGameConfig.id, mapId);
 }
 
+async function handleJumpSelect(target: string): Promise<void> {
+  if (!currentGameConfig || !currentGameConfig.maps[target]) return;
+  await navigateToMap(currentGameConfig.id, target);
+}
+
 function handleTriggerClick(trigger: TriggerDef): void {
   if (triggerEditor.active) return; // Don't navigate in edit mode
   if (!currentGameConfig || !trigger.target) return;
@@ -426,6 +432,7 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
       eventPanel.setEvents(mapConfig.events ?? []);
+      sidebar.setJumps((mapConfig.jumps ?? []).filter(j => Boolean(currentGameConfig?.maps[j.target])));
       poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked, markedPois);
       floorSwitcher.setFloors(floorSiblings(currentGameConfig, mapId), mapId);
       reloadMarks();

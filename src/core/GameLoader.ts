@@ -55,6 +55,7 @@ export class GameLoader {
       id,
       name: map.name,
       hasTriggers: (map.triggers?.length ?? 0) > 0,
+      hasJumps: (map.jumps?.length ?? 0) > 0,
     }));
   }
 
@@ -106,6 +107,18 @@ export class GameLoader {
         }
         if (t?.target && !mapIds.has(t.target)) {
           warnings.push(`trigger "${t.id}" in "${mapId}" targets unknown map "${t.target}"`);
+        }
+      }
+      const jumps = map.jumps ?? [];
+      if (!Array.isArray(jumps)) {
+        warnings.push(`map "${mapId}" jumps is not an array`);
+        continue;
+      }
+      for (const j of jumps) {
+        if (!j?.target || typeof j.target !== 'string') {
+          warnings.push(`jump "${j?.id ?? '?'}" in "${mapId}" is missing target`);
+        } else if (!mapIds.has(j.target)) {
+          warnings.push(`jump "${j.id ?? '?'}" in "${mapId}" targets unknown map "${j.target}"`);
         }
       }
     }
