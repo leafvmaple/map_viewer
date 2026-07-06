@@ -423,6 +423,21 @@ export class MapViewer {
     }
   }
 
+  /** Pan to an event's tile region and briefly flash a highlight box around it,
+   *  so clicking its name in the panel reveals where on the map it applies. */
+  focusEvent(event: EventDef): void {
+    const [[x1, y1], [x2, y2]] = event.bounds;
+    this._map.panTo([-(y1 + y2) / 2, (x1 + x2) / 2]);
+    const flash = L.rectangle([[-y1, x1], [-y2, x2]], {
+      color: '#00e5ff',
+      weight: 2,
+      fill: false,
+      interactive: false,
+      className: 'event-flash',
+    }).addTo(this._map);
+    setTimeout(() => this._map.removeLayer(flash), 1600);
+  }
+
   /** Remove all active event overlays (e.g. when changing maps). */
   clearEventOverlays(): void {
     this._eventOverlays.forEach(ov => this._map.removeLayer(ov));

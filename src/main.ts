@@ -179,6 +179,7 @@ async function init(): Promise<void> {
 
   eventPanel = new EventPanel({
     onToggle: (event, active) => mapViewer.setEventOverlay(event, active),
+    onFocus: (event) => mapViewer.focusEvent(event),
   });
 
   userMenu = new UserMenu(document.getElementById('toolbar')!);

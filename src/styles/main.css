@@ -375,11 +375,11 @@ html, body {
   position: relative;
 }
 
-/* Pixel-perfect rendering for game maps */
+/* Pixel-perfect rendering for game maps. `pixelated` is supported by every
+   target browser (Chrome, Edge 79+, Firefox 93+, Safari) — no vendor-prefixed
+   fallbacks, which is what tripped the compatibleVendorPrefixes CSS lint. */
 .map-image.pixelated {
   image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
 }
 
 /* Coordinate display */
@@ -1242,7 +1242,6 @@ html, body {
   gap: 8px;
   padding: 5px 12px;
   font-size: 12px;
-  cursor: pointer;
   user-select: none;
 }
 
@@ -1253,10 +1252,33 @@ html, body {
 .event-item input {
   accent-color: #00e5ff;
   cursor: pointer;
+  flex: none;
 }
 
+/* Clickable name (jumps to the region) — distinct from the checkbox. */
 .event-name {
   flex: 1;
+  cursor: pointer;
+}
+
+.event-name:hover {
+  color: #00e5ff;
+  text-decoration: underline;
+}
+
+.event-name:focus-visible {
+  outline: 1px solid #00e5ff;
+  outline-offset: 1px;
+  border-radius: 2px;
+}
+
+/* Brief highlight box when a name is clicked. */
+.event-flash {
+  animation: eventFlash 0.5s ease-in-out 3;
+}
+
+@keyframes eventFlash {
+  50% { stroke-opacity: 0.2; }
 }
 
 .event-count {
