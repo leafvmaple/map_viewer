@@ -251,6 +251,19 @@ export class MapViewer {
     const { width, height } = mapConfig;
     const bounds: L.LatLngBoundsExpression = [[-height, 0], [0, width]];
 
+    // Blur-to-sharp loading (Google-Maps style): a low-res whole-map underlay
+    // paints instantly and shows through wherever tiles haven't arrived yet;
+    // tiles fade in sharp on top (same pane, higher zIndex). Smoothly scaled
+    // on purpose — a blurry ground reads as "loading", a pixelated one as
+    // wrong data. Reuses _imageOverlay, so _clearCurrentMap tears it down.
+    if (mapConfig.thumbnail) {
+      this._imageOverlay = L.imageOverlay(this._resolveImagePath!(mapConfig.thumbnail), bounds, {
+        className: 'map-image',
+        pane: 'tilePane',
+        zIndex: 0,
+      }).addTo(this._map);
+    }
+
     this._tileLayer = L.tileLayer(this._resolveImagePath!(mapConfig.tilesPath), {
       tileSize: 256,
       bounds,

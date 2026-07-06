@@ -217,6 +217,10 @@ producer **may** add, on any map:
   viewer behaves exactly as before (probes and paints the full image).
 - `thumbnail` only takes effect when `width` **and** `height` are also present
   (they define the bounds, letting the viewer skip probing the full image).
+- On `type: "tiles"` maps, `thumbnail` doubles as the **blur-to-sharp underlay**:
+  it paints instantly (smoothly scaled) and shows through wherever tiles haven't
+  loaded yet — Google-Maps-style. Producers should point it at the low-res
+  preview they already render.
 
 ## 4. Validating on the producer side
 
