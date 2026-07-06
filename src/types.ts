@@ -160,6 +160,17 @@ export interface PoiKindDef {
   glyph?: string;
 }
 
+/** Provenance stamp written by the producer at export time — identifies which
+ *  export (and which decoder iteration) the served data came from. */
+export interface ExportStamp {
+  /** ISO timestamp of the export. */
+  exportedAt: string;
+  /** Producing tool + its git sha, e.g. "nes_decoder@4b3941b". */
+  producer?: string;
+  /** Short hash of the source ROM, e.g. "sha1:9f2a01c4". */
+  rom?: string;
+}
+
 /** Full game configuration (game.json) */
 export interface GameConfig {
   id: string;
@@ -171,6 +182,8 @@ export interface GameConfig {
   /** Display metadata for this game's POI kinds — new kinds ship with their
    *  data instead of requiring viewer i18n/glyph updates. */
   poiKinds?: Record<string, PoiKindDef>;
+  /** Export provenance (shown in the build-identifier chip). */
+  export?: ExportStamp;
   /** Computed at runtime: base URL path for resolving relative image paths */
   _basePath?: string;
 }

@@ -92,6 +92,7 @@ map_viewer/
 | --- | --- |
 | `id` | `^[a-z0-9_]+$`; equals the folder name and the registry `id`. |
 | `version` | Optional integer (currently `1`): the contract version the file was produced against, so a future breaking change can be detected instead of silently misread. |
+| `export` | Provenance stamp, written **automatically** at export time (don't hand-author): `{ "exportedAt": ISO-timestamp, "producer": "nes_decoder@<git sha>", "rom": "sha1:<short>" }` — only `exportedAt` required. The viewer shows it in the bottom-right build chip (`v1.1.0 · 07-06 ⏐ data 07-06`), answering "is this deployment serving the fresh export?". Producers should also stamp `exportedAt` on their registry.json entry so one fetch shows every game's freshness. |
 | `name`, `label` | **Localized string**: object keyed by language code (`en`/`zh`/`ja`/…), ≥1 entry. `en` is the fallback. |
 | `defaultMap` | Must be a key in `maps`. It is the nav root — returning to it clears the back-stack. |
 | `maps[*].type` | `"image"` (single PNG) or `"tiles"` (pre-generated tile pyramid; requires `tilesPath` + `width`/`height`, else falls back to image mode). |

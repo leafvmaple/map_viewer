@@ -30,6 +30,27 @@
       "propertyNames": { "pattern": "^[A-Za-z0-9_]+$" },
       "additionalProperties": { "$ref": "#/$defs/map" }
     },
+    "export": {
+      "type": "object",
+      "description": "Provenance stamp written automatically at export time — identifies which export (and which decoder iteration) produced this data. Shown in the viewer's build-identifier chip.",
+      "required": ["exportedAt"],
+      "additionalProperties": false,
+      "properties": {
+        "exportedAt": {
+          "type": "string",
+          "minLength": 1,
+          "description": "ISO 8601 timestamp of the export."
+        },
+        "producer": {
+          "type": "string",
+          "description": "Producing tool + its git sha, e.g. \"nes_decoder@4b3941b\"."
+        },
+        "rom": {
+          "type": "string",
+          "description": "Short hash of the source ROM, e.g. \"sha1:9f2a01c4\"."
+        }
+      }
+    },
     "poiKinds": {
       "type": "object",
       "description": "Optional display metadata for this game's POI kinds — legend name + glyph ship with the data, so new kinds need no viewer update. Kinds absent here fall back to the viewer's built-ins.",

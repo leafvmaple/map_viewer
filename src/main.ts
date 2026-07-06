@@ -48,6 +48,7 @@ let userMenu: UserMenu;           // profile switcher (toolbar)
 let poiFilter: PoiFilter;         // POI category legend (bottom-left)
 let checklist: Checklist;         // game-wide collectible drawer (right)
 let floorSwitcher: FloorSwitcher; // building floor pills (top-left)
+let versionEl: HTMLDivElement | null = null; // build/data identifier chip (bottom-right)
 
 /** Current game's marked ("collected") POI ids for the CURRENT user. */
 let markedPois = new Set<string>();
@@ -161,13 +162,13 @@ async function init(): Promise<void> {
     },
   });
 
-  // Build identifier (bottom-right): version + build date, full timestamp on
-  // hover — tells at a glance which image a deployment is running.
-  const versionEl = document.createElement('div');
+  // Build identifier (bottom-right): app version + build date, and — once a
+  // game is loaded — that game's export stamp. Together they answer "is this
+  // deployment running the new image AND the fresh data?" at a glance.
+  versionEl = document.createElement('div');
   versionEl.className = 'app-version';
-  versionEl.textContent = `v${__APP_VERSION__} · ${__BUILD_DATE__.slice(0, 10)}`;
-  versionEl.title = `build ${__BUILD_DATE__}`;
   document.getElementById('map')?.appendChild(versionEl);
+  updateVersionChip();
 
   poiFilter = new PoiFilter({
     onChange: (hidden) => {
@@ -314,6 +315,7 @@ async function handleGameSelect(
     // Game-provided POI-kind names/glyphs (legend + checklist).
     poiFilter.setKindMeta(currentGameConfig.poiKinds);
     checklist.setKindMeta(currentGameConfig.poiKinds);
+    updateVersionChip(); // reflect this game's export stamp
 
     // Configure editor and breadcrumb
     triggerEditor.setGameConfig(currentGameConfig);
@@ -335,6 +337,22 @@ async function handleGameSelect(
 function resolveMapName(mapId: string): string {
   const mapConfig = currentGameConfig?.maps[mapId];
   return mapConfig ? i18n.localize(mapConfig.name) || mapId : mapId;
+}
+
+/** Compose the build-identifier chip: app version/build date, plus the current
+ *  game's export stamp (when its producer wrote one) — full detail on hover. */
+function updateVersionChip(): void {
+  if (!versionEl) return;
+  const build = `v${__APP_VERSION__} · ${__BUILD_DATE__.slice(0, 10)}`;
+  const stamp = currentGameConfig?.export;
+  versionEl.textContent = stamp ? `${build} ⏐ data ${stamp.exportedAt.slice(0, 10)}` : build;
+  const detail = [`build ${__BUILD_DATE__}`];
+  if (stamp) {
+    detail.push(`data ${stamp.exportedAt}`);
+    if (stamp.producer) detail.push(stamp.producer);
+    if (stamp.rom) detail.push(`rom ${stamp.rom}`);
+  }
+  versionEl.title = detail.join('\n');
 }
 
 /** Sync the sidebar's game dropdown: localized names + the active selection.

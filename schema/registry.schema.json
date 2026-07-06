@@ -30,6 +30,10 @@
             "description": "Localized game name (same shape as game.json `name`). Lets the game picker label every game without fetching each game.json up front.",
             "minProperties": 1,
             "additionalProperties": { "type": "string" }
+          },
+          "exportedAt": {
+            "type": "string",
+            "description": "ISO timestamp of this game's latest export — lets one registry fetch show every game's data freshness."
           }
         }
       }
