@@ -152,11 +152,11 @@ export class PoiLayer {
     const needsGlyph = poi.hidden || !CHEST_KINDS.has(poi.kind);
     let renderedAsZone = false;
 
-    const markerIcon = battle.icon ?? species?.icon;
+    const markerIcon = poi.icon ?? battle.icon ?? species?.icon;
     if (markerIcon && this._resolveIcon) {
       // Sprite marker (e.g. a trainer's NPC sprite) — shown on every map,
       // anchored so the sprite's feet stand on its tile.
-      const [w, h] = battle.iconSize ?? species?.iconSize ?? [16, 32];
+      const [w, h] = poi.iconSize ?? battle.iconSize ?? species?.iconSize ?? [16, 32];
       const icon = L.divIcon({
         className: `poi-marker poi-${poi.kind}${isMarked ? ' poi-marked' : ''}`,
         html: `<img class="poi-sprite" src="${this._resolveIcon(markerIcon)}" width="${w}" height="${h}" alt="">`,
