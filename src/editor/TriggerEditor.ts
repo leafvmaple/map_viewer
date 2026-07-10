@@ -603,7 +603,9 @@ export class TriggerEditor {
       const labelJa = (formArea.querySelector('[data-field="label_ja"]') as HTMLInputElement).value;
 
       this._pushUndo();
+      const previousTarget = trigger.target;
       trigger.target = targetSelect.value;
+      if (trigger.target !== previousTarget) delete trigger.focus;
       trigger.label = { en: labelEn, zh: labelZh, ja: labelJa };
 
       this._renderEditTriggers();

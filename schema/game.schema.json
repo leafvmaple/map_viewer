@@ -225,6 +225,13 @@
           "description": "Candidate source maps for a return-stack exit when no navigation context exists.",
           "items": { "$ref": "#/$defs/returnTarget" }
         },
+        "focus": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "number" },
+          "description": "Optional target pixel focus [x, y], full-resolution image space."
+        },
         "label": { "$ref": "#/$defs/localizedString" }
       }
     },

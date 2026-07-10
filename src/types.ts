@@ -30,6 +30,8 @@ export interface TriggerDef {
   kind?: string;
   /** Candidate source maps for `kind: "return"` fallback when no nav context exists. */
   returnTargets?: ReturnTargetDef[];
+  /** Optional pixel focus on the target map. */
+  focus?: [number, number];
   /** Display label */
   label: LocalizedString;
 }

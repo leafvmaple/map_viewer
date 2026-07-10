@@ -119,6 +119,7 @@ map_viewer/
 | `triggers[*].target` | Usually an existing key in this game's `maps`. For return-stack exits, use `"__return__"` with `kind: "return"`; the viewer then returns to the previous map in the navigation stack. Dangling normal targets should be dropped by the producer. |
 | `triggers[*].kind` | Optional trigger semantics. `"return"` means this is a context-sensitive exit from a reused scene; click returns to the map that entered it instead of a fixed target. |
 | `triggers[*].returnTargets` | Optional candidate source maps for `kind: "return"`, used for validation and fallback when a reused scene is opened directly with no navigation context. Each entry has `target` plus optional `focus`. |
+| `triggers[*].focus` | Optional `[x,y]` pixel focus on the target map. Applied after cross-map navigation and directly for same-map doors/teleports. |
 
 ### Coordinate system (important)
 

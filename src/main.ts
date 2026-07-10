@@ -428,7 +428,22 @@ function handleTriggerClick(trigger: TriggerDef): void {
     void handleReturnTrigger(trigger);
     return;
   }
-  void navigateToMap(currentGameConfig.id, trigger.target);
+  void navigateToTriggerTarget(trigger.target, trigger.focus);
+}
+
+/** Navigate through a trigger and apply its arrival point after the target map
+ * has established its image bounds/zoom. Same-map doors only move the camera:
+ * reloading would lose the arrival focus and create misleading history. */
+async function navigateToTriggerTarget(target: string, focus?: [number, number]): Promise<void> {
+  if (!currentGameConfig || !currentGameConfig.maps[target]) return;
+  currentPoiAnchor = null;
+  if (target !== mapViewer.currentMapId) {
+    await navigateToMap(currentGameConfig.id, target);
+  }
+  if (focus && mapViewer.currentMapId === target) {
+    mapViewer.focusPixel(focus);
+    updateHash();
+  }
 }
 
 async function handleReturnTrigger(trigger: TriggerDef): Promise<void> {
@@ -441,7 +456,7 @@ async function handleReturnTrigger(trigger: TriggerDef): Promise<void> {
     return;
   }
   if (candidates.length === 1 && currentGameConfig.maps[candidates[0].target]) {
-    await navigateToMap(currentGameConfig.id, candidates[0].target);
+    await navigateToTriggerTarget(candidates[0].target, candidates[0].focus);
     return;
   }
   const names = candidates.map(rt => resolveMapName(rt.target)).join(' / ');

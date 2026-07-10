@@ -438,6 +438,11 @@ export class MapViewer {
     setTimeout(() => this._map.removeLayer(flash), 1600);
   }
 
+  /** Pan to a full-resolution target pixel without changing the current zoom. */
+  focusPixel([x, y]: [number, number]): void {
+    this._map.panTo([-y, x], { animate: false });
+  }
+
   /** Remove all active event overlays (e.g. when changing maps). */
   clearEventOverlays(): void {
     this._eventOverlays.forEach(ov => this._map.removeLayer(ov));
