@@ -100,6 +100,24 @@ test.describe('viewer basics', () => {
     ).toBe(target);
   });
 
+  test('doors extend the breadcrumb; sidebar map-select resets it (teleport, not a door)', async ({ page }) => {
+    await openApp(page);
+    await expect(page.locator('.breadcrumb-item')).toHaveCount(1); // world map is the root
+
+    // A door pushes a level onto the back-stack.
+    const box = await page.locator('#map path.leaflet-interactive:not(.poi-hover)').first().boundingBox();
+    test.skip(!box, 'world map needs a clickable door');
+    await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await expect(page.locator('.breadcrumb-item')).toHaveCount(2);
+    await expect(page.locator('.btn-back')).toBeEnabled();
+
+    // Picking a map from the sidebar list is a jump — it starts a fresh path,
+    // it does not keep pushing onto the door-entry breadcrumb.
+    await page.locator('.map-list-item:not(.active)').first().click();
+    await expect(page.locator('.breadcrumb-item')).toHaveCount(1);
+    await expect(page.locator('.btn-back')).toBeDisabled();
+  });
+
   test('trigger hover previews the target map; click navigates; back restores the view', async ({ page }) => {
     await openApp(page);
     const worldHash = await page.evaluate(() => location.hash);

@@ -413,7 +413,9 @@ function refreshGameNames(currentGameId: string): void {
 
 async function handleMapSelect(mapId: string): Promise<void> {
   if (!currentGameConfig) return;
-  await navigateToMap(currentGameConfig.id, mapId);
+  // Picking a map from the sidebar list is a direct jump, not a door: start a
+  // fresh path instead of pushing onto the door-entry back-stack.
+  await navigateToMap(currentGameConfig.id, mapId, undefined, true, true);
 }
 
 async function handleJumpSelect(target: string): Promise<void> {
@@ -747,12 +749,15 @@ async function navigateToMap(
   mapId: string,
   viewState?: ViewState,
   pushHistory = true,
+  resetStack = false,
 ): Promise<void> {
   saveCurrentView(); // remember where we were on the map we're leaving
   currentPoiAnchor = null; // plain navigation drops any POI anchor
 
-  // World map is always the root — reset stack when navigating back to it
-  if (currentGameConfig && mapId === currentGameConfig.defaultMap) {
+  // Reset the back-stack when this isn't a door step: navigating to the world
+  // map (the root), or a direct jump from the sidebar map list (a teleport, not
+  // a door). Only door/trigger navigation extends the breadcrumb path.
+  if (resetStack || (currentGameConfig && mapId === currentGameConfig.defaultMap)) {
     navStack.clear();
   }
   navStack.push(gameId, mapId);
