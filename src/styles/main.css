@@ -1497,6 +1497,18 @@ html, body {
   white-space: nowrap;
 }
 
+.user-menu-save {
+  padding-top: 8px;
+  border-top: 1px solid #0f3460;
+  margin-bottom: 8px;
+}
+
+.user-menu-save .btn {
+  width: 100%;
+  padding: 6px 4px;
+  font-size: 12px;
+}
+
 /* ─── Collected (marked) POIs ───────────────────────────────── */
 
 /* Overworld glyph markers: dim + desaturate when collected. */

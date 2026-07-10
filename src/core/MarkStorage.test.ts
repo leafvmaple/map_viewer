@@ -40,4 +40,20 @@ describe('MarkStorage', () => {
     userStore.switchTo(first);
     expect(MarkStorage.markedIds('g1')).toEqual(new Set(['a']));
   });
+
+  it('replaceGame overwrites all marks for a game in one write', async () => {
+    const { MarkStorage } = await fresh();
+    MarkStorage.toggle('g1', 'old');
+    const n = MarkStorage.replaceGame('g1', ['a', 'b', 'c']);
+    expect(n).toBe(3);
+    expect(MarkStorage.markedIds('g1')).toEqual(new Set(['a', 'b', 'c'])); // 'old' gone
+    expect(MarkStorage.load('g1')['a']).toMatchObject({ state: 'collected' });
+  });
+
+  it('replaceGame does not touch other games', async () => {
+    const { MarkStorage } = await fresh();
+    MarkStorage.toggle('g2', 'keep');
+    MarkStorage.replaceGame('g1', ['a']);
+    expect(MarkStorage.markedIds('g2')).toEqual(new Set(['keep']));
+  });
 });

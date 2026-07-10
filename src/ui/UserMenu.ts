@@ -9,14 +9,23 @@ import { userStore } from '../core/UserStore.js';
  * double-click to rename inline), lets you create one by typing a name, and
  * exposes export / import / delete for the current profile.
  */
+export interface UserMenuOptions {
+  /** Import a battery save file into a new profile (orchestrated by main.ts,
+   *  which has the current game + mark-refresh plumbing). */
+  onImportSave?: (file: File) => void | Promise<void>;
+}
+
 export class UserMenu {
   private _el: HTMLElement;
   private _btn!: HTMLButtonElement;
   private _panel!: HTMLElement;
   private _fileInput!: HTMLInputElement;
+  private _saveInput!: HTMLInputElement;
   private _open = false;
+  private _opts: UserMenuOptions;
 
-  constructor(container: HTMLElement) {
+  constructor(container: HTMLElement, opts: UserMenuOptions = {}) {
+    this._opts = opts;
     this._el = document.createElement('div');
     this._el.className = 'user-menu';
     container.appendChild(this._el);
@@ -40,17 +49,22 @@ export class UserMenu {
           <input class="user-menu-input" type="text" placeholder="${i18n.t('user.newPlaceholder')}" maxlength="24" />
           <button class="btn user-menu-add">${i18n.t('user.add')}</button>
         </div>
+        <div class="user-menu-save">
+          <button class="btn user-menu-import-save" title="${i18n.t('save.importTip')}">${i18n.t('save.import')}</button>
+        </div>
         <div class="user-menu-actions">
           <button class="btn user-menu-export">${i18n.t('user.export')}</button>
           <button class="btn user-menu-import">${i18n.t('user.import')}</button>
           <button class="btn btn-danger user-menu-delete">${i18n.t('user.delete')}</button>
         </div>
         <input class="user-menu-file" type="file" accept="application/json,.json" style="display:none;" />
+        <input class="user-menu-save-file" type="file" accept=".sav,.srm,.sa1,.dat,.bin" style="display:none;" />
       </div>
     `;
     this._btn = this._el.querySelector('.user-menu-btn')!;
     this._panel = this._el.querySelector('.user-menu-panel')!;
     this._fileInput = this._el.querySelector('.user-menu-file')!;
+    this._saveInput = this._el.querySelector('.user-menu-save-file')!;
 
     this._btn.addEventListener('click', () => this._setOpen(!this._open));
 
@@ -94,6 +108,22 @@ export class UserMenu {
         alert(i18n.t('user.importError'));
       }
     });
+
+    // Save import: pick a battery save, hand the file to main.ts. Hidden when
+    // no importer is wired (keeps the menu unchanged in tests / embeds).
+    const saveBtn = this._el.querySelector('.user-menu-import-save') as HTMLButtonElement;
+    if (this._opts.onImportSave) {
+      saveBtn.addEventListener('click', () => this._saveInput.click());
+      this._saveInput.addEventListener('change', async () => {
+        const file = this._saveInput.files?.[0];
+        this._saveInput.value = '';
+        if (!file) return;
+        this._setOpen(false);
+        await this._opts.onImportSave!(file);
+      });
+    } else {
+      (saveBtn.parentElement as HTMLElement).style.display = 'none';
+    }
 
     this._el.querySelector('.user-menu-delete')!.addEventListener('click', () => {
       const cur = userStore.current;
@@ -182,6 +212,11 @@ export class UserMenu {
     this._btn.title = i18n.t('user.menu');
     (this._el.querySelector('.user-menu-input') as HTMLInputElement).placeholder = i18n.t('user.newPlaceholder');
     this._el.querySelector('.user-menu-add')!.textContent = i18n.t('user.add');
+    const saveBtn = this._el.querySelector('.user-menu-import-save') as HTMLButtonElement | null;
+    if (saveBtn) {
+      saveBtn.textContent = i18n.t('save.import');
+      saveBtn.title = i18n.t('save.importTip');
+    }
     this._el.querySelector('.user-menu-export')!.textContent = i18n.t('user.export');
     this._el.querySelector('.user-menu-import')!.textContent = i18n.t('user.import');
     this._el.querySelector('.user-menu-delete')!.textContent = i18n.t('user.delete');

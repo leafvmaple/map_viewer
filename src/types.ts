@@ -208,6 +208,47 @@ export interface GameDataCatalogs {
   currencies: Record<string, CurrencyDef>;
 }
 
+/** A contiguous bitfield inside a save file (e.g. Metal Max's opened-chest bits). */
+export interface SaveFlagRegion {
+  /** Byte offset of the bitfield within the raw save file. */
+  offset: number;
+  /** Length of the bitfield in bytes. */
+  length: number;
+}
+
+/** A byte-signature check confirming a save belongs to a given game. */
+export interface SaveSignature {
+  /** Byte offset of the signature within the save file. */
+  offset: number;
+  /** Expected bytes as a lowercase hex string, e.g. "4d4554". */
+  hex: string;
+}
+
+/**
+ * Describes a game's save-file layout so the viewer can read completion flags.
+ * Interpreted by `core/SaveImport` together with each POI's `saveRef`.
+ */
+export interface SaveFormatDef {
+  /** Save-format family the parser dispatches on, e.g. "nes-sram". */
+  family: string;
+  /** Accepted raw file size(s) in bytes; import rejects other sizes. */
+  size?: number | number[];
+  /** Named bitfield regions; `saveRef.region` selects one (default "treasure"). */
+  regions: Record<string, SaveFlagRegion>;
+  /** Bit order within each byte: "lsb" (bit 0 = 0x01) or "msb". Default "lsb". */
+  bitOrder?: 'lsb' | 'msb';
+  /** Optional signature bytes confirming the save belongs to this game. */
+  signature?: SaveSignature[];
+}
+
+/** Which save-file flag proves this POI is done (chest opened, boss beaten…). */
+export interface PoiSaveRef {
+  /** Region name in `saveFormat.regions` (default "treasure"). */
+  region?: string;
+  /** Bit index within the region: byte = flag >> 3, bit = flag & 7. */
+  flag: number;
+}
+
 /** A point of interest on a map (e.g. a treasure chest) */
 export interface PoiDef {
   id: string;
@@ -256,6 +297,8 @@ export interface PoiDef {
   partyId?: string;
   /** One or more game-wide service/shop ids attached to this map POI. */
   serviceIds?: string[];
+  /** Which save-file flag proves this POI is done — read by the save importer. */
+  saveRef?: PoiSaveRef;
 }
 
 /** Map rendering type */
@@ -347,6 +390,8 @@ export interface GameConfig {
   poiKinds?: Record<string, PoiKindDef>;
   /** Optional external catalogs (items, services/shops) loaded on demand. */
   data?: GameDataRefs;
+  /** Optional save-file layout: enables importing a battery save into a profile. */
+  saveFormat?: SaveFormatDef;
   /** Export provenance (shown in the build-identifier chip). */
   export?: ExportStamp;
   /** Computed at runtime: base URL path for resolving relative image paths */

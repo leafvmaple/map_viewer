@@ -12,10 +12,24 @@
 // are corrections to the shared data, not personal state.
 // ============================================================
 
+/** Provenance of a save-imported profile — supports re-import + a UI badge. */
+export interface SaveSource {
+  /** Game id the save was imported for. */
+  game?: string;
+  /** Short ROM hash, when known. */
+  rom?: string;
+  /** When the save was imported (epoch ms). */
+  savedAt?: number;
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   createdAt: number;
+  /** Set when this profile was created by importing a save file (not hand-made). */
+  origin?: 'save';
+  /** Provenance of the imported save. Present only when `origin === 'save'`. */
+  source?: SaveSource;
 }
 
 interface UsersRegistry {
@@ -118,9 +132,12 @@ export class UserStore {
     return [...this._registry.users];
   }
 
-  /** Create a profile and switch to it. Returns the new profile. */
-  create(name: string): UserProfile {
+  /** Create a profile and switch to it. Returns the new profile.
+   *  `extra` tags save-imported profiles with their origin/provenance. */
+  create(name: string, extra?: { origin?: 'save'; source?: SaveSource }): UserProfile {
     const user: UserProfile = { id: randomId(), name: name.trim() || defaultUserName(), createdAt: Date.now() };
+    if (extra?.origin) user.origin = extra.origin;
+    if (extra?.source) user.source = extra.source;
     this._registry.users.push(user);
     this._registry.currentId = user.id;
     this._saveRegistry();

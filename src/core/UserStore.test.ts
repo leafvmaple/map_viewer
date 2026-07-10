@@ -37,6 +37,18 @@ describe('UserStore', () => {
     expect(store.list()).toHaveLength(2);
   });
 
+  it('create() tags a save-imported profile with origin + source', async () => {
+    localStorage.clear();
+    const store = await freshStore();
+    const u = store.create('Save · Metal Max', { origin: 'save', source: { game: 'metal_max', savedAt: 42 } });
+    expect(u.origin).toBe('save');
+    expect(u.source).toEqual({ game: 'metal_max', savedAt: 42 });
+    // a plain profile carries neither
+    const plain = store.create('Manual');
+    expect(plain.origin).toBeUndefined();
+    expect(plain.source).toBeUndefined();
+  });
+
   it('namespaces data per user', async () => {
     localStorage.clear();
     const store = await freshStore();

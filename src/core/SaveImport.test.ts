@@ -1,0 +1,108 @@
+import { describe, it, expect } from 'vitest';
+import { interpretSave } from './SaveImport.js';
+import type { GameConfig, PoiDef, SaveFormatDef } from '../types.js';
+
+function game(saveFormat: SaveFormatDef | undefined, pois: PoiDef[]): GameConfig {
+  return {
+    id: 'g',
+    name: { en: 'G' },
+    defaultMap: 'm',
+    maps: { m: { name: { en: 'M' }, type: 'image', image: 'm.png', triggers: [], pois } },
+    saveFormat,
+  };
+}
+
+function chest(id: string, flag: number, region?: string): PoiDef {
+  return { id, kind: 'treasure', pos: [0, 0], saveRef: region ? { flag, region } : { flag } };
+}
+
+/** A save of `size` bytes with specific byte values patched in. */
+function save(size: number, patch: Record<number, number>): Uint8Array {
+  const b = new Uint8Array(size);
+  for (const [off, val] of Object.entries(patch)) b[Number(off)] = val;
+  return b;
+}
+
+const FMT: SaveFormatDef = {
+  family: 'nes-sram',
+  size: 8192,
+  regions: { treasure: { offset: 4, length: 2 } },
+};
+
+describe('interpretSave', () => {
+  it('maps set bits (lsb) to marked poi ids and counts trackable POIs', () => {
+    const g = game(FMT, [chest('a', 0), chest('b', 1), chest('c', 3), chest('d', 8), chest('e', 9)]);
+    // byte4 = bits 0,3 set → flags 0,3 ; byte5 = bit0 set → flag 8
+    const r = interpretSave(g, save(8192, { 4: 0b0000_1001, 5: 0b0000_0001 }));
+    expect(r.ok).toBe(true);
+    expect(r.trackable).toBe(5);
+    expect(new Set(r.markedIds)).toEqual(new Set(['a', 'c', 'd']));
+  });
+
+  it('ignores POIs without a saveRef (not marked, not counted)', () => {
+    const plain: PoiDef = { id: 'x', kind: 'sign', pos: [0, 0] };
+    const r = interpretSave(game(FMT, [chest('a', 0), plain]), save(8192, { 4: 0b0000_0001 }));
+    expect(r.trackable).toBe(1);
+    expect(r.markedIds).toEqual(['a']);
+  });
+
+  it('reports unsupported when the game has no saveFormat', () => {
+    const r = interpretSave(game(undefined, [chest('a', 0)]), new Uint8Array(8192));
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('save.error.unsupported');
+  });
+
+  it('rejects a wrong-sized file', () => {
+    const r = interpretSave(game(FMT, [chest('a', 0)]), new Uint8Array(4096));
+    expect(r.reason).toBe('save.error.size');
+  });
+
+  it('accepts any of several allowed sizes', () => {
+    const fmt = { ...FMT, size: [8192, 32768] };
+    const r = interpretSave(game(fmt, [chest('a', 0)]), save(32768, { 4: 1 }));
+    expect(r.ok).toBe(true);
+    expect(r.markedIds).toEqual(['a']);
+  });
+
+  it('enforces a byte signature', () => {
+    const fmt: SaveFormatDef = { ...FMT, signature: [{ offset: 0, hex: '4d4d' }] };
+    const ok = interpretSave(game(fmt, [chest('a', 0)]), save(8192, { 0: 0x4d, 1: 0x4d, 4: 1 }));
+    expect(ok.ok).toBe(true);
+    expect(ok.markedIds).toEqual(['a']);
+
+    const bad = interpretSave(game(fmt, [chest('a', 0)]), save(8192, { 0: 0x00, 1: 0x4d, 4: 1 }));
+    expect(bad.reason).toBe('save.error.signature');
+  });
+
+  it('respects msb bit order', () => {
+    const fmt: SaveFormatDef = { ...FMT, bitOrder: 'msb' };
+    // 0x81 = 1000_0001 → msb bit0 (0x80) → flag 0 ; msb bit7 (0x01) → flag 7
+    const r = interpretSave(game(fmt, [chest('a', 0), chest('b', 7), chest('c', 3)]), save(8192, { 4: 0x81 }));
+    expect(new Set(r.markedIds)).toEqual(new Set(['a', 'b']));
+  });
+
+  it('resolves POIs against named regions', () => {
+    const fmt: SaveFormatDef = {
+      family: 'nes-sram',
+      size: 8192,
+      regions: { treasure: { offset: 4, length: 1 }, events: { offset: 10, length: 1 } },
+    };
+    const eventPoi: PoiDef = { id: 'e', kind: 'event', pos: [0, 0], saveRef: { region: 'events', flag: 2 } };
+    const r = interpretSave(game(fmt, [chest('t', 0), eventPoi]), save(8192, { 4: 0b0000_0001, 10: 0b0000_0100 }));
+    expect(new Set(r.markedIds)).toEqual(new Set(['t', 'e']));
+  });
+
+  it('fails when a declared region runs past the end of the file', () => {
+    const fmt: SaveFormatDef = { family: 'nes-sram', size: 8, regions: { treasure: { offset: 4, length: 10 } } };
+    const r = interpretSave(game(fmt, [chest('a', 0)]), new Uint8Array(8));
+    expect(r.reason).toBe('save.error.truncated');
+  });
+
+  it('leaves ids unmarked when their flag byte is out of the region', () => {
+    // region is 1 byte (flags 0-7); flag 20 addresses byte 2 → out of range, not a crash
+    const fmt: SaveFormatDef = { family: 'nes-sram', size: 8192, regions: { treasure: { offset: 4, length: 1 } } };
+    const r = interpretSave(game(fmt, [chest('a', 0), chest('far', 20)]), save(8192, { 4: 0xff }));
+    expect(r.markedIds).toEqual(['a']);
+    expect(r.trackable).toBe(2);
+  });
+});

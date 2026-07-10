@@ -372,6 +372,57 @@ producer **may** add, on any map:
   loaded yet — Google-Maps-style. Producers should point it at the low-res
   preview they already render.
 
+### Optional save import (`saveFormat`, `pois[*].saveRef`)
+
+The viewer can read a **battery save file** and mark the POIs a player has
+already completed (chests opened, bosses beaten…) into a fresh, save-derived
+user profile — leaving hand-authored profiles untouched. This is opt-in per
+game and needs two additive fields.
+
+**Top-level `saveFormat`** describes the save's byte layout:
+
+```jsonc
+"saveFormat": {
+  "family":  "nes-sram",                 // parser family the viewer dispatches on
+  "size":    8192,                       // accepted raw size(s) in bytes (number or [numbers])
+  "bitOrder": "lsb",                     // bit 0 = 0x01 ("lsb", default) or 0x80 ("msb")
+  "regions": {                           // named bitfields, addressed by saveRef.region
+    "treasure": { "offset": 5024, "length": 32 }
+  },
+  "signature": [                         // optional: reject saves that aren't this game
+    { "offset": 0, "hex": "4d4d" }
+  ]
+}
+```
+
+**Per-POI `saveRef`** points at the one flag that proves that POI is done:
+
+```jsonc
+{ "id": "world_map_c01", "kind": "treasure", "pos": [2240, 3584],
+  "saveRef": { "region": "treasure", "flag": 37 } }   // region defaults to "treasure"
+```
+
+| Field | Rule |
+| --- | --- |
+| `saveFormat.family` | Parser family. Only `"nes-sram"` (a flat SRAM image; regions are plain byte slices) is implemented today; GBA/DS families that must first locate the active save slot plug in later against the same `regions`/`saveRef` model. |
+| `saveFormat.size` | Accepted raw file size(s). A file of any other size is rejected before parsing — the cheapest wrong-game guard. |
+| `saveFormat.regions` | Map of region name → `{ offset, length }` (bytes) within the save file. `saveRef.region` selects one; POIs that omit it use `"treasure"`. |
+| `saveFormat.bitOrder` | Bit numbering inside each byte. `"lsb"` (default): flag `n` → byte `offset + (n>>3)`, mask `1 << (n&7)`. `"msb"`: mask `0x80 >> (n&7)`. |
+| `saveFormat.signature` | Optional list of `{ offset, hex }` byte checks; any mismatch rejects the file as belonging to another game. |
+| `pois[*].saveRef.flag` | Bit index within the region. **Must come from the same stable ROM fact as `pois[*].id`** (e.g. the treasure-table index), so a re-export can't silently point a chest at the wrong bit. |
+
+Bit addressing is `byte = offset + (flag >> 3)`, `bit = flag & 7`. Out-of-range
+flags read as unset (never an error). Both fields are **fully backward
+compatible**: omit them and save import simply reports "not supported" for that
+game. Marks written by import reuse the existing per-user `poi.id` mark store,
+so **`saveRef` and `poi.id` must stay in lock-step across re-exports** — the same
+stability rule that already governs `poi.id`.
+
+> **Producers already hold this data.** A decoder that reads the ROM treasure
+> table to emit chest POIs already knows each chest's table index; emitting it as
+> `saveRef.flag` (plus the SRAM offset of the opened-chest bitfield as a region)
+> is all that's required.
+
 ## 4. Validating on the producer side
 
 Add this check to `nes_decoder`'s `map_viewer_export` step so a bad export fails

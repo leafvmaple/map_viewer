@@ -43,6 +43,7 @@
         "currencies": { "type": "string", "minLength": 1, "description": "Currency catalog JSON path, e.g. data/currencies.json." }
       }
     },
+    "saveFormat": { "$ref": "#/$defs/saveFormat" },
     "export": {
       "type": "object",
       "description": "Provenance stamp written automatically at export time — identifies which export (and which decoder iteration) produced this data. Shown in the viewer's build-identifier chip.",
@@ -323,7 +324,8 @@
           "type": "array",
           "description": "Optional references to game-wide services/shops attached to this map POI.",
           "items": { "type": "string", "minLength": 1 }
-        }
+        },
+        "saveRef": { "$ref": "#/$defs/saveRef" }
       }
     },
     "poiItem": {
@@ -405,6 +407,71 @@
         "minItems": 2,
         "maxItems": 2,
         "items": { "type": "number" }
+      }
+    },
+    "saveFormat": {
+      "type": "object",
+      "description": "Optional save-file layout enabling battery-save import. Interpreted by the viewer together with each POI's `saveRef`. See CONTRACT.md §Save import.",
+      "required": ["family", "regions"],
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Save-format family the viewer's parser dispatches on, e.g. \"nes-sram\"."
+        },
+        "size": {
+          "description": "Accepted raw file size(s) in bytes; import rejects any other size.",
+          "oneOf": [
+            { "type": "integer", "exclusiveMinimum": 0 },
+            { "type": "array", "minItems": 1, "items": { "type": "integer", "exclusiveMinimum": 0 } }
+          ]
+        },
+        "regions": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Named bitfield regions; a POI's `saveRef.region` selects one (default \"treasure\").",
+          "additionalProperties": { "$ref": "#/$defs/saveFlagRegion" }
+        },
+        "bitOrder": {
+          "enum": ["lsb", "msb"],
+          "description": "Bit order within each byte: \"lsb\" (bit 0 = 0x01) or \"msb\". Default \"lsb\"."
+        },
+        "signature": {
+          "type": "array",
+          "description": "Optional signature byte checks confirming the save belongs to this game.",
+          "items": { "$ref": "#/$defs/saveSignature" }
+        }
+      }
+    },
+    "saveFlagRegion": {
+      "type": "object",
+      "description": "A contiguous bitfield inside the save file (e.g. the opened-chest bits).",
+      "required": ["offset", "length"],
+      "additionalProperties": false,
+      "properties": {
+        "offset": { "type": "integer", "minimum": 0, "description": "Byte offset of the bitfield within the raw save file." },
+        "length": { "type": "integer", "exclusiveMinimum": 0, "description": "Length of the bitfield in bytes." }
+      }
+    },
+    "saveSignature": {
+      "type": "object",
+      "description": "A byte-signature check confirming a save belongs to this game.",
+      "required": ["offset", "hex"],
+      "additionalProperties": false,
+      "properties": {
+        "offset": { "type": "integer", "minimum": 0, "description": "Byte offset of the signature within the save file." },
+        "hex": { "type": "string", "pattern": "^([0-9a-fA-F]{2})+$", "description": "Expected bytes as a lowercase hex string, e.g. \"4d4554\"." }
+      }
+    },
+    "saveRef": {
+      "type": "object",
+      "description": "Which save-file flag proves this POI is done (chest opened, boss beaten…).",
+      "required": ["flag"],
+      "additionalProperties": false,
+      "properties": {
+        "region": { "type": "string", "minLength": 1, "description": "Region name in saveFormat.regions (default \"treasure\")." },
+        "flag": { "type": "integer", "minimum": 0, "description": "Bit index within the region: byte = flag >> 3, bit = flag & 7." }
       }
     }
   }

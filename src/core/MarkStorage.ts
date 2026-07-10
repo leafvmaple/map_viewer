@@ -54,4 +54,21 @@ export class MarkStorage {
   static isMarked(gameId: string, poiId: string): boolean {
     return poiId in this.load(gameId);
   }
+
+  /**
+   * Replace ALL of a game's marks (current user) with the given ids in one
+   * write. Used by save import to overwrite a derived profile wholesale,
+   * without per-poi read/write churn. Returns the number of marks written.
+   */
+  static replaceGame(gameId: string, ids: Iterable<string>, state: MarkState = 'collected'): number {
+    const at = Date.now();
+    const marks: GameMarks = {};
+    let n = 0;
+    for (const id of ids) {
+      marks[id] = { state, at };
+      n++;
+    }
+    userStore.setItem(this._key(gameId), marks);
+    return n;
+  }
 }

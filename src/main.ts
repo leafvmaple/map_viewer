@@ -15,6 +15,7 @@ import { Prefs } from './core/Prefs.js';
 import { parseHash, formatHash } from './core/hashRoute.js';
 import { userStore } from './core/UserStore.js';
 import { MarkStorage } from './core/MarkStorage.js';
+import { interpretSave } from './core/SaveImport.js';
 import { buildPoiIndex, searchPois, poiItemName, isMarkable, type PoiIndexEntry } from './core/PoiIndex.js';
 import { buildServiceIndex, searchServices, serviceDisplayName, serviceEntryName, type ServiceIndexEntry } from './core/ServiceIndex.js';
 import { floorSiblings } from './core/Floors.js';
@@ -182,7 +183,7 @@ async function init(): Promise<void> {
     onFocus: (event) => mapViewer.focusEvent(event),
   });
 
-  userMenu = new UserMenu(document.getElementById('toolbar')!);
+  userMenu = new UserMenu(document.getElementById('toolbar')!, { onImportSave: importSaveFile });
 
   floorSwitcher = new FloorSwitcher({
     onSelect: (mapId) => {
@@ -493,6 +494,44 @@ function reloadMarks(): void {
   treasureList.setMarks(markedPois);
   poiFilter.setMarks(markedPois);
   checklist.refresh();
+}
+
+/**
+ * Import a battery save into a FRESH profile: parse → confirm → create a
+ * carrier user → write the derived marks → refresh. The new user isolates
+ * save-derived progress from any hand-tuned profile, exactly as designed.
+ */
+async function importSaveFile(file: File): Promise<void> {
+  if (!currentGameConfig) { alert(i18n.t('save.error.noGame')); return; }
+  const game = currentGameConfig;
+
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(await file.arrayBuffer());
+  } catch {
+    alert(i18n.t('save.error.parse'));
+    return;
+  }
+
+  const result = interpretSave(game, bytes);
+  if (!result.ok) { alert(i18n.t(result.reason ?? 'save.error.parse')); return; }
+  if (result.trackable === 0) { alert(i18n.t('save.error.noFlags')); return; }
+
+  const gameName = i18n.localize(game.name);
+  const proceed = confirm(i18n.t('save.confirm', {
+    marked: result.markedIds.length,
+    total: result.trackable,
+  }));
+  if (!proceed) return;
+
+  // create() switches to the new profile and fires onChange → reloadMarks reads
+  // the still-empty namespace; we then write the derived marks and refresh.
+  userStore.create(i18n.t('save.userName', { game: gameName }), {
+    origin: 'save',
+    source: { game: game.id, savedAt: Date.now() },
+  });
+  MarkStorage.replaceGame(game.id, result.markedIds);
+  reloadMarks();
 }
 
 /** Map click on a POI: service markers open their shop list; markable POIs toggle state. */
