@@ -1,7 +1,8 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { renderItemIcon } from '../core/ItemIcon.js';
-import type { CatalogItemDef, CatalogItemStat } from '../types';
+import { itemHasStats, renderItemStatList } from '../core/ItemStats.js';
+import type { CatalogItemDef } from '../types';
 
 /**
  * ItemTip - a shared floating hover card showing an equipment item's stat
@@ -15,7 +16,7 @@ export class ItemTip {
 
   /** True when this item has something worth a tip. */
   static hasTip(item: CatalogItemDef | undefined): item is CatalogItemDef {
-    return Boolean(item?.stats?.length);
+    return itemHasStats(item);
   }
 
   /** Show the tip beside `anchor` (the hovered row), clamped to the viewport.
@@ -31,19 +32,9 @@ export class ItemTip {
     const category = item.category
       ? `<span class="item-tip-category">${escapeHtml(i18n.localize(item.category))}</span>`
       : '';
-    const rows = (item.stats ?? []).map(stat =>
-      `<li><span class="item-tip-label">${escapeHtml(statLabel(stat))}</span>` +
-      `<span class="item-tip-leader"></span>` +
-      `<span class="item-tip-value">${escapeHtml(statValue(stat))}</span></li>`
-    ).join('');
-    const price = Number.isFinite(item.price)
-      ? `<li class="item-tip-price"><span class="item-tip-label">${escapeHtml(i18n.t('item.price'))}</span>` +
-        `<span class="item-tip-leader"></span>` +
-        `<span class="item-tip-value">${item.price}${item.currency ? ` ${escapeHtml(item.currency)}` : ''}</span></li>`
-      : '';
     el.innerHTML = `
       <div class="item-tip-head">${icon}<span class="item-tip-name">${escapeHtml(i18n.localize(item.name) || item.id)}</span>${category}</div>
-      <ul class="item-tip-stats">${rows}${price}</ul>
+      ${renderItemStatList(item)}
     `;
 
     // Measure hidden, then place: left of the anchor, flipped when cramped.
@@ -72,16 +63,6 @@ export class ItemTip {
     }
     return this._el;
   }
-}
-
-function statLabel(stat: CatalogItemStat): string {
-  return i18n.localize(stat.label) || '';
-}
-
-function statValue(stat: CatalogItemStat): string {
-  const v = stat.value;
-  if (typeof v === 'object' && v !== null) return i18n.localize(v) || '';
-  return String(v);
 }
 
 /** Shared instance — panels import this instead of each owning a card. */

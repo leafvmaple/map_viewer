@@ -80,6 +80,47 @@ describe('renderPlainTooltip', () => {
     expect(html).toContain('✓');
     expect(html).not.toContain('<b>');
   });
+
+  const statItems = {
+    '32': {
+      id: '32',
+      name: { zh: '火焰枪' },
+      price: 1000,
+      currency: 'G',
+      stats: [
+        { label: { zh: '攻击' }, value: 70 },
+        { label: { zh: '范围' }, value: { zh: '单体' } },
+      ],
+    },
+    '99': { id: '99', name: { zh: '毛巾' } },
+  };
+
+  it('appends stat rows (and the price line) for equipment items', () => {
+    const poi: PoiDef = { id: 'c1', kind: 'treasure', pos: [0, 0], itemRefs: [{ itemId: '32' }] };
+    const html = renderPlainTooltip(poi, '宝箱', false, resolve, statItems);
+    expect(html).toContain('item-stat-list');
+    expect(html).toContain('攻击');
+    expect(html).toContain('70');
+    expect(html).toContain('单体');       // localized stat value
+    expect(html).toContain('1000 G');     // price line
+    expect(html).not.toContain('item-stat-head'); // single item: no name heading
+  });
+
+  it('items without stats add no stat block', () => {
+    const poi: PoiDef = { id: 'c2', kind: 'treasure', pos: [0, 0], itemRefs: [{ itemId: '99' }] };
+    expect(renderPlainTooltip(poi, '宝箱', false, resolve, statItems)).not.toContain('item-stat-list');
+  });
+
+  it('multi-item chests head each stat block with the item name', () => {
+    const poi: PoiDef = {
+      id: 'c3', kind: 'treasure', pos: [0, 0],
+      itemRefs: [{ itemId: '32' }, { itemId: '99' }],
+    };
+    const html = renderPlainTooltip(poi, '宝箱', false, resolve, statItems);
+    expect(html).toContain('poi-tt-items');
+    expect(html).toContain('item-stat-head');
+    expect(html.match(/item-stat-list/g)).toHaveLength(1); // only 火焰枪 has stats
+  });
 });
 
 describe('renderPartyCard', () => {

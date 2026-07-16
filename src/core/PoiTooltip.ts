@@ -1,7 +1,8 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
-import { resolveBattleRewardText, resolvePoiBattle, resolvePoiRewards } from './GameDataResolver.js';
+import { resolveBattleRewardText, resolvePoiBattle, resolvePoiItems, resolvePoiRewards } from './GameDataResolver.js';
 import { renderItemIcon } from './ItemIcon.js';
+import { itemHasStats, renderItemStatList } from './ItemStats.js';
 import type { CatalogItemDef, GameDataCatalogs, PoiDef } from '../types';
 
 /**
@@ -33,17 +34,26 @@ export function renderPlainTooltip(
   source?: Record<string, CatalogItemDef> | GameDataCatalogs,
 ): string {
   const resolved = resolvePoiRewards(poi, source);
+  // Equipment stat blocks (data-driven `item.stats`): one list per contained
+  // item that ships stats, name-headed when the chest holds several items.
+  const withStats = resolvePoiItems(poi, source).filter(r => itemHasStats(r.item));
+  const stats = withStats.map(r => {
+    const head = resolved.length > 1
+      ? `<div class="item-stat-head">${escapeHtml(i18n.localize(r.name) || r.itemId || '')}</div>`
+      : '';
+    return `${head}${renderItemStatList(r.item!)}`;
+  }).join('');
   if (resolved.length > 1) {
     const rows = resolved.map(reward => {
       const icon = renderItemIcon(reward.icon, 'poi-tt-item', resolveIcon);
       return `<li>${icon}<span>${escapeHtml(reward.text)}</span></li>`;
     }).join('');
-    const base = `<ul class="poi-tt-items">${rows}</ul>`;
+    const base = `<ul class="poi-tt-items">${rows}</ul>${stats}`;
     return isMarked ? `${base}<div class="poi-tt-done-text">✓ ${escapeHtml(i18n.t('treasure.collected'))}</div>` : base;
   }
   const icon = renderItemIcon(resolved[0]?.icon ?? poi.itemIcon, 'poi-tt-item', resolveIcon);
   const base = `${icon}${escapeHtml(resolved[0]?.text ?? title)}`;
-  return isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base;
+  return (isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base) + stats;
 }
 
 /**

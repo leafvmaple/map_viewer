@@ -1256,38 +1256,61 @@ html, body {
   white-space: nowrap;
 }
 
-.item-tip-stats {
+/* Stat rows (label ⋯⋯ value) shared by the tip card and the map POI tooltip. */
+.item-stat-list {
   list-style: none;
   margin: 0;
   padding: 5px 10px 7px;
 }
 
-.item-tip-stats li {
+.item-stat-list li {
   display: flex;
   align-items: baseline;
   gap: 6px;
   line-height: 1.7;
 }
 
-.item-tip-label {
+.item-stat-label {
   color: #8899bb;
   white-space: nowrap;
 }
 
-.item-tip-leader {
+.item-stat-leader {
   flex: 1;
+  min-width: 14px;
   border-bottom: 1px dotted rgba(136, 153, 187, 0.35);
   transform: translateY(-3px);
 }
 
-.item-tip-value {
+.item-stat-value {
   color: #e8eaf0;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
-.item-tip-price .item-tip-value {
+.item-stat-price .item-stat-value {
   color: #ffd54f;
+}
+
+/* Inside the map POI tooltip: tighter rows under a divider, no side padding
+   (the tooltip supplies its own). */
+.poi-tooltip .item-stat-list {
+  padding: 3px 0 1px;
+  margin-top: 3px;
+  border-top: 1px solid rgba(255, 179, 0, 0.25);
+  min-width: 120px;
+}
+
+.poi-tooltip .item-stat-list li {
+  line-height: 1.55;
+  font-size: 11px;
+}
+
+/* Item-name heading above a stats block in multi-item chests. */
+.item-stat-head {
+  margin-top: 4px;
+  color: #ffe082;
+  font-weight: 600;
 }
 
 /* ─── Terrain-event panel (bottom-left) ─────────────────────── */
