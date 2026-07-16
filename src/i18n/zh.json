@@ -47,6 +47,7 @@
   "toolbar.labelsHide": "隐藏标签",
   "toolbar.treasures": "宝箱",
   "toolbar.services": "商店",
+  "item.price": "售价",
   "treasure.listTitle": "宝箱列表",
   "treasure.collected": "已收集",
   "event.listTitle": "地形事件",

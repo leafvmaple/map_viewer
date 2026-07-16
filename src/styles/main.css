@@ -1208,6 +1208,88 @@ html, body {
   font-size: 11px;
 }
 
+/* ─── Item hover tip (equipment stats card) ─────────────────── */
+
+.item-tip {
+  position: fixed;
+  z-index: 1200;
+  min-width: 150px;
+  max-width: 230px;
+  background: #16213e;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+  padding: 0;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.item-tip-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 5px;
+  border-bottom: 1px solid rgba(255, 179, 0, 0.28);
+}
+
+.item-tip-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  image-rendering: pixelated;
+  flex: none;
+}
+
+.item-tip-name {
+  font-weight: 600;
+  color: #ffe082;
+  margin-right: auto;
+  white-space: nowrap;
+}
+
+.item-tip-category {
+  font-size: 10px;
+  color: #8899bb;
+  border: 1px solid #2a3f6a;
+  border-radius: 3px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.item-tip-stats {
+  list-style: none;
+  margin: 0;
+  padding: 5px 10px 7px;
+}
+
+.item-tip-stats li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  line-height: 1.7;
+}
+
+.item-tip-label {
+  color: #8899bb;
+  white-space: nowrap;
+}
+
+.item-tip-leader {
+  flex: 1;
+  border-bottom: 1px dotted rgba(136, 153, 187, 0.35);
+  transform: translateY(-3px);
+}
+
+.item-tip-value {
+  color: #e8eaf0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.item-tip-price .item-tip-value {
+  color: #ffd54f;
+}
+
 /* ─── Terrain-event panel (bottom-left) ─────────────────────── */
 
 .event-panel {

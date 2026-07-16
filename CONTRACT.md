@@ -187,7 +187,24 @@ Games may ship global item and service catalogs next to `game.json`:
 
 `items.json` is the authoritative map of stable item ids to item display facts:
 localized name, price/currency, category, and optional `itemIcon` (same format as
-`pois[*].itemIcon`). `currencies.json` is the authoritative map of stable money
+`pois[*].itemIcon`). An item **may** also carry `stats` — display-ready attribute
+rows for equipment (attack, defense, ammo, weight…), rendered by the viewer as a
+hover tip wherever the item appears (chest list, shop entries):
+
+```jsonc
+"32": {
+  "id": "32", "name": { "ja": "かえんじゅう", "zh": "火焰枪" },
+  "price": 1000, "currency": "G",
+  "stats": [
+    { "label": { "zh": "攻击", "ja": "攻撃", "en": "Attack" }, "value": 70 }
+  ]
+}
+```
+
+Each row is `{ label, value }`: `label` a localized string; `value` a number, a
+plain string (`"∞"`, `"1.8t"`), or a localized string (`{ "zh": "单体", … }`).
+The producer decides which attributes exist per game — the viewer renders the
+rows verbatim, in order, with no game knowledge. `currencies.json` is the authoritative map of stable money
 or token ids to localized names, symbols, icons, and formatting. `services.json`
 is a map of stable service ids to shop/service definitions. Services are
 deliberately separate from POIs: a shop inventory is global data; a POI is only

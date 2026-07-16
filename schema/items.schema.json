@@ -34,7 +34,26 @@
         "price": { "type": "number" },
         "currency": { "type": "string", "minLength": 1 },
         "category": { "$ref": "#/$defs/localizedString" },
-        "itemIcon": { "type": "string", "minLength": 1 }
+        "itemIcon": { "type": "string", "minLength": 1 },
+        "stats": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/itemStat" }
+        }
+      }
+    },
+    "itemStat": {
+      "type": "object",
+      "required": ["label", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "label": { "$ref": "#/$defs/localizedString" },
+        "value": {
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string" },
+            { "$ref": "#/$defs/localizedString" }
+          ]
+        }
       }
     }
   }

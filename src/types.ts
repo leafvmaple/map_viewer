@@ -108,6 +108,13 @@ export interface GameDataRefs {
   currencies?: string;
 }
 
+/** One display-ready attribute row on a catalog item (attack, defense, …).
+ *  `value` may be a number, a plain string ("∞", "1.8t") or a localized string. */
+export interface CatalogItemStat {
+  label: LocalizedString;
+  value: number | string | LocalizedString;
+}
+
 export interface CatalogItemDef {
   id: string;
   name: LocalizedString;
@@ -115,6 +122,8 @@ export interface CatalogItemDef {
   currency?: string;
   category?: LocalizedString;
   itemIcon?: string;
+  /** Equipment attribute rows, rendered verbatim in the item hover tip. */
+  stats?: CatalogItemStat[];
   [key: string]: unknown;
 }
 

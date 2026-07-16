@@ -3,7 +3,8 @@ import { escapeHtml } from '../utils.js';
 import type { CatalogItemDef, GameDataCatalogs, PoiDef } from '../types';
 import { renderItemIcon } from '../core/ItemIcon.js';
 import { poiItemName } from '../core/PoiIndex.js';
-import { poiPrimaryItemIcon } from '../core/GameDataResolver.js';
+import { poiPrimaryItemIcon, resolvePoiItems } from '../core/GameDataResolver.js';
+import { ItemTip, itemTip } from './ItemTip.js';
 
 interface TreasureListOptions {
   onSelect: (poi: PoiDef) => void;
@@ -28,6 +29,7 @@ export class TreasureList {
   private _resolveIcon: ((relativePath: string) => string) | null = null;
   private _items: Record<string, CatalogItemDef> = {};
   private _catalogs: GameDataCatalogs | undefined;
+  private _hoverRow: HTMLElement | null = null;
 
   constructor(options: TreasureListOptions) {
     this._options = options;
@@ -52,6 +54,24 @@ export class TreasureList {
       const row = input.closest<HTMLElement>('.treasure-item');
       const poi = row?.dataset.id ? this._pois.find(p => p.id === row.dataset.id) : undefined;
       if (poi) this._options.onToggleMark?.(poi);
+    });
+
+    // Equipment hover tip: rows whose item ships `stats` show the attribute card.
+    this._el.addEventListener('mouseover', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.treasure-item');
+      if (row === this._hoverRow) return;
+      this._hoverRow = row;
+      const poi = row?.dataset.id ? this._pois.find(p => p.id === row.dataset.id) : undefined;
+      const source = this._catalogs ?? this._items;
+      const item = poi
+        ? resolvePoiItems(poi, source).find(resolved => ItemTip.hasTip(resolved.item))?.item
+        : undefined;
+      if (item) itemTip.show(item, row!.getBoundingClientRect(), this._resolveIcon);
+      else itemTip.hide();
+    });
+    this._el.addEventListener('mouseleave', () => {
+      this._hoverRow = null;
+      itemTip.hide();
     });
   }
 
@@ -108,6 +128,8 @@ export class TreasureList {
   }
 
   private _render(): void {
+    this._hoverRow = null;
+    itemTip.hide();
     const rows = this._pois
       .map((p, i) => {
         const tx = Math.round(p.pos[0] / this._tileSize);

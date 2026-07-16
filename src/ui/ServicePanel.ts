@@ -1,7 +1,8 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
 import { renderItemIcon } from '../core/ItemIcon.js';
-import { serviceDisplayName, serviceEntryIcon, serviceEntryName, serviceEntryPrice, type ServiceIndexEntry } from '../core/ServiceIndex.js';
+import { serviceCatalogItem, serviceDisplayName, serviceEntryIcon, serviceEntryName, serviceEntryPrice, type ServiceIndexEntry } from '../core/ServiceIndex.js';
+import { ItemTip, itemTip } from './ItemTip.js';
 import type { CatalogItemDef } from '../types';
 
 interface ServicePanelOptions {
@@ -18,6 +19,7 @@ export class ServicePanel {
   private _mode: 'directory' | 'detail' | null = null;
   private _options: ServicePanelOptions;
   private _resolveIcon: ((relativePath: string) => string) | null = null;
+  private _hoverRow: HTMLElement | null = null;
 
   constructor(options: ServicePanelOptions = {}) {
     this._options = options;
@@ -45,6 +47,23 @@ export class ServicePanel {
       if (row?.dataset.mapId && row.dataset.poiId) {
         void this._options.onNavigateToPoi?.(row.dataset.mapId, row.dataset.poiId);
       }
+    });
+
+    // Equipment hover tip on shop entries (items that ship `stats`).
+    this._el.addEventListener('mouseover', (e) => {
+      const row = (e.target as HTMLElement).closest<HTMLElement>('.service-entry');
+      if (row === this._hoverRow) return;
+      this._hoverRow = row;
+      const entry = this._activeId ? this._index.get(this._activeId) : undefined;
+      const idx = Number(row?.dataset.idx);
+      const serviceEntry = entry && Number.isInteger(idx) ? entry.service.entries[idx] : undefined;
+      const item = serviceEntry ? serviceCatalogItem(serviceEntry, entry!.items) : undefined;
+      if (ItemTip.hasTip(item)) itemTip.show(item, row!.getBoundingClientRect(), this._resolveIcon);
+      else itemTip.hide();
+    });
+    this._el.addEventListener('mouseleave', () => {
+      this._hoverRow = null;
+      itemTip.hide();
     });
   }
 
@@ -96,6 +115,8 @@ export class ServicePanel {
     if (!entry) return;
     this._activeId = serviceId;
     this._mode = 'detail';
+    this._hoverRow = null;
+    itemTip.hide();
     const service = entry.service;
     const source = service.source ?? {};
     const sourceParts = [source.type, source.listIndex, source.pointer]
@@ -134,6 +155,8 @@ export class ServicePanel {
   hide(): void {
     this._activeId = null;
     this._mode = null;
+    this._hoverRow = null;
+    itemTip.hide();
     this._el.style.display = 'none';
     this._el.innerHTML = '';
     this._options.onClose?.();
@@ -153,7 +176,7 @@ export class ServicePanel {
     if (entry.available === false) stockBits.push(i18n.t('service.soldOut'));
     const stock = stockBits.length ? `<span class="service-entry-stock">${escapeHtml(stockBits.join(' · '))}</span>` : '';
     const cls = entry.available === false ? ' service-entry-unavailable' : '';
-    return `<div class="service-entry${cls}">
+    return `<div class="service-entry${cls}" data-idx="${idx}">
       <span class="service-entry-idx">${idx + 1}</span>
       <span class="service-entry-icon-slot">${icon}</span>
       <span class="service-entry-main">${escapeHtml(serviceEntryName(entry, items))}${itemId}</span>
