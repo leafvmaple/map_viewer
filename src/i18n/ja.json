@@ -28,6 +28,7 @@
   "editor.editTrigger": "トリガー編集",
   "editor.newTrigger": "新規トリガー",
   "trigger.unnamed": "名称未設定",
+  "trigger.arrivedFrom": "「{map}」から移動",
   "map.loading": "マップ読み込み中...",
   "map.error": "マップの読み込みに失敗",
   "map.pixelCoords": "ピクセル",

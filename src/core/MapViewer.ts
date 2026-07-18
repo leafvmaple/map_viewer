@@ -46,8 +46,14 @@ export class MapViewer {
   private _eventOverlays = new Map<string, L.ImageOverlay>();
   private _gridLayer: L.Polyline | null = null;
   private _showGrid = false;
+  private _arrivalMarker: L.Marker | null = null;
+  private _arrivalTimer: ReturnType<typeof setTimeout> | null = null;
   private _coordControl: L.Control;
   private _coordValueEl: HTMLElement | null = null;
+
+  private readonly _dismissArrival = (): void => {
+    this.clearArrival();
+  };
 
   constructor(containerId: string, options: MapViewerOptions = {}) {
     this._onTriggerClick = options.onTriggerClick ?? (() => {});
@@ -326,6 +332,7 @@ export class MapViewer {
 
   /** Clear current map layers. */
   private _clearCurrentMap(): void {
+    this.clearArrival();
     // Drop the outgoing map's maxBounds BEFORE the next map positions its view:
     // setView clamps against the active maxBounds, so a small scene map's stale
     // bounds would drag a restored world-map view into its own corner.
@@ -441,6 +448,71 @@ export class MapViewer {
   /** Pan to a full-resolution target pixel without changing the current zoom. */
   focusPixel([x, y]: [number, number]): void {
     this._map.panTo([-y, x], { animate: false });
+  }
+
+  /**
+   * Mark the point where a trigger arrived on the current map. The beacon is
+   * deliberately transient: it provides orientation without becoming another
+   * permanent POI, and disappears as soon as the user starts interacting.
+   */
+  showArrival([x, y]: [number, number], sourceMapName: string): void {
+    this.clearArrival();
+
+    const labelText = i18n.t('trigger.arrivedFrom', { map: sourceMapName });
+    const content = document.createElement('div');
+    content.className = 'arrival-beacon';
+    content.setAttribute('role', 'status');
+    content.setAttribute('aria-label', labelText);
+
+    const ring = document.createElement('span');
+    ring.className = 'arrival-beacon-ring';
+    ring.setAttribute('aria-hidden', 'true');
+
+    const dot = document.createElement('span');
+    dot.className = 'arrival-beacon-dot';
+    dot.setAttribute('aria-hidden', 'true');
+
+    const label = document.createElement('span');
+    label.className = 'arrival-beacon-label';
+    label.textContent = labelText;
+    label.setAttribute('aria-hidden', 'true');
+
+    content.append(ring, dot, label);
+
+    const icon = L.divIcon({
+      className: 'arrival-marker',
+      html: content,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0],
+    });
+    this._arrivalMarker = L.marker([-y, x], {
+      icon,
+      interactive: false,
+      keyboard: false,
+      zIndexOffset: 1000,
+    }).addTo(this._map);
+
+    const container = this._map.getContainer();
+    container.addEventListener('pointerdown', this._dismissArrival);
+    container.addEventListener('wheel', this._dismissArrival, { passive: true });
+    this._map.on('zoomstart', this._dismissArrival);
+    this._arrivalTimer = setTimeout(() => this.clearArrival(), 2400);
+  }
+
+  /** Remove the current arrival beacon and all of its dismissal hooks. */
+  clearArrival(): void {
+    if (this._arrivalTimer != null) {
+      clearTimeout(this._arrivalTimer);
+      this._arrivalTimer = null;
+    }
+    if (this._arrivalMarker) {
+      this._map.removeLayer(this._arrivalMarker);
+      this._arrivalMarker = null;
+    }
+    const container = this._map.getContainer();
+    container.removeEventListener('pointerdown', this._dismissArrival);
+    container.removeEventListener('wheel', this._dismissArrival);
+    this._map.off('zoomstart', this._dismissArrival);
   }
 
   /** Remove all active event overlays (e.g. when changing maps). */

@@ -28,6 +28,7 @@
   "editor.editTrigger": "Edit Trigger",
   "editor.newTrigger": "New Trigger",
   "trigger.unnamed": "Unnamed Trigger",
+  "trigger.arrivedFrom": "Entered from {map}",
   "map.loading": "Loading map...",
   "map.error": "Failed to load map",
   "map.pixelCoords": "Pixel",

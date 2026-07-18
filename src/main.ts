@@ -438,12 +438,15 @@ function handleTriggerClick(trigger: TriggerDef): void {
  * reloading would lose the arrival focus and create misleading history. */
 async function navigateToTriggerTarget(target: string, focus?: [number, number]): Promise<void> {
   if (!currentGameConfig || !currentGameConfig.maps[target]) return;
+  const sourceMapId = mapViewer.currentMapId;
+  const sourceMapName = sourceMapId ? resolveMapName(sourceMapId) : '';
   currentPoiAnchor = null;
   if (target !== mapViewer.currentMapId) {
     await navigateToMap(currentGameConfig.id, target);
   }
   if (focus && mapViewer.currentMapId === target) {
     mapViewer.focusPixel(focus);
+    mapViewer.showArrival(focus, sourceMapName);
     updateHash();
   }
 }
