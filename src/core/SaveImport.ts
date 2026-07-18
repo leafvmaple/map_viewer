@@ -41,12 +41,29 @@ type SaveAdapter = (bytes: Uint8Array, fmt: SaveFormatDef) => AdapterOutput;
 
 /** Slice each declared region straight out of the file (flat address space). */
 function sliceRegions(bytes: Uint8Array, fmt: SaveFormatDef): AdapterOutput {
-  const regions: Record<string, Uint8Array> = {};
-  for (const [name, r] of Object.entries(fmt.regions)) {
-    if (r.offset < 0 || r.length < 0 || r.offset + r.length > bytes.length) {
+  let recordBase = 0;
+  if (fmt.recordSelector) {
+    const selector = fmt.recordSelector;
+    if (selector.offset < 0 || selector.offset >= bytes.length) {
       return { ok: false, reason: 'save.error.truncated' };
     }
-    regions[name] = bytes.subarray(r.offset, r.offset + r.length);
+    const selected = selector.values[String(bytes[selector.offset])] ?? selector.fallback;
+    if (selected == null || selected < 0) {
+      return { ok: false, reason: 'save.error.parse' };
+    }
+    recordBase = selected;
+  }
+
+  const regions: Record<string, Uint8Array> = {};
+  for (const [name, r] of Object.entries(fmt.regions)) {
+    if (r.relativeTo === 'record' && !fmt.recordSelector) {
+      return { ok: false, reason: 'save.error.parse' };
+    }
+    const offset = r.offset + (r.relativeTo === 'record' ? recordBase : 0);
+    if (r.offset < 0 || r.length < 0 || offset + r.length > bytes.length) {
+      return { ok: false, reason: 'save.error.truncated' };
+    }
+    regions[name] = bytes.subarray(offset, offset + r.length);
   }
   return { ok: true, regions };
 }

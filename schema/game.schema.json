@@ -434,6 +434,7 @@
             { "type": "array", "minItems": 1, "items": { "type": "integer", "exclusiveMinimum": 0 } }
           ]
         },
+        "recordSelector": { "$ref": "#/$defs/saveRecordSelector" },
         "regions": {
           "type": "object",
           "minProperties": 1,
@@ -457,8 +458,26 @@
       "required": ["offset", "length"],
       "additionalProperties": false,
       "properties": {
-        "offset": { "type": "integer", "minimum": 0, "description": "Byte offset of the bitfield within the raw save file." },
-        "length": { "type": "integer", "exclusiveMinimum": 0, "description": "Length of the bitfield in bytes." }
+        "offset": { "type": "integer", "minimum": 0, "description": "Byte offset of the bitfield, absolute unless relativeTo is record." },
+        "length": { "type": "integer", "exclusiveMinimum": 0, "description": "Length of the bitfield in bytes." },
+        "relativeTo": { "const": "record", "description": "Resolve offset relative to the base selected by saveFormat.recordSelector." }
+      }
+    },
+    "saveRecordSelector": {
+      "type": "object",
+      "description": "Selects one duplicated save record by reading a byte in the raw file.",
+      "required": ["offset", "values"],
+      "additionalProperties": false,
+      "properties": {
+        "offset": { "type": "integer", "minimum": 0, "description": "Absolute byte offset of the selector byte." },
+        "values": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Selector byte as a decimal-string key mapped to an absolute record base offset.",
+          "propertyNames": { "pattern": "^(0|[1-9][0-9]{0,2})$" },
+          "additionalProperties": { "type": "integer", "minimum": 0 }
+        },
+        "fallback": { "type": "integer", "minimum": 0, "description": "Optional record base when the selector byte has no mapped value." }
       }
     },
     "saveSignature": {

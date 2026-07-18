@@ -92,6 +92,62 @@ describe('interpretSave', () => {
     expect(new Set(r.markedIds)).toEqual(new Set(['t', 'e']));
   });
 
+  it('resolves record-relative regions from the active-record selector', () => {
+    const fmt: SaveFormatDef = {
+      family: 'nes-sram',
+      size: 32,
+      recordSelector: { offset: 2, values: { '1': 8, '2': 16 } },
+      regions: { treasure: { offset: 3, length: 1, relativeTo: 'record' } },
+    };
+    const g = game(fmt, [chest('file1', 0), chest('file2', 1)]);
+
+    const first = interpretSave(g, save(32, { 2: 1, 11: 0b0000_0001, 19: 0b0000_0010 }));
+    expect(first.markedIds).toEqual(['file1']);
+
+    const second = interpretSave(g, save(32, { 2: 2, 11: 0b0000_0001, 19: 0b0000_0010 }));
+    expect(second.markedIds).toEqual(['file2']);
+  });
+
+  it('rejects an unknown record selector unless a fallback is declared', () => {
+    const base: SaveFormatDef = {
+      family: 'nes-sram',
+      size: 32,
+      recordSelector: { offset: 2, values: { '1': 8 } },
+      regions: { treasure: { offset: 3, length: 1, relativeTo: 'record' } },
+    };
+    expect(interpretSave(game(base, [chest('a', 0)]), save(32, { 2: 7 })).reason).toBe('save.error.parse');
+
+    const fallback: SaveFormatDef = {
+      ...base,
+      recordSelector: { ...base.recordSelector!, fallback: 16 },
+    };
+    expect(interpretSave(game(fallback, [chest('a', 0)]), save(32, { 2: 7, 19: 1 })).markedIds).toEqual(['a']);
+  });
+
+  it('rejects a record-relative region without a record selector', () => {
+    const fmt: SaveFormatDef = {
+      family: 'nes-sram', size: 8,
+      regions: { treasure: { offset: 1, length: 1, relativeTo: 'record' } },
+    };
+    expect(interpretSave(game(fmt, [chest('a', 0)]), save(8, { 1: 1 })).reason).toBe('save.error.parse');
+  });
+
+  it('rejects a selector or selected region outside the file', () => {
+    const selectorPastEnd: SaveFormatDef = {
+      family: 'nes-sram', size: 8,
+      recordSelector: { offset: 8, values: { '1': 0 } },
+      regions: { treasure: { offset: 0, length: 1 } },
+    };
+    expect(interpretSave(game(selectorPastEnd, [chest('a', 0)]), new Uint8Array(8)).reason).toBe('save.error.truncated');
+
+    const recordPastEnd: SaveFormatDef = {
+      family: 'nes-sram', size: 8,
+      recordSelector: { offset: 0, values: { '1': 7 } },
+      regions: { treasure: { offset: 1, length: 1, relativeTo: 'record' } },
+    };
+    expect(interpretSave(game(recordPastEnd, [chest('a', 0)]), save(8, { 0: 1 })).reason).toBe('save.error.truncated');
+  });
+
   it('fails when a declared region runs past the end of the file', () => {
     const fmt: SaveFormatDef = { family: 'nes-sram', size: 8, regions: { treasure: { offset: 4, length: 10 } } };
     const r = interpretSave(game(fmt, [chest('a', 0)]), new Uint8Array(8));

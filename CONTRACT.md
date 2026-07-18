@@ -261,7 +261,7 @@ Currency refs point at `data/currencies.json` and carry only reward/value facts:
 { "kind": "gold", "currencyRefs": [{ "currencyId": "G", "amount": 1000 }] }
 
 // random/encoded amount when the exact amount is not decoded yet
-{ "currencyRefs": [{ "currencyId": "G", "rawCode": "0xFB", "random": true }] }
+{ "currencyRefs": [{ "currencyId": "G", "rawCode": "0xFE", "random": true }] }
 ```
 
 ### Battle party catalogs (`data.species`, `data.parties`, `data.trainers`)
@@ -404,8 +404,12 @@ game and needs two additive fields.
   "family":  "nes-sram",                 // parser family the viewer dispatches on
   "size":    8192,                       // accepted raw size(s) in bytes (number or [numbers])
   "bitOrder": "lsb",                     // bit 0 = 0x01 ("lsb", default) or 0x80 ("msb")
+  "recordSelector": {                    // optional: select one duplicated save record
+    "offset": 2034,                      // absolute selector-byte offset
+    "values": { "1": 2048, "2": 3072 } // selector value → absolute record base
+  },
   "regions": {                           // named bitfields, addressed by saveRef.region
-    "treasure": { "offset": 5024, "length": 32 }
+    "treasure": { "offset": 910, "length": 32, "relativeTo": "record" }
   },
   "signature": [                         // optional: reject saves that aren't this game
     { "offset": 0, "hex": "4d4d" }
@@ -424,7 +428,8 @@ game and needs two additive fields.
 | --- | --- |
 | `saveFormat.family` | Parser family. Only `"nes-sram"` (a flat SRAM image; regions are plain byte slices) is implemented today; GBA/DS families that must first locate the active save slot plug in later against the same `regions`/`saveRef` model. |
 | `saveFormat.size` | Accepted raw file size(s). A file of any other size is rejected before parsing — the cheapest wrong-game guard. |
-| `saveFormat.regions` | Map of region name → `{ offset, length }` (bytes) within the save file. `saveRef.region` selects one; POIs that omit it use `"treasure"`. |
+| `saveFormat.recordSelector` | Optional `{ offset, values, fallback? }`: read one selector byte at the absolute `offset`, then map its decimal value (for example `"2"`) to an absolute record base. An unmapped value fails parsing unless `fallback` supplies a base. |
+| `saveFormat.regions` | Map of region name → `{ offset, length, relativeTo? }` (bytes). Offsets are absolute by default; `relativeTo: "record"` requires `recordSelector` and adds its selected record base. `saveRef.region` selects one; POIs that omit it use `"treasure"`. |
 | `saveFormat.bitOrder` | Bit numbering inside each byte. `"lsb"` (default): flag `n` → byte `offset + (n>>3)`, mask `1 << (n&7)`. `"msb"`: mask `0x80 >> (n&7)`. |
 | `saveFormat.signature` | Optional list of `{ offset, hex }` byte checks; any mismatch rejects the file as belonging to another game. |
 | `pois[*].saveRef.flag` | Bit index within the region. **Must come from the same stable ROM fact as `pois[*].id`** (e.g. the treasure-table index), so a re-export can't silently point a chest at the wrong bit. |

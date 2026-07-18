@@ -221,10 +221,22 @@ export interface GameDataCatalogs {
 
 /** A contiguous bitfield inside a save file (e.g. Metal Max's opened-chest bits). */
 export interface SaveFlagRegion {
-  /** Byte offset of the bitfield within the raw save file. */
+  /** Byte offset of the bitfield, absolute unless `relativeTo` is "record". */
   offset: number;
   /** Length of the bitfield in bytes. */
   length: number;
+  /** Resolve `offset` relative to the base selected by `recordSelector`. */
+  relativeTo?: 'record';
+}
+
+/** Selects one duplicated save record by reading a byte in the raw file. */
+export interface SaveRecordSelector {
+  /** Absolute byte offset of the selector byte. */
+  offset: number;
+  /** Selector byte (decimal string) → absolute record base offset. */
+  values: Record<string, number>;
+  /** Optional record base used when the selector byte has no mapped value. */
+  fallback?: number;
 }
 
 /** A byte-signature check confirming a save belongs to a given game. */
@@ -244,6 +256,8 @@ export interface SaveFormatDef {
   family: string;
   /** Accepted raw file size(s) in bytes; import rejects other sizes. */
   size?: number | number[];
+  /** Optional selector for formats containing duplicated save records. */
+  recordSelector?: SaveRecordSelector;
   /** Named bitfield regions; `saveRef.region` selects one (default "treasure"). */
   regions: Record<string, SaveFlagRegion>;
   /** Bit order within each byte: "lsb" (bit 0 = 0x01) or "msb". Default "lsb". */
