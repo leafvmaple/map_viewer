@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { floorLabel, floorSiblings } from './Floors.js';
+import { floorLabel, floorSiblings, floorSwitchViewState } from './Floors.js';
 import type { GameConfig, MapConfig } from '../types';
 
 const map = (floorGroup?: string, floor?: number): MapConfig => ({
@@ -47,5 +47,32 @@ describe('floorSiblings', () => {
     expect(floorSiblings(config, 'world')).toEqual([]);
     expect(floorSiblings(config, 'lonely')).toEqual([]);
     expect(floorSiblings(config, 'nope')).toEqual([]);
+  });
+});
+
+describe('floorSwitchViewState', () => {
+  const view = { center: [-100, 120] as [number, number], zoom: 2 };
+
+  it('keeps the camera for shared templates and equal coordinate spaces', () => {
+    const sameImage = { ...config, maps: {
+      a: { ...map('tower', 1), image: 'shared.png', width: 240, height: 240 },
+      b: { ...map('tower', 2), image: 'shared.png', width: 240, height: 240 },
+    } };
+    const sameSize = { ...config, maps: {
+      a: { ...map('tower', 1), image: 'a.png', width: 240, height: 240 },
+      b: { ...map('tower', 2), image: 'b.png', width: 240, height: 240 },
+    } };
+
+    expect(floorSwitchViewState(sameImage, 'a', 'b', view)).toBe(view);
+    expect(floorSwitchViewState(sameSize, 'a', 'b', view)).toBe(view);
+  });
+
+  it('fits the target when floor dimensions differ', () => {
+    const differentSize = { ...config, maps: {
+      a: { ...map('tower', 1), width: 304, height: 256 },
+      b: { ...map('tower', 2), width: 240, height: 240 },
+    } };
+
+    expect(floorSwitchViewState(differentSize, 'a', 'b', view)).toBeUndefined();
   });
 });

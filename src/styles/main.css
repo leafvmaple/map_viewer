@@ -130,6 +130,66 @@ html, body {
   gap: 2px;
 }
 
+.map-list-floor-group {
+  border-radius: 6px;
+  background: rgba(15, 52, 96, 0.12);
+}
+
+.map-floor-group-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.map-floor-group-summary::-webkit-details-marker {
+  display: none;
+}
+
+.map-floor-group-summary::before {
+  content: '▸';
+  color: #667788;
+  transition: transform 0.15s;
+}
+
+.map-list-floor-group[open] > .map-floor-group-summary::before {
+  transform: rotate(90deg);
+}
+
+.map-floor-group-summary:hover {
+  background: rgba(0, 229, 255, 0.08);
+}
+
+.map-floor-group-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.map-floor-range {
+  color: #8290a8;
+  font: 11px/1 'Consolas', 'Courier New', monospace;
+}
+
+.map-floor-members {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 0 4px 12px;
+}
+
+.map-floor-label {
+  flex: 1;
+  font: 600 12px/1 'Consolas', 'Courier New', monospace;
+  color: #aebad0;
+}
+
 .map-list-item {
   display: flex;
   align-items: center;
@@ -748,6 +808,12 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  max-height: calc(100vh - 124px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: #0f3460 transparent;
 }
 
 .floor-btn {

@@ -1,5 +1,12 @@
 import { defineConfig } from '@playwright/test';
 
+// Local Vite health checks must bypass workstation HTTP proxies. Without this,
+// Playwright can time out and then incorrectly report that the occupied port
+// failed to start even though localhost is already serving HTTP 200.
+process.env.NO_PROXY = [process.env.NO_PROXY, 'localhost,127.0.0.1,::1']
+  .filter(Boolean)
+  .join(',');
+
 /**
  * E2E tests drive the real app in a real browser against the Vite dev server.
  *
@@ -16,6 +23,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3199',
     viewport: { width: 1400, height: 900 },
+    // Local verification can target an installed browser, e.g.
+    // PLAYWRIGHT_CHANNEL=msedge npm run test:e2e.
+    channel: process.env.PLAYWRIGHT_CHANNEL || undefined,
   },
   webServer: {
     command: 'npm run dev -- --port 3199 --strictPort',

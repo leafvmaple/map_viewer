@@ -5,6 +5,11 @@ async function openApp(page: Page, hash = ''): Promise<void> {
   await page.waitForSelector('.map-list-item', { timeout: 15_000 });
 }
 
+/** Marked baked chests get a check overlay; hidden/sprite POIs dim their marker. */
+function markedMapPoi(page: Page) {
+  return page.locator('.poi-check, .poi-marker.poi-marked');
+}
+
 test.describe('global item search', () => {
   test('searching an item name lists it; clicking jumps to it and anchors the hash', async ({ page }) => {
     await openApp(page);
@@ -81,18 +86,18 @@ test.describe('hide collected on the map', () => {
     test.skip(!panelVisible, 'current world map has no treasure list');
 
     await page.locator('.treasure-item .treasure-mark').first().check();
-    await expect(page.locator('.poi-check')).toHaveCount(1);
+    await expect(markedMapPoi(page)).toHaveCount(1);
 
     await page.locator('.poi-filter input[data-hide-marked]').check();
-    await expect(page.locator('.poi-check')).toHaveCount(0);
+    await expect(markedMapPoi(page)).toHaveCount(0);
 
     await page.reload({ waitUntil: 'networkidle' });
     await page.waitForSelector('.poi-filter-item');
     await expect(page.locator('.poi-filter input[data-hide-marked]')).toBeChecked();
-    await expect(page.locator('.poi-check')).toHaveCount(0);
+    await expect(markedMapPoi(page)).toHaveCount(0);
 
     await page.locator('.poi-filter input[data-hide-marked]').uncheck();
-    await expect(page.locator('.poi-check')).toHaveCount(1);
+    await expect(markedMapPoi(page)).toHaveCount(1);
   });
 });
 
@@ -111,7 +116,8 @@ test.describe('poi deep link', () => {
     await expect
       .poll(() => page.evaluate(() => location.hash))
       .toContain(`&poi=${poiId}`);
-    // the anchored chest zone is on screen (focusPoi panned to it)
-    await expect(page.locator('#map path.poi-hover').first()).toBeVisible();
+    // The anchored POI is on screen: baked chests use a hover zone, while
+    // hidden or sprite-backed collectibles use a visible marker.
+    await expect(page.locator('#map path.poi-hover, #map .poi-marker').first()).toBeVisible();
   });
 });

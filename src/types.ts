@@ -456,6 +456,10 @@ export interface MapListItem {
   name: LocalizedString;
   hasTriggers: boolean;
   hasJumps?: boolean;
+  /** Shared building/dungeon key; grouped into one collapsible sidebar row. */
+  floorGroup?: string;
+  /** Floor label shown for members of a grouped sidebar row. */
+  floor?: number;
 }
 
 /** Supported language codes */

@@ -46,5 +46,6 @@ export class FloorSwitcher {
         data-map-id="${escapeHtml(en.mapId)}">${escapeHtml(floorLabel(en.floor))}</button>`)
       .join('');
     this._el.style.display = 'flex';
+    this._el.querySelector<HTMLElement>('.floor-btn.active')?.scrollIntoView({ block: 'nearest' });
   }
 }

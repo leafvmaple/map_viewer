@@ -5,6 +5,10 @@ async function openApp(page: Page): Promise<void> {
   await page.waitForSelector('.map-list-item', { timeout: 15_000 });
 }
 
+function markedMapPoi(page: Page) {
+  return page.locator('.poi-check, .poi-marker.poi-marked');
+}
+
 async function createUser(page: Page, name: string): Promise<void> {
   await page.click('.user-menu-btn');
   await page.fill('.user-menu-input', name);
@@ -87,7 +91,7 @@ test.describe('chest marks', () => {
     await page.locator('.treasure-item .treasure-mark').first().check();
     await expect(page.locator('.treasure-count')).toHaveText(`1/${total}`);
     await expect(page.locator('.treasure-item.marked')).toHaveCount(1);
-    await expect(page.locator('.poi-check')).toHaveCount(1);
+    await expect(markedMapPoi(page)).toHaveCount(1);
 
     // survives a reload
     await page.reload({ waitUntil: 'networkidle' });

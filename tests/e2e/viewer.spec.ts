@@ -178,6 +178,14 @@ test.describe('viewer basics', () => {
 
     await openApp(page, '#golden_sun/map_016');
     await expect(page.locator('.map-list-item.active')).toHaveAttribute('data-map-id', 'map_016');
+    // At fit zoom the viewport is taller than this shallow map, so Leaflet
+    // legitimately clamps panTo near the centre. Zoom in before checking the
+    // exact entrance focus coordinate.
+    await page.locator('.leaflet-control-zoom-in').click();
+    await page.locator('.leaflet-control-zoom-in').click();
+    // This entrance shares a pixel with a POI marker. Hide POIs so the test
+    // exercises the trigger layer instead of clicking the marker above it.
+    await page.locator('.btn-treasure').click();
     const paths = page.locator('#map path.leaflet-interactive:not(.poi-hover)');
     await expect.poll(() => paths.count()).toBeGreaterThanOrEqual(triggers.length);
     await paths.nth(index).click({ force: true });

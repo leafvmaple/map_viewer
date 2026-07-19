@@ -18,7 +18,7 @@ import { MarkStorage } from './core/MarkStorage.js';
 import { interpretSave } from './core/SaveImport.js';
 import { buildPoiIndex, searchPois, poiItemName, isMarkable, type PoiIndexEntry } from './core/PoiIndex.js';
 import { buildServiceIndex, searchServices, serviceDisplayName, serviceEntryName, type ServiceIndexEntry } from './core/ServiceIndex.js';
-import { floorSiblings } from './core/Floors.js';
+import { floorSiblings, floorSwitchViewState } from './core/Floors.js';
 import { FloorSwitcher } from './ui/FloorSwitcher.js';
 import { UserMenu } from './ui/UserMenu.js';
 import { PoiFilter } from './ui/PoiFilter.js';
@@ -188,8 +188,12 @@ async function init(): Promise<void> {
   floorSwitcher = new FloorSwitcher({
     onSelect: (mapId) => {
       if (!currentGameConfig) return;
-      // Floors of one building share the layout — keep the camera in place.
-      void navigateToMap(currentGameConfig.id, mapId, mapViewer.getViewState());
+      // Reuse the camera only when both floors share a compatible pixel space.
+      const currentMapId = mapViewer.currentMapId;
+      const view = currentMapId
+        ? floorSwitchViewState(currentGameConfig, currentMapId, mapId, mapViewer.getViewState())
+        : undefined;
+      void navigateToMap(currentGameConfig.id, mapId, view);
     },
   });
 

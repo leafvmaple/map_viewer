@@ -112,7 +112,7 @@ map_viewer/
 | `maps[*].image` | Non-empty, relative to `res/{gameId}/`. The file must exist. |
 | `maps[*].tilesPath` | Tile URL template for `type: "tiles"`, relative to `res/{gameId}/` (e.g. `world_tiles/{z}/{x}_{y}.png`); coordinates stay full-res pixels. Optional `minNativeZoom` sets the lowest pre-rendered level (default -5). |
 | `maps[*].tileSize` | Positive integer, usually `16`. Both games use 16px tiles. |
-| `maps[*].floorGroup` | Optional building/dungeon key: maps sharing it are floors of one place and get an **in-map floor switcher** (3F/2F/1F/B1F pills; switching keeps the camera). Must be **stable across re-exports** — derive it from map-table facts (e.g. the smallest member map id), not enumeration order. |
+| `maps[*].floorGroup` | Optional building/dungeon key: maps sharing it are floors of one place, collapse into one sidebar group, and get an **in-map floor switcher** (3F/2F/1F/B1F pills). The camera is preserved only when source and target declare the same pixel dimensions or share one image; otherwise the target fits to view. Must be **stable across re-exports** — derive it from map-table facts (e.g. the smallest member map id), not enumeration order. |
 | `maps[*].floor` | Floor number within `floorGroup`: `1` = ground, negative = basement (`-1` renders B1F). Drives switcher order (top floor first) and labels. |
 | `triggers[*].id` | Unique **within its map**. Convention `{mapId}_t{NN}`. |
 | `triggers[*].bounds` | `[[x1,y1],[x2,y2]]` in **full-resolution image pixels**, origin top-left. 1 tile = `tileSize` px. |
@@ -495,9 +495,10 @@ if problems:
 ```
 
 The viewer performs the equivalent *soft* checks at load time
-([`GameLoader._validate`](src/core/GameLoader.ts)) and logs any dangling targets
-or malformed bounds to the browser console — so the same issues surface on both
-sides.
+([`GameLoader._validate`](src/core/GameLoader.ts)) and logs dangling targets,
+malformed/out-of-image trigger and event bounds, out-of-image POIs, and target
+focus points outside their destination map — so the same issues surface on both
+sides. Producers should run the shared export validator before publishing.
 
 ## 5. Compatibility rules
 

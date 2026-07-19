@@ -1,5 +1,6 @@
 import { i18n } from '../i18n/index.js';
 import { escapeHtml } from '../utils.js';
+import { floorLabel } from '../core/Floors.js';
 import type { LocalizedString, MapJumpDef, MapListItem, RegistryEntry } from '../types';
 
 interface SidebarOptions {
@@ -292,6 +293,11 @@ export class Sidebar {
       const id = (el as HTMLElement).dataset.mapId;
       el.classList.toggle('active', id === mapId);
     });
+    const active = Array.from(this._mapListEl.querySelectorAll<HTMLElement>('.map-list-item'))
+      .find(item => item.dataset.mapId === mapId);
+    const group = active?.closest<HTMLDetailsElement>('.map-list-floor-group');
+    if (group) group.open = true;
+    active?.scrollIntoView({ block: 'nearest' });
   }
 
   /** Show the active map's non-spatial jump list. */
@@ -302,8 +308,16 @@ export class Sidebar {
 
   private _renderMapList(maps: MapListItem[]): void {
     // Clicks/dblclicks are handled by the delegated listeners bound in _render().
-    this._mapListEl.innerHTML = maps
-      .map(m => {
+    const grouped = new Map<string, MapListItem[]>();
+    for (const map of maps) {
+      if (map.floorGroup) {
+        const members = grouped.get(map.floorGroup) ?? [];
+        members.push(map);
+        grouped.set(map.floorGroup, members);
+      }
+    }
+
+    const renderItem = (m: MapListItem, floorChild = false): string => {
         const name = escapeHtml(i18n.localize(m.name));
         const triggerBadge = m.hasTriggers
           ? '<span class="map-badge trigger-badge" title="Has triggers">⚡</span>'
@@ -312,14 +326,36 @@ export class Sidebar {
           ? '<span class="map-badge jump-badge" title="Has jumps">↪</span>'
           : '';
         const active = m.id === this._currentMapId ? 'active' : '';
-        return `<div class="map-list-item ${active}" data-map-id="${escapeHtml(m.id)}">
-          <span class="map-list-name" title="${i18n.t('sidebar.renameTip')}">${name}</span>
+        const label = floorChild
+          ? `<span class="map-floor-label" title="${name}">${escapeHtml(floorLabel(m.floor))}</span>`
+          : `<span class="map-list-name" title="${i18n.t('sidebar.renameTip')}">${name}</span>`;
+        return `<div class="map-list-item${floorChild ? ' floor-map-item' : ''} ${active}" data-map-id="${escapeHtml(m.id)}">
+          ${label}
           <span class="map-list-id">${escapeHtml(m.id)}</span>
           ${triggerBadge}
           ${jumpBadge}
         </div>`;
-      })
-      .join('');
+    };
+
+    const emittedGroups = new Set<string>();
+    this._mapListEl.innerHTML = maps.map(map => {
+      const members = map.floorGroup ? grouped.get(map.floorGroup) ?? [] : [];
+      if (!map.floorGroup || members.length < 2) return renderItem(map);
+      if (emittedGroups.has(map.floorGroup)) return '';
+      emittedGroups.add(map.floorGroup);
+
+      const ordered = [...members].sort((a, b) => (b.floor ?? 1) - (a.floor ?? 1));
+      const floors = ordered.map(member => member.floor ?? 1);
+      const range = `${floorLabel(Math.min(...floors))}–${floorLabel(Math.max(...floors))}`;
+      const current = members.some(member => member.id === this._currentMapId);
+      return `<details class="map-list-floor-group" data-floor-group="${escapeHtml(map.floorGroup)}"${current ? ' open' : ''}>
+        <summary class="map-floor-group-summary">
+          <span class="map-floor-group-name">${escapeHtml(i18n.localize(members[0].name))}</span>
+          <span class="map-floor-range">${escapeHtml(range)}</span>
+        </summary>
+        <div class="map-floor-members">${ordered.map(member => renderItem(member, true)).join('')}</div>
+      </details>`;
+    }).join('');
   }
 
   private _renderJumpList(): void {

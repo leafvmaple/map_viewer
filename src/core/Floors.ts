@@ -1,4 +1,4 @@
-import type { GameConfig } from '../types';
+import type { GameConfig, ViewState } from '../types';
 
 /**
  * Floors - Pure helpers for the in-map floor switcher.
@@ -38,4 +38,30 @@ export function floorSiblings(config: GameConfig, mapId: string): FloorEntry[] {
   // Top floor first, basements last; equal floors keep maps-object order.
   entries.sort((a, b) => b.floor - a.floor);
   return entries;
+}
+
+/**
+ * Preserve the camera only when two floors use the same coordinate space.
+ * Shared-template floors commonly reference the same image; separately
+ * rendered floors may also preserve the view when their declared dimensions
+ * match. Missing or different dimensions fall back to fitBounds.
+ */
+export function floorSwitchViewState(
+  config: GameConfig,
+  fromMapId: string,
+  toMapId: string,
+  viewState: ViewState,
+): ViewState | undefined {
+  const from = config.maps[fromMapId];
+  const to = config.maps[toMapId];
+  if (!from || !to || from.floorGroup !== to.floorGroup || !from.floorGroup) return undefined;
+  if (from.type !== to.type) return undefined;
+  if (
+    from.width != null && from.height != null &&
+    to.width != null && to.height != null
+  ) {
+    return from.width === to.width && from.height === to.height ? viewState : undefined;
+  }
+  if (from.image === to.image) return viewState;
+  return undefined;
 }

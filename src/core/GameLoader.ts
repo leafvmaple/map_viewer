@@ -72,6 +72,8 @@ export class GameLoader {
       name: map.name,
       hasTriggers: (map.triggers?.length ?? 0) > 0,
       hasJumps: (map.jumps?.length ?? 0) > 0,
+      floorGroup: map.floorGroup,
+      floor: map.floor,
     }));
   }
 
@@ -111,6 +113,7 @@ export class GameLoader {
       if (!map.image && !(map.type === 'tiles' && map.tilesPath)) {
         warnings.push(`map "${mapId}" is missing "image"`);
       }
+      const mapSize = this._mapSize(map);
 
       const triggers = map.triggers ?? [];
       if (!Array.isArray(triggers)) {
@@ -120,9 +123,17 @@ export class GameLoader {
       for (const t of triggers) {
         if (!this._isValidBounds(t?.bounds)) {
           warnings.push(`trigger "${t?.id ?? '?'}" in "${mapId}" has malformed bounds`);
+        } else if (mapSize && !this._boundsInside(t.bounds, mapSize)) {
+          warnings.push(`trigger "${t.id}" in "${mapId}" has out-of-bounds bounds`);
         }
         if (t?.target && !mapIds.has(t.target)) {
           warnings.push(`trigger "${t.id}" in "${mapId}" targets unknown map "${t.target}"`);
+        }
+        if (t?.focus) {
+          const targetSize = t.target ? this._mapSize(config.maps[t.target]) : undefined;
+          if (!this._isValidPoint(t.focus) || (targetSize && !this._pointInside(t.focus, targetSize, true))) {
+            warnings.push(`trigger "${t.id}" in "${mapId}" has out-of-bounds target focus`);
+          }
         }
       }
       const jumps = map.jumps ?? [];
@@ -135,6 +146,16 @@ export class GameLoader {
           warnings.push(`jump "${j?.id ?? '?'}" in "${mapId}" is missing target`);
         } else if (!mapIds.has(j.target)) {
           warnings.push(`jump "${j.id ?? '?'}" in "${mapId}" targets unknown map "${j.target}"`);
+        }
+      }
+      for (const poi of map.pois ?? []) {
+        if (mapSize && (!this._isValidPoint(poi?.pos) || !this._pointInside(poi.pos, mapSize, false))) {
+          warnings.push(`poi "${poi?.id ?? '?'}" in "${mapId}" has out-of-bounds position`);
+        }
+      }
+      for (const event of map.events ?? []) {
+        if (mapSize && (!this._isValidBounds(event?.bounds) || !this._boundsInside(event.bounds, mapSize))) {
+          warnings.push(`event "${event?.id ?? '?'}" in "${mapId}" has out-of-bounds bounds`);
         }
       }
     }
@@ -156,6 +177,31 @@ export class GameLoader {
       b.length === 2 &&
       b.every(p => Array.isArray(p) && p.length === 2 && p.every(n => typeof n === 'number'))
     );
+  }
+
+  private _isValidPoint(point: unknown): point is [number, number] {
+    return Array.isArray(point) && point.length === 2 && point.every(value => typeof value === 'number');
+  }
+
+  private _mapSize(map: unknown): [number, number] | undefined {
+    if (!map || typeof map !== 'object') return undefined;
+    const { width, height } = map as { width?: unknown; height?: unknown };
+    return typeof width === 'number' && width > 0 && typeof height === 'number' && height > 0
+      ? [width, height]
+      : undefined;
+  }
+
+  private _pointInside(point: [number, number], size: [number, number], includeEdge: boolean): boolean {
+    const [x, y] = point;
+    const [width, height] = size;
+    return includeEdge
+      ? x >= 0 && x <= width && y >= 0 && y <= height
+      : x >= 0 && x < width && y >= 0 && y < height;
+  }
+
+  private _boundsInside(bounds: [[number, number], [number, number]], size: [number, number]): boolean {
+    const [[x1, y1], [x2, y2]] = bounds;
+    return x1 >= 0 && y1 >= 0 && x1 < x2 && y1 < y2 && x2 <= size[0] && y2 <= size[1];
   }
 
   private _validateGameData(config: GameConfig, catalogs: GameDataCatalogs): void {
