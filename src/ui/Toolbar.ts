@@ -7,6 +7,7 @@ interface ToolbarOptions {
   onTriggersToggle: () => boolean;
   onLabelsToggle: () => boolean;
   onTreasuresToggle: () => boolean;
+  onEncountersToggle: () => boolean;
   onGridToggle: () => boolean;
   onEditModeToggle: () => boolean;
   onChecklistToggle: () => boolean;
@@ -24,6 +25,7 @@ export class Toolbar {
   private _triggersVisible = true;
   private _labelsVisible = false;
   private _treasuresVisible = true;
+  private _encountersVisible = true;
   private _gridVisible = false;
   private _editMode = false;
   private _checklistOpen = false;
@@ -41,6 +43,7 @@ export class Toolbar {
     this._triggersVisible = prefs.triggers;
     this._labelsVisible = prefs.labels;
     this._treasuresVisible = prefs.treasures;
+    this._encountersVisible = prefs.encounters;
     this._gridVisible = prefs.grid;
 
     this._render();
@@ -68,6 +71,9 @@ export class Toolbar {
         </button>
         <button class="toolbar-btn btn-treasure" title="${i18n.t('toolbar.treasures')}">
           📦 ${i18n.t('toolbar.treasures')}
+        </button>
+        <button class="toolbar-btn btn-encounters" title="${i18n.t('toolbar.encounters')}">
+          👾 ${i18n.t('toolbar.encounters')}
         </button>
         <button class="toolbar-btn btn-checklist" title="${i18n.t('toolbar.checklist')}">
           📋 ${i18n.t('toolbar.checklist')}
@@ -118,6 +124,13 @@ export class Toolbar {
       Prefs.save({ treasures: this._treasuresVisible });
     });
 
+    const encountersBtn = this._el.querySelector('.btn-encounters')!;
+    encountersBtn.addEventListener('click', () => {
+      this._encountersVisible = this._options.onEncountersToggle();
+      encountersBtn.classList.toggle('active', this._encountersVisible);
+      Prefs.save({ encounters: this._encountersVisible });
+    });
+
     // Checklist drawer toggle
     const checklistBtn = this._el.querySelector('.btn-checklist')!;
     checklistBtn.addEventListener('click', () => {
@@ -163,6 +176,7 @@ export class Toolbar {
     this._el.querySelector('.btn-triggers')?.classList.toggle('active', this._triggersVisible);
     this._el.querySelector('.btn-labels')?.classList.toggle('active', this._labelsVisible);
     this._el.querySelector('.btn-treasure')?.classList.toggle('active', this._treasuresVisible);
+    this._el.querySelector('.btn-encounters')?.classList.toggle('active', this._encountersVisible);
     this._el.querySelector('.btn-checklist')?.classList.toggle('active', this._checklistOpen);
     this._el.querySelector('.btn-services')?.classList.toggle('active', this._servicesOpen);
     this._el.querySelector('.btn-grid')?.classList.toggle('active', this._gridVisible);
@@ -206,6 +220,7 @@ export class Toolbar {
     this._triggersVisible = prefs.triggers;
     this._labelsVisible = prefs.labels;
     this._treasuresVisible = prefs.treasures;
+    this._encountersVisible = prefs.encounters;
     this._gridVisible = prefs.grid;
     this._applyState();
   }
@@ -229,6 +244,9 @@ export class Toolbar {
 
     const treasureBtn = this._el.querySelector('.btn-treasure');
     if (treasureBtn) treasureBtn.textContent = `📦 ${i18n.t('toolbar.treasures')}`;
+
+    const encountersBtn = this._el.querySelector('.btn-encounters');
+    if (encountersBtn) encountersBtn.textContent = `👾 ${i18n.t('toolbar.encounters')}`;
 
     const checklistBtn = this._el.querySelector('.btn-checklist');
     if (checklistBtn) checklistBtn.textContent = `📋 ${i18n.t('toolbar.checklist')}`;

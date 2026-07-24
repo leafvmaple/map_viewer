@@ -106,6 +106,8 @@ export interface GameDataRefs {
   trainers?: string;
   /** Currency catalog JSON path, relative to res/{gameId}/game.json. */
   currencies?: string;
+  /** Random-encounter realm catalog JSON path, relative to game.json. */
+  encounters?: string;
 }
 
 /** One display-ready attribute row on a catalog item (attack, defense, …).
@@ -160,6 +162,54 @@ export interface SpeciesDef {
   icon?: string;
   iconSize?: [number, number];
   [key: string]: unknown;
+}
+
+export interface EncounterMemberDef {
+  speciesId: string;
+  count: number;
+}
+
+export interface EncounterOutcomeDef {
+  kind: 'monster' | 'formation';
+  speciesId?: string;
+  groupId?: string;
+  members?: EncounterMemberDef[];
+  weight: number;
+  chancePercent?: number;
+  conditional?: boolean;
+  countRanges?: [number, number][];
+}
+
+export interface EncounterRealmDef {
+  id: string;
+  name?: LocalizedString;
+  attributeRaw?: number;
+  ridingTankItemClass?: number;
+  initialRateClass?: number;
+  surpriseClass?: number;
+  probabilitySet?: number;
+  totalWeight: number;
+  conditional: boolean;
+  outcomes: EncounterOutcomeDef[];
+}
+
+export interface EncounterZoneDef {
+  id: string;
+  realmId: string;
+  /** Full-resolution pixel bounds, top-left origin. */
+  bounds: [[number, number], [number, number]];
+}
+
+export interface FixedEncounterDef {
+  id: string;
+  name: LocalizedString;
+  mapId: string;
+  /** Trigger tile coordinates, not pixels. */
+  pos: [number, number];
+  completionFlag: string;
+  battleParameter: string;
+  handlerId: string;
+  active: boolean;
 }
 
 export interface PartyMemberRefDef {
@@ -217,6 +267,8 @@ export interface GameDataCatalogs {
   parties: Record<string, PartyDef>;
   trainers: Record<string, TrainerDef>;
   currencies: Record<string, CurrencyDef>;
+  encounters?: Record<string, EncounterRealmDef>;
+  fixedEncounters?: Record<string, FixedEncounterDef>;
 }
 
 /** A contiguous bitfield inside a save file (e.g. Metal Max's opened-chest bits). */
@@ -324,6 +376,8 @@ export interface PoiDef {
   serviceIds?: string[];
   /** Which save-file flag proves this POI is done — read by the save importer. */
   saveRef?: PoiSaveRef;
+  /** Stable row id in data/encounters.json fixedEncounters. */
+  fixedEncounterId?: string;
 }
 
 /** Map rendering type */
@@ -369,6 +423,8 @@ export interface MapConfig {
   pois?: PoiDef[];
   /** Event-driven tile changes (e.g. a wall opening), toggled by the viewer. */
   events?: EventDef[];
+  /** Spatial bindings from map regions to the global encounter realm catalog. */
+  encounters?: EncounterZoneDef[];
 }
 
 /** A terrain change a map applies when a story event fires (toggleable overlay). */

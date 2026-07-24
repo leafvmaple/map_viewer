@@ -10,10 +10,11 @@ export interface UiPrefs {
   triggers: boolean;   // trigger zones visible
   labels: boolean;     // always-on labels
   treasures: boolean;  // treasure/POI markers visible
+  encounters: boolean; // encounter-region overlay + details visible
   grid: boolean;       // tile grid overlay
 }
 
-const DEFAULTS: UiPrefs = { triggers: true, labels: false, treasures: true, grid: false };
+const DEFAULTS: UiPrefs = { triggers: true, labels: false, treasures: true, encounters: true, grid: false };
 
 export const Prefs = {
   /** Load the current user's prefs, filling any missing keys from the defaults. */

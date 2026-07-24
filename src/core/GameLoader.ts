@@ -46,7 +46,7 @@ export class GameLoader {
 
   /** Load optional external item/service catalogs declared by game.json `data`. */
   async loadGameData(gameConfig: GameConfig): Promise<GameDataCatalogs> {
-    const out: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
+    const out: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {}, encounters: {} };
     const refs = gameConfig.data;
     if (!refs) return out;
 
@@ -56,6 +56,8 @@ export class GameLoader {
     out.parties = await this._loadCatalog(gameConfig, refs.parties, 'parties', 'party');
     out.trainers = await this._loadCatalog(gameConfig, refs.trainers, 'trainers', 'trainer');
     out.currencies = await this._loadCatalog(gameConfig, refs.currencies, 'currencies', 'currency');
+    out.encounters = await this._loadCatalog(gameConfig, refs.encounters, 'encounters', 'encounter realm', 'realms');
+    out.fixedEncounters = await this._loadCatalog(gameConfig, refs.encounters, 'fixedEncounters', 'fixed encounter', 'fixedEncounters');
     this._validateGameData(gameConfig, out);
     return out;
   }
@@ -158,6 +160,11 @@ export class GameLoader {
           warnings.push(`event "${event?.id ?? '?'}" in "${mapId}" has out-of-bounds bounds`);
         }
       }
+      for (const zone of map.encounters ?? []) {
+        if (mapSize && (!this._isValidBounds(zone?.bounds) || !this._boundsInside(zone.bounds, mapSize))) {
+          warnings.push(`encounter zone "${zone?.id ?? '?'}" in "${mapId}" has out-of-bounds bounds`);
+        }
+      }
     }
 
     if (warnings.length > 0) {
@@ -212,9 +219,19 @@ export class GameLoader {
     const partyIds = new Set(Object.keys(catalogs.parties));
     const trainerIds = new Set(Object.keys(catalogs.trainers));
     const currencyIds = new Set(Object.keys(catalogs.currencies));
+    const encounterIds = new Set(Object.keys(catalogs.encounters ?? {}));
+    const fixedEncounterIds = new Set(Object.keys(catalogs.fixedEncounters ?? {}));
 
     for (const [mapId, map] of Object.entries(config.maps)) {
+      for (const zone of map.encounters ?? []) {
+        if (!encounterIds.has(zone.realmId)) {
+          warnings.push(`maps/${mapId}/encounters/${zone.id}: realmId '${zone.realmId}' missing from encounter catalog`);
+        }
+      }
       for (const poi of map.pois ?? []) {
+        if (poi.fixedEncounterId && !fixedEncounterIds.has(poi.fixedEncounterId)) {
+          warnings.push(`maps/${mapId}/pois/${poi.id}: fixedEncounterId '${poi.fixedEncounterId}' missing from encounter catalog`);
+        }
         for (const ref of poi.itemRefs ?? []) {
           if (!itemIds.has(ref.itemId)) warnings.push(`maps/${mapId}/pois/${poi.id}: itemRef '${ref.itemId}' missing from item catalog`);
         }
@@ -264,6 +281,20 @@ export class GameLoader {
       }
     }
 
+    for (const [realmId, realm] of Object.entries(catalogs.encounters ?? {})) {
+      for (const outcome of realm.outcomes) {
+        const refs = [
+          ...(outcome.speciesId ? [outcome.speciesId] : []),
+          ...(outcome.members ?? []).map(member => member.speciesId),
+        ];
+        for (const speciesId of refs) {
+          if (!speciesIds.has(speciesId)) {
+            warnings.push(`encounters/${realmId}: speciesId '${speciesId}' missing from species catalog`);
+          }
+        }
+      }
+    }
+
     if (warnings.length > 0) {
       const shown = warnings.slice(0, 50);
       console.warn(
@@ -279,11 +310,12 @@ export class GameLoader {
     path: string | undefined,
     key: K,
     label: string,
+    rootKey: string = key,
   ): Promise<GameDataCatalogs[K]> {
     if (!path) return {} as GameDataCatalogs[K];
     const resp = await fetch(this.resolveImagePath(gameConfig, path));
     if (!resp.ok) throw new Error(`Failed to load ${label} catalog: ${resp.status}`);
-    const data = await resp.json() as Partial<GameDataCatalogs>;
-    return (data[key] ?? {}) as GameDataCatalogs[K];
+    const data = await resp.json() as Record<string, unknown>;
+    return (data[rootKey] ?? {}) as GameDataCatalogs[K];
   }
 }

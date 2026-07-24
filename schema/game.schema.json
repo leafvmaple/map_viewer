@@ -40,7 +40,8 @@
         "species": { "type": "string", "minLength": 1, "description": "Species catalog JSON path, e.g. data/species.json." },
         "parties": { "type": "string", "minLength": 1, "description": "Battle party catalog JSON path, e.g. data/parties.json." },
         "trainers": { "type": "string", "minLength": 1, "description": "Trainer catalog JSON path, e.g. data/trainers.json." },
-        "currencies": { "type": "string", "minLength": 1, "description": "Currency catalog JSON path, e.g. data/currencies.json." }
+        "currencies": { "type": "string", "minLength": 1, "description": "Currency catalog JSON path, e.g. data/currencies.json." },
+        "encounters": { "type": "string", "minLength": 1, "description": "Random encounter realm catalog JSON path, e.g. data/encounters.json." }
       }
     },
     "saveFormat": { "$ref": "#/$defs/saveFormat" },
@@ -156,7 +157,22 @@
           "type": "array",
           "description": "Event-driven tile changes (e.g. a wall opening); each is a toggleable overlay.",
           "items": { "$ref": "#/$defs/event" }
+        },
+        "encounters": {
+          "type": "array",
+          "description": "Map regions bound to global random-encounter realms.",
+          "items": { "$ref": "#/$defs/encounterZone" }
         }
+      }
+    },
+    "encounterZone": {
+      "type": "object",
+      "required": ["id", "realmId", "bounds"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "realmId": { "type": "string", "minLength": 1 },
+        "bounds": { "$ref": "#/$defs/bounds" }
       }
     },
     "jump": {
@@ -331,6 +347,11 @@
           "type": "array",
           "description": "Optional references to game-wide services/shops attached to this map POI.",
           "items": { "type": "string", "minLength": 1 }
+        },
+        "fixedEncounterId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable row id in data/encounters.json fixedEncounters."
         },
         "saveRef": { "$ref": "#/$defs/saveRef" }
       }

@@ -110,5 +110,19 @@
   "service.directoryEmpty": "このゲームには店またはサービスがありません",
   "service.award": "賞品",
   "service.quantity": "数",
-  "service.soldOut": "売り切れ"
+  "service.soldOut": "売り切れ",
+  "toolbar.encounters": "エンカウント",
+  "encounter.title": "エンカウント領域",
+  "encounter.rateClass": "出現率クラス",
+  "encounter.surpriseClass": "不意打ちクラス",
+  "encounter.probabilitySet": "重みセット",
+  "encounter.conditionalNote": "* イベント条件編成を含むため、固定確率ではなくROM重みを表示",
+  "encounter.formation": "固定編成",
+  "encounter.weight": "重み",
+  "encounter.drop": "ドロップ",
+  "encounter.fixed": "固定エンカウント",
+  "encounter.row": "テーブル行",
+  "encounter.victoryFlag": "勝利フラグ",
+  "encounter.handler": "ハンドラ",
+  "encounter.battleParameter": "戦闘パラメータ"
 }

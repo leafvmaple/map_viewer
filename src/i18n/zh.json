@@ -110,5 +110,19 @@
   "service.directoryEmpty": "当前游戏没有商店或服务目录",
   "service.award": "奖品",
   "service.quantity": "数量",
-  "service.soldOut": "售罄"
+  "service.soldOut": "售罄",
+  "toolbar.encounters": "遇敌",
+  "encounter.title": "遇敌领域",
+  "encounter.rateClass": "频率级",
+  "encounter.surpriseClass": "偷袭级",
+  "encounter.probabilitySet": "权重组",
+  "encounter.conditionalNote": "* 含事件条件编队，显示 ROM 权重而非固定概率",
+  "encounter.formation": "固定编队",
+  "encounter.weight": "权重",
+  "encounter.drop": "掉落",
+  "encounter.fixed": "固定遇敌",
+  "encounter.row": "表行",
+  "encounter.victoryFlag": "胜利旗标",
+  "encounter.handler": "处理器",
+  "encounter.battleParameter": "战斗参数"
 }

@@ -45,7 +45,7 @@ export class PoiLayer {
   private _onPoiClick: (poi: PoiDef) => void;
   private _resolveIcon: ((relativePath: string) => string) | null = null;
   private _items: Record<string, CatalogItemDef> = {};
-  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
+  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {}, encounters: {} };
 
   constructor(leafletMap: L.Map, options: PoiLayerOptions = {}) {
     this._map = leafletMap;

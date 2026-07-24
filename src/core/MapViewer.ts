@@ -1,8 +1,9 @@
 import L from 'leaflet';
 import { TriggerLayer } from './TriggerLayer.js';
 import { PoiLayer } from './PoiLayer.js';
+import { EncounterLayer } from './EncounterLayer.js';
 import { i18n } from '../i18n/index.js';
-import type { CatalogItemDef, GameConfig, GameDataCatalogs, MapConfig, PoiDef, TriggerDef, ViewState, EventDef } from '../types';
+import type { CatalogItemDef, EncounterZoneDef, GameConfig, GameDataCatalogs, MapConfig, PoiDef, TriggerDef, ViewState, EventDef } from '../types';
 
 interface MapViewerOptions {
   onTriggerClick?: (trigger: TriggerDef) => void;
@@ -13,6 +14,8 @@ interface MapViewerOptions {
   onImageError?: (url: string) => void;
   /** Click on a POI marker/zone (used to toggle its collected mark). */
   onPoiClick?: (poi: PoiDef) => void;
+  /** Called when the cursor enters a random-encounter region. */
+  onEncounterZoneChange?: (zone: EncounterZoneDef | null) => void;
 }
 
 interface ImageDimensions {
@@ -28,6 +31,7 @@ export class MapViewer {
   private _map: L.Map;
   private _triggerLayer: TriggerLayer;
   private _poiLayer: PoiLayer;
+  private _encounterLayer: EncounterLayer;
   private _onTriggerClick: (trigger: TriggerDef) => void;
   private _onMapLoaded: (mapId: string, mapConfig: MapConfig) => void;
   private _onImageError: (url: string) => void;
@@ -39,7 +43,7 @@ export class MapViewer {
   private _resolveImagePath: ((relativePath: string) => string) | null = null;
   private _isPoiMarked: ((poiId: string) => boolean) | null = null;
   private _items: Record<string, CatalogItemDef> = {};
-  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {} };
+  private _catalogs: GameDataCatalogs = { items: {}, services: {}, species: {}, parties: {}, trainers: {}, currencies: {}, encounters: {} };
 
   private _imageOverlay: L.ImageOverlay | null = null;
   private _tileLayer: L.TileLayer | null = null;
@@ -81,6 +85,9 @@ export class MapViewer {
 
     // Points of interest (treasure chests, etc.)
     this._poiLayer = new PoiLayer(this._map, { onPoiClick: options.onPoiClick });
+    this._encounterLayer = new EncounterLayer(this._map, {
+      onZoneChange: options.onEncounterZoneChange,
+    });
 
     // Pixel coordinate display
     this._coordControl = new L.Control({ position: 'bottomleft' });
@@ -189,6 +196,7 @@ export class MapViewer {
       ? new Set(pois.filter(p => this._isPoiMarked!(p.id)).map(p => p.id))
       : undefined;
     this._poiLayer.setPois(pois, mapConfig.tileSize ?? 16, showGlyphs, marked);
+    this._encounterLayer.setZones(mapConfig.encounters ?? []);
     this._onMapLoaded(mapId, mapConfig);
   }
 
@@ -347,6 +355,7 @@ export class MapViewer {
     }
     this._triggerLayer.clear();
     this._poiLayer.clear();
+    this._encounterLayer.clear();
     this._removeGrid();
     this.clearEventOverlays();
     this._currentMapId = null;
@@ -408,6 +417,10 @@ export class MapViewer {
 
   get poiLayer(): PoiLayer {
     return this._poiLayer;
+  }
+
+  get encounterLayer(): EncounterLayer {
+    return this._encounterLayer;
   }
 
   /** Toggle a map event's changed-tiles overlay (rendered above the base image). */

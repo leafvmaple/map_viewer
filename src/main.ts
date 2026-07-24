@@ -9,6 +9,7 @@ import { Toolbar } from './ui/Toolbar.js';
 import { TreasureList } from './ui/TreasureList.js';
 import { ServicePanel } from './ui/ServicePanel.js';
 import { EventPanel } from './ui/EventPanel.js';
+import { EncounterPanel } from './ui/EncounterPanel.js';
 import { TriggerStorage } from './core/TriggerStorage.js';
 import { MapConfigStorage } from './core/MapConfigStorage.js';
 import { Prefs } from './core/Prefs.js';
@@ -48,6 +49,7 @@ let toolbar: Toolbar;
 let treasureList: TreasureList;   // current map (top-right, clickable)
 let servicePanel: ServicePanel;   // shop/service details (right)
 let eventPanel: EventPanel;       // terrain-event toggles (bottom-left)
+let encounterPanel: EncounterPanel; // random encounter details (bottom-right)
 let userMenu: UserMenu;           // profile switcher (toolbar)
 let poiFilter: PoiFilter;         // POI category legend (bottom-left)
 let checklist: Checklist;         // game-wide collectible drawer (right)
@@ -133,7 +135,10 @@ async function init(): Promise<void> {
     onMapLoaded: handleMapLoaded,
     onImageError: (url) => showError(url),
     onPoiClick: handlePoiClick,
+    onEncounterZoneChange: (zone) => encounterPanel?.selectZone(zone),
   });
+
+  encounterPanel = new EncounterPanel(document.getElementById('map')!);
 
   triggerEditor = new TriggerEditor(mapViewer.leafletMap, {
     onTriggersChanged: handleTriggersChanged,
@@ -160,6 +165,11 @@ async function init(): Promise<void> {
       const visible = mapViewer.poiLayer.toggle();
       treasureList.setVisible(visible);
       poiFilter.setVisible(visible);
+      return visible;
+    },
+    onEncountersToggle: () => {
+      const visible = mapViewer.encounterLayer.toggle();
+      encounterPanel.setVisible(visible);
       return visible;
     },
     onGridToggle: () => mapViewer.toggleGrid(),
@@ -354,6 +364,10 @@ async function handleGameSelect(
       (poiId) => markedPois.has(poiId),
     );
     mapViewer.setCatalogs(catalogs);
+    encounterPanel.setCatalogs(
+      catalogs,
+      (path) => gameLoader.resolveImagePath(currentGameConfig!, path),
+    );
     // Item mini-icons in the treasure panel / checklist share the same resolver.
     treasureList.setIconResolver((path) => gameLoader.resolveImagePath(currentGameConfig!, path));
     treasureList.setCatalogs(catalogs);
@@ -560,6 +574,10 @@ async function importSaveFile(file: File): Promise<void> {
 
 /** Map click on a POI: service markers open their shop list; markable POIs toggle state. */
 function handlePoiClick(poi: PoiDef): void {
+  if (poi.fixedEncounterId) {
+    encounterPanel.selectFixedEncounter(poi.fixedEncounterId);
+    return;
+  }
   if (poi.serviceIds?.length) {
     servicePanel.show(poi.serviceIds[0]);
     toolbar.setServicesOpen(true);
@@ -606,6 +624,8 @@ function applyLayerPrefs(): void {
   mapViewer.triggerLayer.setLabelsPermanent(p.labels);
   mapViewer.triggerLayer.setVisible(!triggerEditor.active && p.triggers);
   mapViewer.poiLayer.setVisible(p.treasures);
+  mapViewer.encounterLayer.setVisible(p.encounters);
+  encounterPanel.setVisible(p.encounters);
   treasureList.setVisible(p.treasures && !triggerEditor.active);
   poiFilter.setVisible(p.treasures);
   if (p.grid !== mapViewer.gridVisible) mapViewer.toggleGrid();
@@ -840,6 +860,7 @@ function refreshAllLabels(): void {
   mapViewer.poiLayer.refreshLabels();
   treasureList.refreshLabels();
   eventPanel.refreshLabels();
+  encounterPanel.refreshLabels();
   servicePanel.refreshLabels();
   poiFilter.refreshLabels();
   checklist.refreshLabels();

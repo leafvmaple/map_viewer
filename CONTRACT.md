@@ -18,6 +18,7 @@ fix-ups. The machine-readable form lives in [`schema/`](schema/):
 | [`schema/parties.schema.json`](schema/parties.schema.json) | `res/{gameId}/data/parties.json` |
 | [`schema/trainers.schema.json`](schema/trainers.schema.json) | `res/{gameId}/data/trainers.json` |
 | [`schema/currencies.schema.json`](schema/currencies.schema.json) | `res/{gameId}/data/currencies.json` |
+| [`schema/encounters.schema.json`](schema/encounters.schema.json) | `res/{gameId}/data/encounters.json` |
 
 ---
 
@@ -41,7 +42,8 @@ map_viewer/
        │  ├─ species.json                 #   species/entity catalog
        │  ├─ parties.json                 #   battle party catalog
        │  ├─ trainers.json                #   trainer/boss catalog
-       │  └─ currencies.json              #   money/token catalog
+       │  ├─ currencies.json              #   money/token catalog
+       │  └─ encounters.json              #   random-encounter realm catalog
       └─ sprites/                       # OPTIONAL: POI images referenced by game.json
          ├─ *.png                       #   pois[*].icon (NPC overworld sprites…)
          ├─ mon/*.png                   #   party[*].icon (mini icons)
@@ -121,6 +123,51 @@ map_viewer/
 | `triggers[*].returnTargets` | Optional candidate source maps for `kind: "return"`, used for validation and fallback when a reused scene is opened directly with no navigation context. Each entry has `target` plus optional `focus`. |
 | `triggers[*].focus` | Optional `[x,y]` pixel focus on the target map. Applied after cross-map navigation and directly for same-map doors/teleports. |
 
+### Optional random-encounter regions
+
+Maps bind pixel regions to a game-wide realm catalog. Keep monster facts in
+`species.json`; keep pools/formations in `encounters.json`; do not duplicate
+either on every map.
+
+```jsonc
+// game.json map entry
+"encounters": [
+  { "id": "world_21", "realmId": "3A", "bounds": [[256, 512], [512, 768]] }
+]
+
+// data/encounters.json
+{ "realms": {
+  "3A": {
+    "id": "3A", "initialRateClass": 2, "surpriseClass": 1,
+    "probabilitySet": 0, "totalWeight": 16, "conditional": false,
+    "outcomes": [
+      { "kind": "monster", "speciesId": "18", "countRanges": [[1, 3]],
+        "weight": 8, "chancePercent": 50.0 }
+    ]
+  }
+}, "fixedEncounters": {
+  "21": {
+    "id": "21", "name": { "zh": "固定遇敌第1波" }, "mapId": "A2",
+    "pos": [22, 14], "completionFlag": "C0", "battleParameter": "00",
+    "handlerId": "1B", "active": true
+  }
+} }
+```
+
+- `bounds` use the same full-resolution, top-left-origin pixel coordinates as
+  triggers and must stay inside the map image.
+- `realmId` must exist in `data/encounters.json` and every species reference in
+  a realm must exist in `data/species.json`.
+- `chancePercent` is optional. Omit it when event/state conditions can change
+  the active denominator; retain the ROM `weight` and mark the realm/outcome
+  `conditional: true` instead of presenting a false fixed probability.
+- `countRanges` contains inclusive `[min,max]` pairs. A formation outcome uses
+  `members: [{speciesId,count}]` instead.
+- `fixedEncounters` preserves one-time/map-script encounter table rows. Active
+  rows should also be emitted as map POIs with `kind: "fixed_encounter"` and
+  `fixedEncounterId`; reserved rows stay in the catalog with `active: false`
+  but do not get fake map markers.
+
 ### Coordinate system (important)
 
 - Bounds are **pixel coordinates of the full-res `image`**, not tiles, not lat/lng.
@@ -168,7 +215,7 @@ hover zones with a chest list, and users can mark them as collected:
 | `pois[*].partyId` | Direct battle party reference into `data/parties.json`, for bosses or encounters that do not have a trainer row. |
 | `pois[*].serviceIds` | Optional references to game-wide shop/service ids from `data/services.json`. Use this for spatial bindings (NPC/counter/vending machine); don't duplicate a full shop inventory on every POI. |
 
-### Optional catalogs (`data.items`, `data.services`)
+### Optional catalogs (`data.*`)
 
 Games may ship global item and service catalogs next to `game.json`:
 
@@ -180,7 +227,8 @@ Games may ship global item and service catalogs next to `game.json`:
     "species": "data/species.json",
     "parties": "data/parties.json",
     "trainers": "data/trainers.json",
-    "currencies": "data/currencies.json"
+    "currencies": "data/currencies.json",
+    "encounters": "data/encounters.json"
   }
 }
 ```

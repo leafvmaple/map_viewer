@@ -110,5 +110,19 @@
   "service.directoryEmpty": "No shops or services for this game",
   "service.award": "Prize",
   "service.quantity": "Qty",
-  "service.soldOut": "Sold out"
+  "service.soldOut": "Sold out",
+  "toolbar.encounters": "Encounters",
+  "encounter.title": "Encounter realm",
+  "encounter.rateClass": "Rate class",
+  "encounter.surpriseClass": "Surprise class",
+  "encounter.probabilitySet": "Weight set",
+  "encounter.conditionalNote": "* Contains event-gated formations; ROM weights shown instead of fixed odds",
+  "encounter.formation": "Formation",
+  "encounter.weight": "Weight",
+  "encounter.drop": "Drop",
+  "encounter.fixed": "Fixed encounter",
+  "encounter.row": "Table row",
+  "encounter.victoryFlag": "Victory flag",
+  "encounter.handler": "Handler",
+  "encounter.battleParameter": "Battle parameter"
 }

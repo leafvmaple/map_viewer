@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/leafvmaple/map_viewer/schema/encounters.schema.json",
+  "title": "Game Map Viewer - random encounter catalog",
+  "type": "object",
+  "required": ["realms"],
+  "additionalProperties": true,
+  "properties": {
+    "realms": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/realm" }
+    },
+    "fixedEncounters": {
+      "type": "object",
+      "description": "All rows in the one-time fixed-encounter table, including reserved rows.",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "$ref": "#/$defs/fixedEncounter" }
+    }
+  },
+  "$defs": {
+    "localizedString": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": { "type": "string" }
+    },
+    "member": {
+      "type": "object",
+      "required": ["speciesId", "count"],
+      "additionalProperties": false,
+      "properties": {
+        "speciesId": { "type": "string", "minLength": 1 },
+        "count": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "countRange": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        { "type": "integer", "minimum": 0 },
+        { "type": "integer", "minimum": 0 }
+      ],
+      "items": false
+    },
+    "outcome": {
+      "type": "object",
+      "required": ["kind", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": { "enum": ["monster", "formation"] },
+        "speciesId": { "type": "string", "minLength": 1 },
+        "groupId": { "type": "string", "minLength": 1 },
+        "members": { "type": "array", "items": { "$ref": "#/$defs/member" } },
+        "weight": { "type": "integer", "minimum": 0 },
+        "chancePercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "conditional": { "type": "boolean" },
+        "countRanges": { "type": "array", "items": { "$ref": "#/$defs/countRange" } }
+      }
+    },
+    "realm": {
+      "type": "object",
+      "required": ["id", "totalWeight", "conditional", "outcomes"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "attributeRaw": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "ridingTankItemClass": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "initialRateClass": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "surpriseClass": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "probabilitySet": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "totalWeight": { "type": "integer", "minimum": 0 },
+        "conditional": { "type": "boolean" },
+        "outcomes": { "type": "array", "items": { "$ref": "#/$defs/outcome" } }
+      }
+    },
+    "fixedEncounter": {
+      "type": "object",
+      "required": ["id", "name", "mapId", "pos", "completionFlag", "battleParameter", "handlerId", "active"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "$ref": "#/$defs/localizedString" },
+        "mapId": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "pos": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer", "minimum": 0, "maximum": 255 }
+        },
+        "completionFlag": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "battleParameter": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "handlerId": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "active": { "type": "boolean" }
+      }
+    }
+  }
+}
