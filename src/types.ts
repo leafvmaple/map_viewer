@@ -479,6 +479,18 @@ export interface EventDef {
   label?: LocalizedString;
   /** Number of tiles this event changes. */
   tiles?: number;
+  /** Save byte that directly controls this terrain state. */
+  saveStateRef?: EventSaveStateRef;
+}
+
+/** A byte-valued saved state that controls a terrain overlay. */
+export interface EventSaveStateRef {
+  /** Region name in `saveFormat.regions`. */
+  region: string;
+  /** Byte offset within the named region. */
+  offset: number;
+  /** Byte predicate that activates the overlay. */
+  test: 'nonzero' | 'zero';
 }
 
 /** Display metadata for a game-specific POI kind (legend name + glyph). */

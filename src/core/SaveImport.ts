@@ -26,6 +26,10 @@ export interface SaveImportResult {
   markedIds: string[];
   /** Number of POIs carrying a `saveRef` — the import denominator ("42/91"). */
   trackable: number;
+  /** Terrain event ids whose direct saved-state byte activates their overlay. */
+  activeEventIds: string[];
+  /** Number of terrain events carrying a `saveStateRef`. */
+  trackableEvents: number;
   /** Native save position, optionally resolved to a rendered map and pixel focus. */
   location?: SaveLocationResult;
 }
@@ -122,7 +126,10 @@ function bitSet(region: Uint8Array, flag: number, order: 'lsb' | 'msb'): boolean
 }
 
 function fail(reason: string): SaveImportResult {
-  return { ok: false, reason, markedIds: [], trackable: 0 };
+  return {
+    ok: false, reason, markedIds: [], trackable: 0,
+    activeEventIds: [], trackableEvents: 0,
+  };
 }
 
 function resolveLocation(
@@ -214,7 +221,9 @@ export function interpretSave(game: GameConfig, bytes: Uint8Array): SaveImportRe
 
   const bitOrder = fmt.bitOrder ?? 'lsb';
   const markedIds: string[] = [];
+  const activeEventIds = new Set<string>();
   let trackable = 0;
+  let trackableEvents = 0;
   for (const map of Object.values(game.maps)) {
     for (const poi of map.pois ?? []) {
       const ref = poi.saveRef;
@@ -223,7 +232,20 @@ export function interpretSave(game: GameConfig, bytes: Uint8Array): SaveImportRe
       const region = out.regions[ref.region ?? DEFAULT_REGION];
       if (region && bitSet(region, ref.flag, bitOrder)) markedIds.push(poi.id);
     }
+    for (const event of map.events ?? []) {
+      const ref = event.saveStateRef;
+      if (!ref) continue;
+      trackableEvents++;
+      const value = out.regions[ref.region]?.[ref.offset];
+      if (value == null) continue;
+      const active = ref.test === 'nonzero' ? value !== 0 : value === 0;
+      if (active) activeEventIds.add(event.id);
+    }
   }
   const location = resolveLocation(game, bytes, fmt, out.recordBase ?? 0);
-  return { ok: true, markedIds, trackable, ...(location ? { location } : {}) };
+  return {
+    ok: true, markedIds, trackable,
+    activeEventIds: [...activeEventIds], trackableEvents,
+    ...(location ? { location } : {}),
+  };
 }

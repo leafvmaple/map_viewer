@@ -65,10 +65,10 @@ export class EventPanel {
     if (ev) this._options.onFocus(ev);
   }
 
-  /** Show the events for the current map (resets all toggles to off). */
-  setEvents(events: EventDef[]): void {
+  /** Show the events for the current map, restoring saved/imported states. */
+  setEvents(events: EventDef[], activeIds: ReadonlySet<string> = new Set()): void {
     this._events = events ?? [];
-    this._active.clear();
+    this._active = new Set(this._events.filter(event => activeIds.has(event.id)).map(event => event.id));
     this._render();
   }
 

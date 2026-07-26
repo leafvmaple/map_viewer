@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { interpretSave } from './SaveImport.js';
-import type { GameConfig, PoiDef, SaveFormatDef } from '../types.js';
+import type { EventDef, GameConfig, PoiDef, SaveFormatDef } from '../types.js';
 
 function game(saveFormat: SaveFormatDef | undefined, pois: PoiDef[]): GameConfig {
   return {
@@ -9,6 +9,15 @@ function game(saveFormat: SaveFormatDef | undefined, pois: PoiDef[]): GameConfig
     defaultMap: 'm',
     maps: { m: { name: { en: 'M' }, type: 'image', image: 'm.png', triggers: [], pois } },
     saveFormat,
+  };
+}
+
+function terrain(id: string, offset: number, test: 'nonzero' | 'zero' = 'nonzero'): EventDef {
+  return {
+    id,
+    bounds: [[0, 0], [16, 16]],
+    overlay: `${id}.png`,
+    saveStateRef: { region: 'dynamicBlocks', offset, test },
   };
 }
 
@@ -122,6 +131,31 @@ describe('interpretSave', () => {
       recordSelector: { ...base.recordSelector!, fallback: 16 },
     };
     expect(interpretSave(game(fallback, [chest('a', 0)]), save(32, { 2: 7, 19: 1 })).markedIds).toEqual(['a']);
+  });
+
+  it('activates terrain overlays from direct record-relative state bytes', () => {
+    const fmt: SaveFormatDef = {
+      family: 'nes-sram',
+      size: 8192,
+      recordBase: 0x1000,
+      regions: {
+        dynamicBlocks: { offset: 0x320, length: 0x91, relativeTo: 'record' },
+      },
+    };
+    const g = game(fmt, []);
+    g.maps.m!.events = [
+      terrain('block02', 0x02),
+      terrain('block05', 0x05),
+      terrain('zero06', 0x06, 'zero'),
+    ];
+    const r = interpretSave(g, save(8192, {
+      [0x1322]: 1,
+      [0x1325]: 0,
+      [0x1326]: 0,
+    }));
+
+    expect(r.trackableEvents).toBe(3);
+    expect(new Set(r.activeEventIds)).toEqual(new Set(['block02', 'zero06']));
   });
 
   it('rejects a record-relative region without a record selector', () => {

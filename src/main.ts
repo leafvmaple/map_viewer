@@ -58,6 +58,8 @@ let versionEl: HTMLDivElement | null = null; // build/data identifier chip (bott
 
 /** Current game's marked ("collected") POI ids for the CURRENT user. */
 let markedPois = new Set<string>();
+/** Terrain overlays active for the current game/profile (often save-derived). */
+let activeEvents = new Set<string>();
 /** POI kinds the CURRENT user hides on the current game's maps. */
 let hiddenKinds = new Set<string>();
 /** Whether the CURRENT user hides collected POIs on the map. */
@@ -190,7 +192,14 @@ async function init(): Promise<void> {
   });
 
   eventPanel = new EventPanel({
-    onToggle: (event, active) => mapViewer.setEventOverlay(event, active),
+    onToggle: (event, active) => {
+      if (active) activeEvents.add(event.id);
+      else activeEvents.delete(event.id);
+      if (currentGameConfig) {
+        userStore.setItem(`event_states_${currentGameConfig.id}`, [...activeEvents]);
+      }
+      mapViewer.setEventOverlay(event, active);
+    },
     onFocus: (event) => mapViewer.focusEvent(event),
   });
 
@@ -235,6 +244,7 @@ async function init(): Promise<void> {
     loadViews();
     reloadMarks();
     reloadFilters();
+    reloadEventStates();
     toolbar.syncPrefs();
     applyLayerPrefs();
     i18n.reload(); // notifies (→ refreshAllLabels) only if the language differs
@@ -334,6 +344,7 @@ async function handleGameSelect(
     // This game's marks/filters must be in place BEFORE the first loadMap —
     // its initial render reads them (poi ids may collide across games).
     markedPois = MarkStorage.markedIds(gameId);
+    activeEvents = new Set(userStore.getItem<string[]>(`event_states_${gameId}`) ?? []);
     const filters = loadFilterState(gameId);
     hiddenKinds = filters.kinds;
     hideMarked = filters.hideMarked;
@@ -512,7 +523,11 @@ function handleMapLoaded(mapId: string, _mapConfig: unknown): void {
       // mapConfig.triggers is already the authoritative list here.
       triggerEditor.setCurrentMap(mapId, mapConfig.triggers ?? [], mapConfig.tileSize);
       treasureList.setPois(mapConfig.pois ?? [], mapConfig.tileSize ?? 16);
-      eventPanel.setEvents(mapConfig.events ?? []);
+      const events = mapConfig.events ?? [];
+      eventPanel.setEvents(events, activeEvents);
+      for (const event of events) {
+        if (activeEvents.has(event.id)) mapViewer.setEventOverlay(event, true);
+      }
       sidebar.setJumps((mapConfig.jumps ?? []).filter(j => Boolean(currentGameConfig?.maps[j.target])));
       poiFilter.setPois(mapConfig.pois ?? [], hiddenKinds, hideMarked, markedPois);
       floorSwitcher.setFloors(floorSiblings(currentGameConfig, mapId), mapId);
@@ -535,6 +550,17 @@ function reloadMarks(): void {
   checklist.refresh();
 }
 
+/** Reload save-derived/manual terrain states for the current profile. */
+function reloadEventStates(): void {
+  activeEvents = currentGameConfig
+    ? new Set(userStore.getItem<string[]>(`event_states_${currentGameConfig.id}`) ?? [])
+    : new Set();
+  if (!currentGameConfig || !mapViewer.currentMapId) return;
+  const events = currentGameConfig.maps[mapViewer.currentMapId]?.events ?? [];
+  eventPanel.setEvents(events, activeEvents);
+  for (const event of events) mapViewer.setEventOverlay(event, activeEvents.has(event.id));
+}
+
 /**
  * Import a battery save into a FRESH profile: parse → confirm → create a
  * carrier user → write the derived marks → refresh. The new user isolates
@@ -554,7 +580,7 @@ async function importSaveFile(file: File): Promise<void> {
 
   const result = interpretSave(game, bytes);
   if (!result.ok) { alert(i18n.t(result.reason ?? 'save.error.parse')); return; }
-  if (result.trackable === 0 && !result.location?.mapId) {
+  if (result.trackable === 0 && result.trackableEvents === 0 && !result.location?.mapId) {
     alert(i18n.t('save.error.noFlags'));
     return;
   }
@@ -581,7 +607,10 @@ async function importSaveFile(file: File): Promise<void> {
     source: { game: game.id, savedAt: Date.now() },
   });
   MarkStorage.replaceGame(game.id, result.markedIds);
+  activeEvents = new Set(result.activeEventIds);
+  userStore.setItem(`event_states_${game.id}`, result.activeEventIds);
   reloadMarks();
+  reloadEventStates();
   if (result.location?.mapId && result.location.focus) {
     await navigateToMap(game.id, result.location.mapId);
     mapViewer.showArrival(result.location.focus, i18n.t('save.locationLabel'));

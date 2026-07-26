@@ -431,7 +431,21 @@ pokemon, berry, dock, place, route) need no entry.
 
 `events` (toggleable terrain-change overlays) follow the same pixel-bounds
 conventions; `events[*].id` should be stable for the same reason, though
-nothing user-persistent references it yet.
+save-imported profiles may persist it. A producer can bind an overlay to a
+direct byte-valued state with `saveStateRef`:
+
+```jsonc
+"saveStateRef": {
+  "region": "dynamicBlocks", // key in saveFormat.regions
+  "offset": 2,                // byte offset inside that region
+  "test": "nonzero"          // or "zero"
+}
+```
+
+This is deliberately separate from `pois[*].saveRef`: terrain engines often
+store the rendered block state directly, while story flags merely record the
+script path that produced it. Save import restores these overlays into the
+new profile and keeps manual toggles per profile.
 
 ### Optional performance fields (progressive loading)
 

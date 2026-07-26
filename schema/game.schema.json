@@ -253,7 +253,18 @@
           "minLength": 1,
           "description": "Path to the changed-tiles overlay image, relative to this game.json's folder."
         },
-        "tiles": { "type": "integer", "description": "Number of tiles this event changes." }
+        "tiles": { "type": "integer", "description": "Number of tiles this event changes." },
+        "saveStateRef": {
+          "type": "object",
+          "description": "Direct saved-state byte that controls this terrain overlay.",
+          "required": ["region", "offset", "test"],
+          "additionalProperties": false,
+          "properties": {
+            "region": { "type": "string", "minLength": 1 },
+            "offset": { "type": "integer", "minimum": 0 },
+            "test": { "enum": ["nonzero", "zero"] }
+          }
+        }
       }
     },
     "trigger": {
