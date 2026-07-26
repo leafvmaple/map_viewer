@@ -161,4 +161,59 @@ describe('interpretSave', () => {
     expect(r.markedIds).toEqual(['a']);
     expect(r.trackable).toBe(2);
   });
+
+  it('resolves a location-only save contract to native map pixels', () => {
+    const fmt: SaveFormatDef = {
+      family: 'nes-sram',
+      size: [8192, 32768],
+      recordBase: 0x1000,
+      location: {
+        sceneStackIndexOffset: 0x12,
+        sceneStackOffset: 0x14,
+        sceneStackLength: 4,
+        subYOffset: 0x18,
+        blockYOffset: 0x19,
+        subXOffset: 0x1a,
+        blockXOffset: 0x1b,
+        relativeTo: 'record',
+        blockWidth: 16,
+        blockHeight: 15,
+      },
+    };
+    const g: GameConfig = {
+      id: 'tenchi2', name: { en: 'Tenchi II' }, defaultMap: 'm', saveFormat: fmt,
+      maps: {
+        m: {
+          name: { en: 'Scene 07' }, type: 'image', image: 'm.png', tileSize: 16, triggers: [],
+          nativeGrid: {
+            sceneId: 7,
+            blockRect: [0, 25, 6, 29],
+            blocks: [[5, 25]],
+            blockSize: [16, 15],
+          },
+        },
+      },
+    };
+    const r = interpretSave(g, save(32768, {
+      [0x1012]: 2,
+      [0x1016]: 7,
+      [0x1018]: 11,
+      [0x1019]: 25,
+      [0x101a]: 6,
+      [0x101b]: 5,
+    }));
+    expect(r.ok).toBe(true);
+    expect(r.trackable).toBe(0);
+    expect(r.location).toEqual({
+      sceneId: 7,
+      blockX: 5,
+      blockY: 25,
+      subX: 6,
+      subY: 11,
+      globalCellX: 86,
+      globalCellY: 386,
+      mapId: 'm',
+      focus: [1384, 184],
+    });
+  });
 });

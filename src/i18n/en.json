@@ -68,6 +68,8 @@
   "save.import": "Import save…",
   "save.importTip": "Read a battery save file and mark progress in a new profile",
   "save.confirm": "Mark {marked}/{total} tracked items as done, in a new save-imported profile?",
+  "save.confirmLocation": "The current position was resolved from the save. Create a save profile and jump there?",
+  "save.locationLabel": "Save location",
   "save.userName": "Save · {game}",
   "save.error.noGame": "Open a game first, then import its save.",
   "save.error.unsupported": "This game does not support save import yet.",

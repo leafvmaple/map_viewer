@@ -308,14 +308,42 @@ export interface SaveFormatDef {
   family: string;
   /** Accepted raw file size(s) in bytes; import rejects other sizes. */
   size?: number | number[];
+  /** Fixed base of the save record when no selector is needed. */
+  recordBase?: number;
   /** Optional selector for formats containing duplicated save records. */
   recordSelector?: SaveRecordSelector;
   /** Named bitfield regions; `saveRef.region` selects one (default "treasure"). */
-  regions: Record<string, SaveFlagRegion>;
+  regions?: Record<string, SaveFlagRegion>;
+  /** Optional native scene/block location stored in the save. */
+  location?: SaveLocationDef;
   /** Bit order within each byte: "lsb" (bit 0 = 0x01) or "msb". Default "lsb". */
   bitOrder?: 'lsb' | 'msb';
   /** Optional signature bytes confirming the save belongs to this game. */
   signature?: SaveSignature[];
+}
+
+/** Byte offsets used to resolve a native map location from a save record. */
+export interface SaveLocationDef {
+  sceneStackIndexOffset: number;
+  sceneStackOffset: number;
+  sceneStackLength: number;
+  subXOffset: number;
+  subYOffset: number;
+  blockXOffset: number;
+  blockYOffset: number;
+  /** Add the selected/fixed record base to every offset. */
+  relativeTo?: 'record';
+  blockWidth: number;
+  blockHeight: number;
+}
+
+/** Native scene/block coverage used to map a save position to rendered pixels. */
+export interface NativeGridDef {
+  sceneId: number;
+  blockRect: [number, number, number, number];
+  /** Exact included blocks for irregular regions; rect containment is the fallback. */
+  blocks?: Array<[number, number]>;
+  blockSize: [number, number];
 }
 
 /** Which save-file flag proves this POI is done (chest opened, boss beaten…). */
@@ -395,6 +423,8 @@ export interface MapConfig {
   minNativeZoom?: number;
   /** Tile size in pixels (used for grid overlay) */
   tileSize?: number;
+  /** Producer-native coordinates used to resolve save-file player locations. */
+  nativeGrid?: NativeGridDef;
   /** Building/dungeon key: maps sharing it are floors of one place and get
    *  an in-map floor switcher. Stable across re-exports. */
   floorGroup?: string;

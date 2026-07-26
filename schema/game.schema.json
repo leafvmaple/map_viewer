@@ -127,6 +127,7 @@
           "exclusiveMinimum": 0,
           "description": "Tile size in pixels; drives the grid overlay and the editor's snap-to-grid. Typically 16."
         },
+        "nativeGrid": { "$ref": "#/$defs/nativeGrid" },
         "floorGroup": {
           "type": "string",
           "minLength": 1,
@@ -162,6 +163,30 @@
           "type": "array",
           "description": "Map regions bound to global random-encounter realms.",
           "items": { "$ref": "#/$defs/encounterZone" }
+        }
+      }
+    },
+    "nativeGrid": {
+      "type": "object",
+      "description": "Producer-native scene/block coverage used to resolve save-file locations.",
+      "required": ["sceneId", "blockRect", "blockSize"],
+      "additionalProperties": false,
+      "properties": {
+        "sceneId": { "type": "integer", "minimum": 0 },
+        "blockRect": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "type": "array", "minItems": 2, "maxItems": 2,
+            "items": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "blockSize": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": { "type": "integer", "exclusiveMinimum": 0 }
         }
       }
     },
@@ -440,7 +465,11 @@
     "saveFormat": {
       "type": "object",
       "description": "Optional save-file layout enabling battery-save import. Interpreted by the viewer together with each POI's `saveRef`. See CONTRACT.md §Save import.",
-      "required": ["family", "regions"],
+      "required": ["family"],
+      "anyOf": [
+        { "required": ["regions"] },
+        { "required": ["location"] }
+      ],
       "additionalProperties": false,
       "properties": {
         "family": {
@@ -455,6 +484,11 @@
             { "type": "array", "minItems": 1, "items": { "type": "integer", "exclusiveMinimum": 0 } }
           ]
         },
+        "recordBase": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Fixed save-record base when no selector is needed."
+        },
         "recordSelector": { "$ref": "#/$defs/saveRecordSelector" },
         "regions": {
           "type": "object",
@@ -462,6 +496,7 @@
           "description": "Named bitfield regions; a POI's `saveRef.region` selects one (default \"treasure\").",
           "additionalProperties": { "$ref": "#/$defs/saveFlagRegion" }
         },
+        "location": { "$ref": "#/$defs/saveLocation" },
         "bitOrder": {
           "enum": ["lsb", "msb"],
           "description": "Bit order within each byte: \"lsb\" (bit 0 = 0x01) or \"msb\". Default \"lsb\"."
@@ -471,6 +506,28 @@
           "description": "Optional signature byte checks confirming the save belongs to this game.",
           "items": { "$ref": "#/$defs/saveSignature" }
         }
+      }
+    },
+    "saveLocation": {
+      "type": "object",
+      "description": "Offsets for a native scene/block player location in a save record.",
+      "required": [
+        "sceneStackIndexOffset", "sceneStackOffset", "sceneStackLength",
+        "subXOffset", "subYOffset", "blockXOffset", "blockYOffset",
+        "blockWidth", "blockHeight"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sceneStackIndexOffset": { "type": "integer", "minimum": 0 },
+        "sceneStackOffset": { "type": "integer", "minimum": 0 },
+        "sceneStackLength": { "type": "integer", "exclusiveMinimum": 0 },
+        "subXOffset": { "type": "integer", "minimum": 0 },
+        "subYOffset": { "type": "integer", "minimum": 0 },
+        "blockXOffset": { "type": "integer", "minimum": 0 },
+        "blockYOffset": { "type": "integer", "minimum": 0 },
+        "relativeTo": { "const": "record" },
+        "blockWidth": { "type": "integer", "exclusiveMinimum": 0 },
+        "blockHeight": { "type": "integer", "exclusiveMinimum": 0 }
       }
     },
     "saveFlagRegion": {

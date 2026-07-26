@@ -68,6 +68,8 @@
   "save.import": "导入存档…",
   "save.importTip": "读取电池存档，把进度标记到一个新用户里",
   "save.confirm": "将标记 {marked}/{total} 个可追踪项为已完成，并新建一个存档用户承载。确认？",
+  "save.confirmLocation": "已从存档解析出当前位置。新建存档用户并跳转到该位置？",
+  "save.locationLabel": "存档位置",
   "save.userName": "存档 · {game}",
   "save.error.noGame": "请先打开一个游戏，再导入它的存档。",
   "save.error.unsupported": "本游戏暂不支持存档导入。",

@@ -174,6 +174,22 @@ either on every map.
 - Origin is **top-left**; `x` grows right, `y` grows down.
 - The viewer maps pixel `(x, y)` → Leaflet `LatLng(-y, x)` in `CRS.Simple` internally — the producer does **not** need to know that; just emit plain pixels.
 
+Maps may additionally expose a producer-native block grid so a save-file
+location can resolve back to this image:
+
+```jsonc
+"nativeGrid": {
+  "sceneId": 7,
+  "blockRect": [0, 25, 6, 29],
+  "blocks": [[0,25], [1,25], [5,25]], // optional exact irregular coverage
+  "blockSize": [16, 15]               // logic cells per native block
+}
+```
+
+`blockRect` is inclusive. When `blocks` is present, the resolver requires an
+exact block match; this prevents black/unused holes inside an irregular rendered
+rectangle from claiming a save position.
+
 ### Optional POIs (treasure chests etc.)
 
 A map **may** carry points of interest; the viewer renders them as markers /
@@ -451,6 +467,7 @@ game and needs two additive fields.
 "saveFormat": {
   "family":  "nes-sram",                 // parser family the viewer dispatches on
   "size":    8192,                       // accepted raw size(s) in bytes (number or [numbers])
+  "recordBase": 4096,                    // optional fixed record base
   "bitOrder": "lsb",                     // bit 0 = 0x01 ("lsb", default) or 0x80 ("msb")
   "recordSelector": {                    // optional: select one duplicated save record
     "offset": 2034,                      // absolute selector-byte offset
@@ -458,6 +475,15 @@ game and needs two additive fields.
   },
   "regions": {                           // named bitfields, addressed by saveRef.region
     "treasure": { "offset": 910, "length": 32, "relativeTo": "record" }
+  },
+  "location": {                          // optional scene/block position
+    "sceneStackIndexOffset": 18,
+    "sceneStackOffset": 20,
+    "sceneStackLength": 4,
+    "subYOffset": 24, "blockYOffset": 25,
+    "subXOffset": 26, "blockXOffset": 27,
+    "relativeTo": "record",
+    "blockWidth": 16, "blockHeight": 15
   },
   "signature": [                         // optional: reject saves that aren't this game
     { "offset": 0, "hex": "4d4d" }
@@ -476,8 +502,10 @@ game and needs two additive fields.
 | --- | --- |
 | `saveFormat.family` | Parser family. Only `"nes-sram"` (a flat SRAM image; regions are plain byte slices) is implemented today; GBA/DS families that must first locate the active save slot plug in later against the same `regions`/`saveRef` model. |
 | `saveFormat.size` | Accepted raw file size(s). A file of any other size is rejected before parsing — the cheapest wrong-game guard. |
+| `saveFormat.recordBase` | Optional fixed record base for games whose importer targets one known record. `recordSelector`, when present, selects dynamically instead. |
 | `saveFormat.recordSelector` | Optional `{ offset, values, fallback? }`: read one selector byte at the absolute `offset`, then map its decimal value (for example `"2"`) to an absolute record base. An unmapped value fails parsing unless `fallback` supplies a base. |
-| `saveFormat.regions` | Map of region name → `{ offset, length, relativeTo? }` (bytes). Offsets are absolute by default; `relativeTo: "record"` requires `recordSelector` and adds its selected record base. `saveRef.region` selects one; POIs that omit it use `"treasure"`. |
+| `saveFormat.regions` | Optional map of region name → `{ offset, length, relativeTo? }` (bytes). Offsets are absolute by default; `relativeTo: "record"` requires `recordBase` or `recordSelector`. `saveRef.region` selects one; POIs that omit it use `"treasure"`. |
+| `saveFormat.location` | Optional native location offsets. The scene id is `sceneStack[sceneStackIndex]`; block/sub-cell bytes become global cells using `blockWidth`/`blockHeight`, then resolve against each map's `nativeGrid`. A location-only save contract is valid without flag regions. |
 | `saveFormat.bitOrder` | Bit numbering inside each byte. `"lsb"` (default): flag `n` → byte `offset + (n>>3)`, mask `1 << (n&7)`. `"msb"`: mask `0x80 >> (n&7)`. |
 | `saveFormat.signature` | Optional list of `{ offset, hex }` byte checks; any mismatch rejects the file as belonging to another game. |
 | `pois[*].saveRef.flag` | Bit index within the region. **Must come from the same stable ROM fact as `pois[*].id`** (e.g. the treasure-table index), so a re-export can't silently point a chest at the wrong bit. |

@@ -26,6 +26,20 @@ export interface SaveImportResult {
   markedIds: string[];
   /** Number of POIs carrying a `saveRef` — the import denominator ("42/91"). */
   trackable: number;
+  /** Native save position, optionally resolved to a rendered map and pixel focus. */
+  location?: SaveLocationResult;
+}
+
+export interface SaveLocationResult {
+  sceneId: number;
+  blockX: number;
+  blockY: number;
+  subX: number;
+  subY: number;
+  globalCellX: number;
+  globalCellY: number;
+  mapId?: string;
+  focus?: [number, number];
 }
 
 interface AdapterOutput {
@@ -33,6 +47,7 @@ interface AdapterOutput {
   reason?: string;
   /** region name → its bytes */
   regions?: Record<string, Uint8Array>;
+  recordBase?: number;
 }
 
 type SaveAdapter = (bytes: Uint8Array, fmt: SaveFormatDef) => AdapterOutput;
@@ -41,7 +56,7 @@ type SaveAdapter = (bytes: Uint8Array, fmt: SaveFormatDef) => AdapterOutput;
 
 /** Slice each declared region straight out of the file (flat address space). */
 function sliceRegions(bytes: Uint8Array, fmt: SaveFormatDef): AdapterOutput {
-  let recordBase = 0;
+  let recordBase = fmt.recordBase ?? 0;
   if (fmt.recordSelector) {
     const selector = fmt.recordSelector;
     if (selector.offset < 0 || selector.offset >= bytes.length) {
@@ -55,8 +70,8 @@ function sliceRegions(bytes: Uint8Array, fmt: SaveFormatDef): AdapterOutput {
   }
 
   const regions: Record<string, Uint8Array> = {};
-  for (const [name, r] of Object.entries(fmt.regions)) {
-    if (r.relativeTo === 'record' && !fmt.recordSelector) {
+  for (const [name, r] of Object.entries(fmt.regions ?? {})) {
+    if (r.relativeTo === 'record' && !fmt.recordSelector && fmt.recordBase == null) {
       return { ok: false, reason: 'save.error.parse' };
     }
     const offset = r.offset + (r.relativeTo === 'record' ? recordBase : 0);
@@ -65,7 +80,7 @@ function sliceRegions(bytes: Uint8Array, fmt: SaveFormatDef): AdapterOutput {
     }
     regions[name] = bytes.subarray(offset, offset + r.length);
   }
-  return { ok: true, regions };
+  return { ok: true, regions, recordBase };
 }
 
 /** NES battery SRAM: a flat byte image, so regions are plain slices. */
@@ -108,6 +123,60 @@ function fail(reason: string): SaveImportResult {
   return { ok: false, reason, markedIds: [], trackable: 0 };
 }
 
+function resolveLocation(
+  game: GameConfig,
+  bytes: Uint8Array,
+  fmt: SaveFormatDef,
+  recordBase: number,
+): SaveLocationResult | null {
+  const def = fmt.location;
+  if (!def) return null;
+  const base = def.relativeTo === 'record' ? recordBase : 0;
+  const offsets = [
+    def.sceneStackIndexOffset,
+    def.sceneStackOffset + def.sceneStackLength - 1,
+    def.subXOffset, def.subYOffset, def.blockXOffset, def.blockYOffset,
+  ].map(offset => base + offset);
+  if (def.sceneStackLength <= 0 || offsets.some(offset => offset < 0 || offset >= bytes.length)) return null;
+
+  const stackIndex = bytes[base + def.sceneStackIndexOffset]!;
+  if (stackIndex >= def.sceneStackLength) return null;
+  const sceneId = bytes[base + def.sceneStackOffset + stackIndex]!;
+  const blockX = bytes[base + def.blockXOffset]!;
+  const blockY = bytes[base + def.blockYOffset]!;
+  const subX = bytes[base + def.subXOffset]!;
+  const subY = bytes[base + def.subYOffset]!;
+  const location: SaveLocationResult = {
+    sceneId, blockX, blockY, subX, subY,
+    globalCellX: blockX * def.blockWidth + subX,
+    globalCellY: blockY * def.blockHeight + subY,
+  };
+
+  const candidates = Object.entries(game.maps).filter(([, map]) => {
+    const native = map.nativeGrid;
+    if (!native || native.sceneId !== sceneId) return false;
+    if (native.blocks?.length) return native.blocks.some(([x, y]) => x === blockX && y === blockY);
+    const [x0, y0, x1, y1] = native.blockRect;
+    return blockX >= x0 && blockX <= x1 && blockY >= y0 && blockY <= y1;
+  });
+  if (!candidates.length) return location;
+  const [mapId, map] = candidates.sort(([, a], [, b]) => {
+    const ar = a.nativeGrid!.blockRect;
+    const br = b.nativeGrid!.blockRect;
+    return (ar[2] - ar[0] + 1) * (ar[3] - ar[1] + 1) -
+      (br[2] - br[0] + 1) * (br[3] - br[1] + 1);
+  })[0]!;
+  const native = map.nativeGrid!;
+  const [x0, y0] = native.blockRect;
+  const tileSize = map.tileSize ?? 16;
+  location.mapId = mapId;
+  location.focus = [
+    ((blockX - x0) * native.blockSize[0] + subX) * tileSize + tileSize / 2,
+    ((blockY - y0) * native.blockSize[1] + subY) * tileSize + tileSize / 2,
+  ];
+  return location;
+}
+
 // ─── Public API ─────────────────────────────────────────────
 
 /**
@@ -148,5 +217,6 @@ export function interpretSave(game: GameConfig, bytes: Uint8Array): SaveImportRe
       if (region && bitSet(region, ref.flag, bitOrder)) markedIds.push(poi.id);
     }
   }
-  return { ok: true, markedIds, trackable };
+  const location = resolveLocation(game, bytes, fmt, out.recordBase ?? 0);
+  return { ok: true, markedIds, trackable, ...(location ? { location } : {}) };
 }

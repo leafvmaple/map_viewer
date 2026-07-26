@@ -553,13 +553,16 @@ async function importSaveFile(file: File): Promise<void> {
 
   const result = interpretSave(game, bytes);
   if (!result.ok) { alert(i18n.t(result.reason ?? 'save.error.parse')); return; }
-  if (result.trackable === 0) { alert(i18n.t('save.error.noFlags')); return; }
+  if (result.trackable === 0 && !result.location?.mapId) {
+    alert(i18n.t('save.error.noFlags'));
+    return;
+  }
 
   const gameName = i18n.localize(game.name);
-  const proceed = confirm(i18n.t('save.confirm', {
-    marked: result.markedIds.length,
-    total: result.trackable,
-  }));
+  const proceed = confirm(i18n.t(
+    result.trackable > 0 ? 'save.confirm' : 'save.confirmLocation',
+    { marked: result.markedIds.length, total: result.trackable },
+  ));
   if (!proceed) return;
 
   // create() switches to the new profile and fires onChange → reloadMarks reads
@@ -570,6 +573,10 @@ async function importSaveFile(file: File): Promise<void> {
   });
   MarkStorage.replaceGame(game.id, result.markedIds);
   reloadMarks();
+  if (result.location?.mapId && result.location.focus) {
+    await navigateToMap(game.id, result.location.mapId);
+    mapViewer.showArrival(result.location.focus, i18n.t('save.locationLabel'));
+  }
 }
 
 /** Map click on a POI: service markers open their shop list; markable POIs toggle state. */
