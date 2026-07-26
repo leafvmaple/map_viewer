@@ -9,6 +9,7 @@ interface ToolbarOptions {
   onTreasuresToggle: () => boolean;
   onEncountersToggle: () => boolean;
   onGridToggle: () => boolean;
+  onCollisionToggle: () => boolean;
   onEditModeToggle: () => boolean;
   onChecklistToggle: () => boolean;
   onServicesToggle: () => boolean;
@@ -27,6 +28,7 @@ export class Toolbar {
   private _treasuresVisible = true;
   private _encountersVisible = true;
   private _gridVisible = false;
+  private _collisionVisible = false;
   private _editMode = false;
   private _checklistOpen = false;
   private _servicesOpen = false;
@@ -45,6 +47,7 @@ export class Toolbar {
     this._treasuresVisible = prefs.treasures;
     this._encountersVisible = prefs.encounters;
     this._gridVisible = prefs.grid;
+    this._collisionVisible = prefs.collision;
 
     this._render();
   }
@@ -83,6 +86,9 @@ export class Toolbar {
         </button>
         <button class="toolbar-btn btn-grid" title="${i18n.t('toolbar.grid')}">
           # ${i18n.t('toolbar.grid')}
+        </button>
+        <button class="toolbar-btn btn-collision" title="${i18n.t('toolbar.collision')}">
+          ◩ ${i18n.t('toolbar.collision')}
         </button>
         <button class="toolbar-btn btn-edit" title="${i18n.t('toolbar.editModeOff')}">
           ✏ ${i18n.t('toolbar.editMode')}
@@ -153,6 +159,13 @@ export class Toolbar {
       Prefs.save({ grid: this._gridVisible });
     });
 
+    const collisionBtn = this._el.querySelector('.btn-collision')!;
+    collisionBtn.addEventListener('click', () => {
+      this._collisionVisible = this._options.onCollisionToggle();
+      collisionBtn.classList.toggle('active', this._collisionVisible);
+      Prefs.save({ collision: this._collisionVisible });
+    });
+
     // Edit mode toggle
     const editBtn = this._el.querySelector('.btn-edit')!;
     editBtn.addEventListener('click', () => {
@@ -180,6 +193,7 @@ export class Toolbar {
     this._el.querySelector('.btn-checklist')?.classList.toggle('active', this._checklistOpen);
     this._el.querySelector('.btn-services')?.classList.toggle('active', this._servicesOpen);
     this._el.querySelector('.btn-grid')?.classList.toggle('active', this._gridVisible);
+    this._el.querySelector('.btn-collision')?.classList.toggle('active', this._collisionVisible);
 
     const editBtn = this._el.querySelector('.btn-edit');
     if (editBtn) {
@@ -222,6 +236,7 @@ export class Toolbar {
     this._treasuresVisible = prefs.treasures;
     this._encountersVisible = prefs.encounters;
     this._gridVisible = prefs.grid;
+    this._collisionVisible = prefs.collision;
     this._applyState();
   }
 
@@ -256,6 +271,9 @@ export class Toolbar {
 
     const gridBtn = this._el.querySelector('.btn-grid');
     if (gridBtn) gridBtn.textContent = `# ${i18n.t('toolbar.grid')}`;
+
+    const collisionBtn = this._el.querySelector('.btn-collision');
+    if (collisionBtn) collisionBtn.textContent = `◩ ${i18n.t('toolbar.collision')}`;
 
     // Edit-button text depends on mode → handled by _applyState.
     this._applyState();

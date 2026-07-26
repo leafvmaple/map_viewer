@@ -346,6 +346,15 @@ export interface NativeGridDef {
   blockSize: [number, number];
 }
 
+/** Static per-cell movement result produced from the game's own map engine. */
+export interface CollisionGridDef {
+  /** One character per logic cell: '.' walkable, '#' blocked, ' ' outside map. */
+  encoding: 'ascii-grid-v1';
+  /** Clarifies that this describes entering a destination cell on foot. */
+  semantics?: 'on-foot-destination';
+  rows: string[];
+}
+
 /** Which save-file flag proves this POI is done (chest opened, boss beaten…). */
 export interface PoiSaveRef {
   /** Region name in `saveFormat.regions` (default "treasure"). */
@@ -425,6 +434,8 @@ export interface MapConfig {
   tileSize?: number;
   /** Producer-native coordinates used to resolve save-file player locations. */
   nativeGrid?: NativeGridDef;
+  /** Static logic-cell collision grid aligned to tileSize. */
+  collision?: CollisionGridDef;
   /** Building/dungeon key: maps sharing it are floors of one place and get
    *  an in-map floor switcher. Stable across re-exports. */
   floorGroup?: string;

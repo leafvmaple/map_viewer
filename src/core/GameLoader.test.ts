@@ -48,4 +48,33 @@ describe('GameLoader spatial validation', () => {
     expect(message).toContain('event "wall" in "a" has out-of-bounds bounds');
     warn.mockRestore();
   });
+
+  it('accepts the schema-defined return-stack pseudo target', () => {
+    const config: GameConfig = {
+      id: 'g',
+      name: { en: 'G' },
+      defaultMap: 'a',
+      maps: {
+        a: {
+          name: { en: 'A' },
+          type: 'image',
+          image: 'a.png',
+          width: 32,
+          height: 32,
+          triggers: [{
+            id: 'return',
+            bounds: [[0, 0], [16, 16]],
+            target: '__return__',
+            label: { en: 'Return' },
+          }],
+        },
+      },
+    };
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    (new GameLoader() as unknown as { _validate: (value: GameConfig) => void })._validate(config);
+
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
 });

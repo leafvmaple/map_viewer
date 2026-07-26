@@ -40,6 +40,8 @@ export interface SaveLocationResult {
   globalCellY: number;
   mapId?: string;
   focus?: [number, number];
+  /** Static on-foot destination result at this cell, when exported by the producer. */
+  walkable?: boolean;
 }
 
 interface AdapterOutput {
@@ -170,10 +172,15 @@ function resolveLocation(
   const [x0, y0] = native.blockRect;
   const tileSize = map.tileSize ?? 16;
   location.mapId = mapId;
+  const localCellX = (blockX - x0) * native.blockSize[0] + subX;
+  const localCellY = (blockY - y0) * native.blockSize[1] + subY;
   location.focus = [
-    ((blockX - x0) * native.blockSize[0] + subX) * tileSize + tileSize / 2,
-    ((blockY - y0) * native.blockSize[1] + subY) * tileSize + tileSize / 2,
+    localCellX * tileSize + tileSize / 2,
+    localCellY * tileSize + tileSize / 2,
   ];
+  const collisionCell = map.collision?.rows[localCellY]?.[localCellX];
+  if (collisionCell === '.') location.walkable = true;
+  if (collisionCell === '#') location.walkable = false;
   return location;
 }
 

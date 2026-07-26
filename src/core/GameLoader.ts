@@ -128,7 +128,7 @@ export class GameLoader {
         } else if (mapSize && !this._boundsInside(t.bounds, mapSize)) {
           warnings.push(`trigger "${t.id}" in "${mapId}" has out-of-bounds bounds`);
         }
-        if (t?.target && !mapIds.has(t.target)) {
+        if (t?.target && t.target !== '__return__' && !mapIds.has(t.target)) {
           warnings.push(`trigger "${t.id}" in "${mapId}" targets unknown map "${t.target}"`);
         }
         if (t?.focus) {

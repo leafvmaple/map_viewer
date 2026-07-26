@@ -50,6 +50,8 @@ export class MapViewer {
   private _eventOverlays = new Map<string, L.ImageOverlay>();
   private _gridLayer: L.Polyline | null = null;
   private _showGrid = false;
+  private _collisionLayer: L.ImageOverlay | null = null;
+  private _showCollision = false;
   private _arrivalMarker: L.Marker | null = null;
   private _arrivalTimer: ReturnType<typeof setTimeout> | null = null;
   private _coordControl: L.Control;
@@ -247,6 +249,10 @@ export class MapViewer {
 
     this._currentDims = { width, height };
 
+    if (this._showCollision && mapConfig.collision) {
+      this._addCollision(mapConfig.collision.rows, width, height);
+    }
+
     // Upgrade the placeholder to full resolution in the background. Guard against
     // the user navigating away before the full image finishes loading.
     if (canUseThumb) {
@@ -323,6 +329,9 @@ export class MapViewer {
     ]);
 
     this._currentDims = { width, height };
+    if (this._showCollision && mapConfig.collision) {
+      this._addCollision(mapConfig.collision.rows, width, height);
+    }
     if (this._showGrid && mapConfig.tileSize) {
       this._addGrid(mapConfig.tileSize, width, height);
     }
@@ -357,6 +366,7 @@ export class MapViewer {
     this._poiLayer.clear();
     this._encounterLayer.clear();
     this._removeGrid();
+    this._removeCollision();
     this.clearEventOverlays();
     this._currentMapId = null;
     this._currentMapConfig = null;
@@ -409,6 +419,71 @@ export class MapViewer {
 
   get gridVisible(): boolean {
     return this._showGrid;
+  }
+
+  /** Render the compact producer grid as one scaled raster overlay. */
+  private _addCollision(rows: string[], width: number, height: number): void {
+    this._removeCollision();
+    const cols = rows.reduce((maximum, row) => Math.max(maximum, row.length), 0);
+    if (!rows.length || !cols) return;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = cols;
+    canvas.height = rows.length;
+    const context = canvas.getContext('2d');
+    if (!context) return;
+    const pixels = context.createImageData(cols, rows.length);
+    for (let y = 0; y < rows.length; y++) {
+      const row = rows[y]!;
+      for (let x = 0; x < row.length; x++) {
+        const cell = row[x];
+        if (cell !== '.' && cell !== '#') continue;
+        const offset = (y * cols + x) * 4;
+        if (cell === '#') {
+          pixels.data[offset] = 255;
+          pixels.data[offset + 1] = 48;
+          pixels.data[offset + 2] = 48;
+          pixels.data[offset + 3] = 140;
+        } else {
+          pixels.data[offset] = 32;
+          pixels.data[offset + 1] = 220;
+          pixels.data[offset + 2] = 112;
+          pixels.data[offset + 3] = 42;
+        }
+      }
+    }
+    context.putImageData(pixels, 0, 0);
+    this._collisionLayer = L.imageOverlay(
+      canvas.toDataURL('image/png'),
+      [[-height, 0], [0, width]],
+      { className: 'collision-overlay pixelated', interactive: false },
+    ).addTo(this._map);
+  }
+
+  private _removeCollision(): void {
+    if (!this._collisionLayer) return;
+    this._map.removeLayer(this._collisionLayer);
+    this._collisionLayer = null;
+  }
+
+  /** Toggle the static on-foot movement overlay. */
+  toggleCollision(): boolean {
+    this._showCollision = !this._showCollision;
+    if (this._showCollision && this._currentMapConfig?.collision && this._currentDims) {
+      this._addCollision(
+        this._currentMapConfig.collision.rows,
+        this._currentDims.width,
+        this._currentDims.height,
+      );
+      if (this._gridLayer) this._gridLayer.bringToFront();
+    } else {
+      this._removeCollision();
+    }
+    return this._showCollision;
+  }
+
+  get collisionVisible(): boolean {
+    return this._showCollision;
   }
 
   get triggerLayer(): TriggerLayer {

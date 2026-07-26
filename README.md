@@ -25,7 +25,7 @@ generated locally by `nes_decoder` (and mounted from the NAS in production, see
 - ✏️ **Trigger editor** — drag to draw (snaps to the tile grid), set target/label, export `game.json` or a single map's triggers.
 - 🌐 Trilingual UI (English / 中文 / 日本語) with per-game/-map localized names.
 - 🔍 Searchable map list, inline rename (double-click), add-map dialog.
-- 🟦 Optional tile grid overlay and a live pixel-coordinate readout.
+- 🟦 Optional tile grid and producer-supplied static collision overlays, plus a live pixel-coordinate readout.
 - 💾 Edits (triggers, renames, added maps) persist in `localStorage` over the read-only base data.
 - 🚀 Progressive image loading (low-res placeholder → full image) when the data provides it.
 - 🔗 URL hash deep links; map navigation integrates with browser history (back/forward work).

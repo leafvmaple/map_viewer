@@ -191,6 +191,12 @@ describe('interpretSave', () => {
             blocks: [[5, 25]],
             blockSize: [16, 15],
           },
+          collision: {
+            encoding: 'ascii-grid-v1',
+            semantics: 'on-foot-destination',
+            rows: Array.from({ length: 75 }, (_, y) =>
+              y === 11 ? `${'.'.repeat(86)}#${'.'.repeat(25)}` : '.'.repeat(112)),
+          },
         },
       },
     };
@@ -214,6 +220,7 @@ describe('interpretSave', () => {
       globalCellY: 386,
       mapId: 'm',
       focus: [1384, 184],
+      walkable: false,
     });
   });
 });

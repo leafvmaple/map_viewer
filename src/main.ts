@@ -173,6 +173,7 @@ async function init(): Promise<void> {
       return visible;
     },
     onGridToggle: () => mapViewer.toggleGrid(),
+    onCollisionToggle: () => mapViewer.toggleCollision(),
     onEditModeToggle: handleEditModeToggle,
     onBack: handleBack,
   });
@@ -559,10 +560,18 @@ async function importSaveFile(file: File): Promise<void> {
   }
 
   const gameName = i18n.localize(game.name);
-  const proceed = confirm(i18n.t(
+  const confirmText = i18n.t(
     result.trackable > 0 ? 'save.confirm' : 'save.confirmLocation',
     { marked: result.markedIds.length, total: result.trackable },
-  ));
+  );
+  const movementText = result.location?.mapId
+    ? i18n.t(result.location.walkable === false
+      ? 'save.locationBlocked'
+      : result.location.walkable === true
+        ? 'save.locationWalkable'
+        : 'save.locationUnknown')
+    : '';
+  const proceed = confirm([confirmText, movementText].filter(Boolean).join('\n\n'));
   if (!proceed) return;
 
   // create() switches to the new profile and fires onChange → reloadMarks reads
@@ -636,6 +645,7 @@ function applyLayerPrefs(): void {
   treasureList.setVisible(p.treasures && !triggerEditor.active);
   poiFilter.setVisible(p.treasures);
   if (p.grid !== mapViewer.gridVisible) mapViewer.toggleGrid();
+  if (p.collision !== mapViewer.collisionVisible) mapViewer.toggleCollision();
 }
 
 async function handleBreadcrumbNavigate(index: number): Promise<void> {

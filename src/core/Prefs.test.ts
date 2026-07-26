@@ -11,14 +11,18 @@ async function fresh() {
 describe('Prefs', () => {
   it('returns defaults when nothing is saved', async () => {
     const { Prefs } = await fresh();
-    expect(Prefs.load()).toEqual({ triggers: true, labels: false, treasures: true, encounters: true, grid: false });
+    expect(Prefs.load()).toEqual({
+      triggers: true, labels: false, treasures: true, encounters: true, grid: false, collision: false,
+    });
   });
 
   it('save() merges a patch over the saved prefs', async () => {
     const { Prefs } = await fresh();
     Prefs.save({ grid: true });
     Prefs.save({ labels: true });
-    expect(Prefs.load()).toEqual({ triggers: true, labels: true, treasures: true, encounters: true, grid: true });
+    expect(Prefs.load()).toEqual({
+      triggers: true, labels: true, treasures: true, encounters: true, grid: true, collision: false,
+    });
   });
 
   it('prefs are per user', async () => {
