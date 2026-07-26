@@ -1056,6 +1056,15 @@ html, body {
   margin-right: 0;
 }
 
+.poi-tt-chance {
+  margin-left: auto;
+  padding-left: 8px;
+  color: #9fb3c8;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 .poi-tt-done-text {
   margin-top: 3px;
   color: #9fb3c8;

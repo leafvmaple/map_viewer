@@ -44,16 +44,32 @@ export function renderPlainTooltip(
     return `${head}${renderItemStatList(r.item!)}`;
   }).join('');
   if (resolved.length > 1) {
-    const rows = resolved.map(reward => {
+    const rows = resolved.map((reward, index) => {
       const icon = renderItemIcon(reward.icon, 'poi-tt-item', resolveIcon);
-      return `<li>${icon}<span>${escapeHtml(reward.text)}</span></li>`;
+      const odds = renderSelectionOdds(poi, index);
+      return `<li>${icon}<span>${escapeHtml(reward.text)}</span>${odds}</li>`;
     }).join('');
     const base = `<ul class="poi-tt-items">${rows}</ul>${stats}`;
     return isMarked ? `${base}<div class="poi-tt-done-text">✓ ${escapeHtml(i18n.t('treasure.collected'))}</div>` : base;
   }
   const icon = renderItemIcon(resolved[0]?.icon ?? poi.itemIcon, 'poi-tt-item', resolveIcon);
-  const base = `${icon}${escapeHtml(resolved[0]?.text ?? title)}`;
+  const base = `${icon}${escapeHtml(resolved[0]?.text ?? title)}${renderSelectionOdds(poi, 0)}`;
   return (isMarked ? `${base} · ✓ ${escapeHtml(i18n.t('treasure.collected'))}` : base) + stats;
+}
+
+/** Render producer-supplied native selection weight as raw ratio + percent. */
+function renderSelectionOdds(poi: PoiDef, index: number): string {
+  const ref = poi.itemRefs?.[index];
+  const weight = ref?.selectionWeight;
+  const total = ref?.selectionWeightTotal;
+  if (typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0
+      || typeof total !== 'number' || !Number.isFinite(total) || total <= 0
+      || weight > total) return '';
+  const percent = weight / total * 100;
+  const percentText = Number.isInteger(percent)
+    ? String(percent)
+    : percent.toFixed(1).replace(/\.0$/, '');
+  return `<span class="poi-tt-chance">${weight}/${total} · ${percentText}%</span>`;
 }
 
 /**
