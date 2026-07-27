@@ -474,9 +474,8 @@ html, body {
   bottom: 42px;
   z-index: 840;
   width: min(360px, calc(100% - 24px));
-  /* Stay below the top-right treasure panel on ordinary desktop heights; the
-     roster itself scrolls when a realm contains many outcomes. */
-  max-height: min(36vh, 420px);
+  /* Tall enough for a full 10-monster realm roster; the list scrolls beyond. */
+  max-height: min(68vh, 700px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -485,6 +484,12 @@ html, body {
   border: 1px solid #ff9800;
   border-radius: 7px;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.48);
+}
+
+/* When the treasure list occupies the same right column, yield the vertical
+   space it needs on ordinary desktop heights (old behaviour). */
+#app:has(.treasure-panel.open) .encounter-panel {
+  max-height: min(36vh, 420px);
 }
 
 .encounter-panel.hidden {
@@ -515,8 +520,8 @@ html, body {
 }
 
 .encounter-row {
-  min-height: 50px;
-  padding: 7px 10px;
+  min-height: 42px;
+  padding: 4px 10px;
   display: flex;
   align-items: center;
   gap: 9px;
@@ -528,9 +533,9 @@ html, body {
 }
 
 .encounter-icon {
-  width: 44px;
-  height: 40px;
-  flex: 0 0 44px;
+  width: 40px;
+  height: 34px;
+  flex: 0 0 40px;
   object-fit: contain;
   image-rendering: pixelated;
 }
@@ -546,20 +551,28 @@ html, body {
   font-weight: 600;
 }
 
-.encounter-muted,
-.encounter-chance {
+.encounter-muted {
   margin-top: 2px;
   color: #9aa9ba;
   font-size: 10px;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .encounter-drop {
   color: #81c784;
 }
 
+/* Right-aligned odds column, out of the stacked text so rows stay two lines. */
 .encounter-chance {
+  flex: 0 0 auto;
+  margin-left: auto;
+  text-align: right;
   color: #ffb74d;
+  font-size: 10px;
+  line-height: 1.25;
   font-family: 'Consolas', 'Courier New', monospace;
 }
 

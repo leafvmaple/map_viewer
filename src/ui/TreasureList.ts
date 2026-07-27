@@ -124,7 +124,11 @@ export class TreasureList {
   }
 
   private _updateDisplay(): void {
-    this._el.style.display = this._visible && this._pois.length > 0 ? 'flex' : 'none';
+    const shown = this._visible && this._pois.length > 0;
+    this._el.style.display = shown ? 'flex' : 'none';
+    // Lets sibling panels (e.g. the encounter roster) yield vertical space
+    // via `#app:has(.treasure-panel.open)` while the list occupies the right column.
+    this._el.classList.toggle('open', shown);
   }
 
   private _render(): void {

@@ -137,8 +137,7 @@ export class EncounterPanel {
     body.className = 'encounter-row-body';
     const species = this._catalogs.species[member.speciesId];
     this._appendSpeciesIdentity(row, body, species, member.speciesId);
-    this._appendMuted(body, `×${member.count}`);
-    this._appendDrop(body, species);
+    this._appendDetails(body, `×${member.count}`, species);
     row.appendChild(body);
     return row;
   }
@@ -153,26 +152,26 @@ export class EncounterPanel {
       const species = this._catalogs.species[outcome.speciesId];
       this._appendSpeciesIdentity(row, body, species, outcome.speciesId);
       const counts = (outcome.countRanges ?? []).map(([lo, hi]) => lo === hi ? `×${lo}` : `×${lo}–${hi}`);
-      if (counts.length) this._appendMuted(body, counts.join(' / '));
-      this._appendDrop(body, species);
+      this._appendDetails(body, counts.join(' / '), species);
     } else {
       const title = document.createElement('div');
       title.className = 'encounter-name';
       title.textContent = `${i18n.t('encounter.formation')} #${outcome.groupId ?? '?'}`;
       body.appendChild(title);
-      for (const member of outcome.members ?? []) {
+      const members = (outcome.members ?? []).map(member => {
         const species = this._catalogs.species[member.speciesId];
-        this._appendMuted(body, `${i18n.localize(species?.name) || `#${member.speciesId}`} ×${member.count}`);
-      }
+        return `${i18n.localize(species?.name) || `#${member.speciesId}`} ×${member.count}`;
+      });
+      if (members.length) this._appendMuted(body, members.join(' + '));
     }
+    row.appendChild(body);
 
     const chance = document.createElement('div');
     chance.className = 'encounter-chance';
     chance.textContent = outcome.chancePercent != null && !realm.conditional
       ? `${this._formatPercent(outcome.chancePercent)}%`
       : `${i18n.t('encounter.weight')} ${outcome.weight}${outcome.conditional ? '*' : ''}`;
-    body.appendChild(chance);
-    row.appendChild(body);
+    row.appendChild(chance);
     return row;
   }
 
@@ -190,24 +189,36 @@ export class EncounterPanel {
     body.appendChild(name);
   }
 
-  private _appendDrop(body: HTMLElement, species: SpeciesDef | undefined): void {
+  /** Counts and drop share one muted line so tall realm rosters stay compact. */
+  private _appendDetails(body: HTMLElement, counts: string, species: SpeciesDef | undefined): void {
+    const drop = this._dropText(species);
+    if (!counts && !drop) return;
+    const line = document.createElement('div');
+    line.className = 'encounter-muted';
+    if (counts) line.appendChild(document.createTextNode(counts));
+    if (drop) {
+      const span = document.createElement('span');
+      span.className = 'encounter-drop';
+      span.textContent = counts ? ` · ${drop}` : drop;
+      line.appendChild(span);
+    }
+    body.appendChild(line);
+  }
+
+  private _dropText(species: SpeciesDef | undefined): string {
     const drop = species?.drop as SpeciesDrop | undefined;
-    if (!drop?.itemId) return;
+    if (!drop?.itemId) return '';
     const item: CatalogItemDef | undefined = this._catalogs.items[drop.itemId];
     const itemName = i18n.localize(item?.name) || `#${drop.itemId}`;
     const percent = drop.chancePercent ?? (
       drop.numerator != null && drop.denominator ? drop.numerator * 100 / drop.denominator : undefined
     );
-    this._appendMuted(
-      body,
-      `${i18n.t('encounter.drop')} ${itemName}${percent == null ? '' : ` ${this._formatPercent(percent)}%`}`,
-      'encounter-drop',
-    );
+    return `${i18n.t('encounter.drop')} ${itemName}${percent == null ? '' : ` ${this._formatPercent(percent)}%`}`;
   }
 
-  private _appendMuted(body: HTMLElement, text: string, extraClass = ''): void {
+  private _appendMuted(body: HTMLElement, text: string): void {
     const line = document.createElement('div');
-    line.className = `encounter-muted ${extraClass}`.trim();
+    line.className = 'encounter-muted';
     line.textContent = text;
     body.appendChild(line);
   }
