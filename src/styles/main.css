@@ -545,6 +545,36 @@ html, body {
   min-width: 0;
 }
 
+/* Formation rows: one species cell per member, sharing the odds column. */
+.encounter-stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.encounter-cell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.encounter-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 14px;
+  color: #ffb74d;
+  border: 1px solid rgba(255, 183, 77, 0.55);
+  border-radius: 3px;
+  vertical-align: 1px;
+}
+
 .encounter-name {
   color: #f5f7fa;
   font-size: 12px;

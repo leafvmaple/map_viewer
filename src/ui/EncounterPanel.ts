@@ -133,38 +133,28 @@ export class EncounterPanel {
   private _memberRow(member: EncounterMemberDef): HTMLElement {
     const row = document.createElement('div');
     row.className = 'encounter-row';
-    const body = document.createElement('div');
-    body.className = 'encounter-row-body';
-    const species = this._catalogs.species[member.speciesId];
-    this._appendSpeciesIdentity(row, body, species, member.speciesId);
-    this._appendDetails(body, `×${member.count}`, species);
-    row.appendChild(body);
+    row.appendChild(this._speciesCell(member.speciesId, `×${member.count}`));
     return row;
   }
 
   private _outcomeRow(outcome: EncounterOutcomeDef, realm: EncounterRealmDef): HTMLElement {
     const row = document.createElement('div');
     row.className = 'encounter-row';
-    const body = document.createElement('div');
-    body.className = 'encounter-row-body';
 
     if (outcome.kind === 'monster' && outcome.speciesId) {
-      const species = this._catalogs.species[outcome.speciesId];
-      this._appendSpeciesIdentity(row, body, species, outcome.speciesId);
       const counts = (outcome.countRanges ?? []).map(([lo, hi]) => lo === hi ? `×${lo}` : `×${lo}–${hi}`);
-      this._appendDetails(body, counts.join(' / '), species);
+      row.appendChild(this._speciesCell(outcome.speciesId, counts.join(' / ')));
     } else {
-      const title = document.createElement('div');
-      title.className = 'encounter-name';
-      title.textContent = `${i18n.t('encounter.formation')} #${outcome.groupId ?? '?'}`;
-      body.appendChild(title);
-      const members = (outcome.members ?? []).map(member => {
-        const species = this._catalogs.species[member.speciesId];
-        return `${i18n.localize(species?.name) || `#${member.speciesId}`} ×${member.count}`;
+      // Formation: same species-cell format as normal rows, one per member,
+      // tagged on the first line; the shared odds column covers the group.
+      const stack = document.createElement('div');
+      stack.className = 'encounter-stack';
+      (outcome.members ?? []).forEach((member, index) => {
+        const tag = index === 0 ? `#${outcome.groupId ?? '?'}` : undefined;
+        stack.appendChild(this._speciesCell(member.speciesId, `×${member.count}`, tag));
       });
-      if (members.length) this._appendMuted(body, members.join(' + '));
+      row.appendChild(stack);
     }
-    row.appendChild(body);
 
     const chance = document.createElement('div');
     chance.className = 'encounter-chance';
@@ -175,18 +165,34 @@ export class EncounterPanel {
     return row;
   }
 
-  private _appendSpeciesIdentity(row: HTMLElement, body: HTMLElement, species: SpeciesDef | undefined, id: string): void {
+  /** Icon + name (+ optional formation tag) + counts·drop line for one species. */
+  private _speciesCell(speciesId: string, counts: string, formationTag?: string): HTMLElement {
+    const cell = document.createElement('div');
+    cell.className = 'encounter-cell';
+    const species = this._catalogs.species[speciesId];
     if (species?.icon) {
       const img = document.createElement('img');
       img.className = 'encounter-icon';
       img.src = this._resolveImagePath(species.icon);
       img.alt = '';
-      row.appendChild(img);
+      cell.appendChild(img);
     }
+    const body = document.createElement('div');
+    body.className = 'encounter-row-body';
     const name = document.createElement('div');
     name.className = 'encounter-name';
-    name.textContent = i18n.localize(species?.name) || `#${id}`;
+    name.textContent = i18n.localize(species?.name) || `#${speciesId}`;
+    if (formationTag != null) {
+      const chip = document.createElement('span');
+      chip.className = 'encounter-tag';
+      chip.textContent = i18n.t('encounter.formation');
+      chip.title = formationTag;
+      name.appendChild(chip);
+    }
     body.appendChild(name);
+    this._appendDetails(body, counts, species);
+    cell.appendChild(body);
+    return cell;
   }
 
   /** Counts and drop share one muted line so tall realm rosters stay compact. */
@@ -214,13 +220,6 @@ export class EncounterPanel {
       drop.numerator != null && drop.denominator ? drop.numerator * 100 / drop.denominator : undefined
     );
     return `${i18n.t('encounter.drop')} ${itemName}${percent == null ? '' : ` ${this._formatPercent(percent)}%`}`;
-  }
-
-  private _appendMuted(body: HTMLElement, text: string): void {
-    const line = document.createElement('div');
-    line.className = 'encounter-muted';
-    line.textContent = text;
-    body.appendChild(line);
   }
 
   private _formatPercent(value: number): string {
