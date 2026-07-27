@@ -1,6 +1,7 @@
 import { i18n } from '../i18n/index.js';
 import type {
   CatalogItemDef,
+  EncounterMemberDef,
   EncounterOutcomeDef,
   EncounterRealmDef,
   EncounterZoneDef,
@@ -74,17 +75,28 @@ export class EncounterPanel {
     if (fixed) {
       const header = document.createElement('div');
       header.className = 'encounter-panel-header';
-      header.textContent = `${i18n.t('encounter.fixed')} · ${i18n.localize(fixed.name)}`;
+      // Exported names already carry a kind prefix ("固定遇敌·水鬼×2"),
+      // so the header is the localized name alone.
+      const name = i18n.localize(fixed.name);
+      header.textContent = name.includes('·') ? name : `${i18n.t('encounter.fixed')} · ${name}`;
       this._el.appendChild(header);
       const meta = document.createElement('div');
       meta.className = 'encounter-panel-meta encounter-fixed-meta';
+      const formationId = fixed.groupId ?? fixed.handlerId;
       meta.textContent = [
         `${i18n.t('encounter.row')} #${fixed.id}`,
         `${i18n.t('encounter.victoryFlag')} ${fixed.completionFlag}`,
-        `${i18n.t('encounter.handler')} ${fixed.handlerId}`,
+        ...(formationId ? [`${i18n.t('encounter.group')} ${formationId}`] : []),
         `${i18n.t('encounter.battleParameter')} ${fixed.battleParameter}`,
+        ...(fixed.scripted ? [i18n.t('encounter.scripted')] : []),
       ].join(' · ');
       this._el.appendChild(meta);
+      if (fixed.members?.length) {
+        const list = document.createElement('div');
+        list.className = 'encounter-list';
+        for (const member of fixed.members) list.appendChild(this._memberRow(member));
+        this._el.appendChild(list);
+      }
       return;
     }
 
@@ -115,6 +127,20 @@ export class EncounterPanel {
     list.className = 'encounter-list';
     for (const outcome of realm.outcomes) list.appendChild(this._outcomeRow(outcome, realm));
     this._el.appendChild(list);
+  }
+
+  /** One fixed-formation species: icon · name · ×count · drop. */
+  private _memberRow(member: EncounterMemberDef): HTMLElement {
+    const row = document.createElement('div');
+    row.className = 'encounter-row';
+    const body = document.createElement('div');
+    body.className = 'encounter-row-body';
+    const species = this._catalogs.species[member.speciesId];
+    this._appendSpeciesIdentity(row, body, species, member.speciesId);
+    this._appendMuted(body, `×${member.count}`);
+    this._appendDrop(body, species);
+    row.appendChild(body);
+    return row;
   }
 
   private _outcomeRow(outcome: EncounterOutcomeDef, realm: EncounterRealmDef): HTMLElement {

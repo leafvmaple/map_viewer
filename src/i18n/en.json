@@ -129,6 +129,7 @@
   "encounter.fixed": "Fixed encounter",
   "encounter.row": "Table row",
   "encounter.victoryFlag": "Victory flag",
-  "encounter.handler": "Handler",
+  "encounter.group": "Formation group",
+  "encounter.scripted": "Scripted battle",
   "encounter.battleParameter": "Battle parameter"
 }

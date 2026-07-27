@@ -35,6 +35,41 @@ describe('hasPartyCard', () => {
     };
     expect(hasPartyCard({ id: 't07', kind: 'trainer', pos: [0, 0], trainerId: '7' }, catalogs)).toBe(true);
   });
+
+  it('true for a fixed encounter with resolved formation members', () => {
+    const catalogs: GameDataCatalogs = {
+      items: {},
+      services: {},
+      species: { '6E': { id: '6E', name: { zh: '水鬼' }, icon: 'monsters/monster_110.png' } },
+      parties: {},
+      trainers: {},
+      currencies: {},
+      fixedEncounters: {
+        '21': {
+          id: '21', name: { zh: '东京下水道·水鬼第1波' }, mapId: 'A2', pos: [22, 14],
+          completionFlag: 'C0', battleParameter: '00', groupId: '1B', active: true,
+          members: [{ speciesId: '6E', count: 2 }],
+        },
+      },
+    };
+    const poi: PoiDef = { id: 'fe21', kind: 'fixed_encounter', pos: [0, 0], fixedEncounterId: '21' };
+    expect(hasPartyCard(poi, catalogs)).toBe(true);
+    const html = renderPartyCard(poi, '水鬼第1波', false, resolve, catalogs);
+    expect(html).toContain('水鬼');
+    expect(html).toContain('src="/res/g/monsters/monster_110.png"');
+    expect(html).toContain('<small>×</small>2');
+    // Without members the POI falls back to the plain tooltip.
+    const bare: GameDataCatalogs = {
+      ...catalogs,
+      fixedEncounters: {
+        '21': {
+          id: '21', name: { zh: '固定遇敌组 C0' }, mapId: 'A2', pos: [22, 14],
+          completionFlag: 'C0', battleParameter: '00', groupId: '1B', active: true,
+        },
+      },
+    };
+    expect(hasPartyCard(poi, bare)).toBe(false);
+  });
 });
 
 describe('renderPlainTooltip', () => {

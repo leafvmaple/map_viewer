@@ -208,7 +208,14 @@ export interface FixedEncounterDef {
   pos: [number, number];
   completionFlag: string;
   battleParameter: string;
-  handlerId: string;
+  /** True when the battle runs in the game's scripted/event-battle mode. */
+  scripted?: boolean;
+  /** Battle formation id (game-native, e.g. 1-based special-group id; "00" = none). */
+  groupId?: string;
+  /** Resolved battle formation: one entry per species with the total count. */
+  members?: EncounterMemberDef[];
+  /** Deprecated: pre-formation-decode name of `groupId` in old exports. */
+  handlerId?: string;
   active: boolean;
 }
 

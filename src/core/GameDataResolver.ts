@@ -109,7 +109,9 @@ export function resolvePoiBattle(poi: PoiDef, catalogs?: GameDataCatalogs): Reso
   const partyId = poi.partyId ?? trainer?.partyId;
   const party = catalogParty(catalogs?.parties, partyId);
   const members = (party?.members ?? []).map(member => resolvePartyMember(member, catalogs));
-  const fallbackMembers = members.length > 0 ? members : (poi.party ?? []);
+  const fallbackMembers = members.length > 0
+    ? members
+    : (poi.party ?? resolveFixedEncounterMembers(poi, catalogs));
   return {
     trainer,
     party,
@@ -119,6 +121,16 @@ export function resolvePoiBattle(poi: PoiDef, catalogs?: GameDataCatalogs): Reso
     icon: poi.icon ?? trainer?.icon,
     iconSize: poi.iconSize ?? trainer?.iconSize,
   };
+}
+
+/** Fixed-encounter formations render like a trainer party, badged `×count`. */
+function resolveFixedEncounterMembers(poi: PoiDef, catalogs?: GameDataCatalogs): PartyMemberDef[] {
+  const fixed = catalogById(catalogs?.fixedEncounters, poi.fixedEncounterId);
+  return (fixed?.members ?? []).map(member => resolvePartyMember({
+    speciesId: member.speciesId,
+    value: member.count,
+    unit: { en: '×' },
+  }, catalogs));
 }
 
 export function resolveBattleRewardText(poi: PoiDef, catalogs?: GameDataCatalogs): string {

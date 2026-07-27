@@ -295,6 +295,14 @@ export class GameLoader {
       }
     }
 
+    for (const [fixedId, fixed] of Object.entries(catalogs.fixedEncounters ?? {})) {
+      for (const member of fixed.members ?? []) {
+        if (!speciesIds.has(member.speciesId)) {
+          warnings.push(`fixedEncounters/${fixedId}: speciesId '${member.speciesId}' missing from species catalog`);
+        }
+      }
+    }
+
     if (warnings.length > 0) {
       const shown = warnings.slice(0, 50);
       console.warn(

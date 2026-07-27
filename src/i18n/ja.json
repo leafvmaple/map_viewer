@@ -129,6 +129,7 @@
   "encounter.fixed": "固定エンカウント",
   "encounter.row": "テーブル行",
   "encounter.victoryFlag": "勝利フラグ",
-  "encounter.handler": "ハンドラ",
+  "encounter.group": "編成グループ",
+  "encounter.scripted": "イベント戦闘",
   "encounter.battleParameter": "戦闘パラメータ"
 }

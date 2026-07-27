@@ -77,7 +77,7 @@
     },
     "fixedEncounter": {
       "type": "object",
-      "required": ["id", "name", "mapId", "pos", "completionFlag", "battleParameter", "handlerId", "active"],
+      "required": ["id", "name", "mapId", "pos", "completionFlag", "battleParameter", "groupId", "active"],
       "additionalProperties": false,
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -90,8 +90,26 @@
           "items": { "type": "integer", "minimum": 0, "maximum": 255 }
         },
         "completionFlag": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
-        "battleParameter": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
-        "handlerId": { "type": "string", "pattern": "^[0-9A-F]{2}$" },
+        "battleParameter": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{2}$",
+          "description": "Game-native battle-context code (Metal Max $0481): \"00\" = standard encounter battle, nonzero (\"FF\") = scripted event-battle mode."
+        },
+        "scripted": {
+          "type": "boolean",
+          "description": "True when the battle runs in the game's scripted/event-battle mode instead of the standard encounter flow (derived from battleParameter)."
+        },
+        "groupId": {
+          "type": "string",
+          "pattern": "^[0-9A-F]{2}$",
+          "description": "Battle formation id (game-native, e.g. Metal Max's 1-based special-group id; \"00\" = none)."
+        },
+        "members": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/member" },
+          "description": "Resolved battle formation, one entry per species with the total count. Every speciesId must exist in data/species.json. The viewer renders these as a trainer-style monster card on the map POI."
+        },
         "active": { "type": "boolean" }
       }
     }

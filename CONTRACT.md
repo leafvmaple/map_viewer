@@ -147,9 +147,10 @@ either on every map.
   }
 }, "fixedEncounters": {
   "21": {
-    "id": "21", "name": { "zh": "固定遇敌第1波" }, "mapId": "A2",
+    "id": "21", "name": { "zh": "东京下水道·水鬼第1波" }, "mapId": "A2",
     "pos": [22, 14], "completionFlag": "C0", "battleParameter": "00",
-    "handlerId": "1B", "active": true
+    "groupId": "1B", "members": [{ "speciesId": "6E", "count": 2 }],
+    "active": true
   }
 } }
 ```
@@ -167,6 +168,18 @@ either on every map.
   rows should also be emitted as map POIs with `kind: "fixed_encounter"` and
   `fixedEncounterId`; reserved rows stay in the catalog with `active: false`
   but do not get fake map markers.
+- `fixedEncounters[*].members` is the resolved battle formation (same
+  `{speciesId, count}` shape as formation outcomes, one entry per species with
+  the total count). When present, the viewer renders the POI's hover tooltip as
+  a trainer-style monster card (species icon · name · ×count) instead of the
+  plain label, and the encounter panel lists each species with its drop info.
+  `groupId` records the game-native formation id for traceability
+  (Metal Max: 1-based SPECIAL_MONSTER_GROUP id; `"00"` = none). Producers that
+  cannot resolve a formation may omit `members` — the viewer falls back to the
+  plain label. Set `scripted: true` when the row runs in the game's
+  scripted/event-battle mode rather than the standard encounter flow
+  (Metal Max: nonzero `battleParameter`); the viewer surfaces it as a
+  "scripted battle" tag in the encounter panel.
 
 ### Coordinate system (important)
 

@@ -129,6 +129,7 @@
   "encounter.fixed": "固定遇敌",
   "encounter.row": "表行",
   "encounter.victoryFlag": "胜利旗标",
-  "encounter.handler": "处理器",
+  "encounter.group": "编队",
+  "encounter.scripted": "剧情战斗",
   "encounter.battleParameter": "战斗参数"
 }
